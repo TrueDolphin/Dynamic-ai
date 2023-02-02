@@ -1,5 +1,5 @@
 //name:TrueDolphin
-//date:22/1/2023
+//date:2/2/2023
 //dynamic ai spawns
 
 modded class MissionServer {
@@ -102,7 +102,7 @@ modded class MissionServer {
     return valid;
   }
 
-  //cluster of bad stuff.
+  //create and faction stuff
   void LocalSpawn(PlayerBase player) {
     m_cur = Math.RandomIntInclusive(0, Dynamic_Total);
     int SpawnCount;
@@ -125,18 +125,12 @@ modded class MissionServer {
         } else {
           sentry.GetGroup().SetFaction(new eAIFactionShamans());
         }
-        sentry.GetGroup().AddWaypoint(player.GetPosition());
-        player.GetTargetInformation().AddAI(sentry, EngageTimer);
         GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, CleanupTimer, false, sentry);
       } else {
         if (player.CheckZone() == true) {
           sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
         } else {
           sentry.GetGroup().SetFaction(eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction));
-        }
-        sentry.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 5));
-        if (m_Dynamic_Groups.HuntMode == 1){
-        player.GetTargetInformation().AddAI(sentry, EngageTimer);
         }
         GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, CleanupTimer, false, sentry);
       }
@@ -177,12 +171,15 @@ modded class MissionServer {
     }
   }
 
-  // generic sentry spawn
+  // generic sentry spawn, loadout set and positional stuff
   eAIBase SpawnAI_Dynamic(vector pos, PlayerBase player) {
     eAIBase ai;
     if (!Class.CastTo(ai, GetGame().CreateObject(GetRandomAI(), pos))) return null;
     if (player.CheckZone() == true) {
       ExpansionHumanLoadout.Apply(ai, player.Dynamic_Loadout(), true);
+      ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+      if (m_Dynamic_Groups.HuntMode == 1) player.GetTargetInformation().AddAI(ai, EngageTimer);
       return ai;
     }
     if (m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout) {
@@ -192,6 +189,9 @@ modded class MissionServer {
       LoggerDynPrint("Using Default WestLoadout.json");
       ExpansionHumanLoadout.Apply(ai, "WestLoadout,json", true);
     }
+    ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
+    ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+    if (m_Dynamic_Groups.HuntMode == 1) player.GetTargetInformation().AddAI(ai, EngageTimer);
     return ai;
   }
   // Ingame chat message
@@ -230,7 +230,7 @@ modded class MissionServer {
       LoggerDynPrint("Loading config (" + EXP_AI_DYNAMIC_SETTINGS + ")");
     }
 
-    if (m_Dynamic_Groups.Version != 9) { // dont like this. change it.
+    if (m_Dynamic_Groups.Version != 10) { // dont like this. change it.
       LoggerDynPrint("Settings File Out of date. Please delete and restart server.");
       Dynamic_Version = false;
       return;
@@ -440,7 +440,7 @@ modded class MissionServer {
 }
 
 class Dynamic_Groups {
-  int Version = 9;
+  int Version = 10;
   int Dynamic_MinTimer = 1200000;
   int Dynamic_MaxTimer = 1200000;
   int MinDistance = 140;
@@ -452,6 +452,7 @@ class Dynamic_Groups {
   int MessageType = 1;
   string MessageTitle = "Dynamic AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";
+  bool Lootable = true;
   bool Dynamic_InVehicle = false;
   bool Dynamic_IsBleeding = false;
   bool Dynamic_IsRestrained = false;

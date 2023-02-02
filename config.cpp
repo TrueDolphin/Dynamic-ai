@@ -4,7 +4,7 @@ class CfgPatches
 {
 	class DayZ_Expansion_AI_Dynamic_scripts
 	{
-		requiredAddons[] = {"DayZExpansion_AI_Scripts"};
+		requiredAddons[] = {"DayZExpansion_AI_Scripts", "EXP_AI_Dynamic_Define"};
 	};
 };
 class CfgMods
