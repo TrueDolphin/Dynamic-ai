@@ -16,7 +16,6 @@ modded class MissionServer {
   int EngageTimer;
   int CleanupTimer;
   int MessageType;
-  int PointSafe;
   bool Dynamic_Version = true;
   bool Dynamic_InVehicle;
   bool Dynamic_IsBleeding;
@@ -77,28 +76,23 @@ modded class MissionServer {
   bool ValidPlayer(PlayerBase player) {
     PlayerIdentity identity = player.GetIdentity();
     bool valid = true;
-
     #ifdef EXPANSIONMODBASEBUILDING
     if (player.IsInsideOwnTerritory() != Dynamic_InOwnTerritory) {
       return false;
     }
     #endif
-
     if (player.IsInVehicle() != Dynamic_InVehicle || player.Expansion_IsInSafeZone() != Dynamic_IsInSafeZone || player.IsBleeding() != Dynamic_IsBleeding || player.IsRestrained() != Dynamic_IsRestrained || player.IsUnconscious() != Dynamic_IsUnconscious) {
       return false;
     }
-
     #ifdef SZDEBUG
     if (player.GetSafeZoneStatus() == SZ_IN_SAFEZONE && Dynamic_TPSafeZone == false) {
       return false;
     }
     #endif
-
     if (m_Dynamic_Groups.Points_Enabled == 1 && player.CheckSafe()) {
       //LoggerDynPrint("debugger - player safe");
       return false;
     }
-
     return valid;
   }
 
@@ -200,7 +194,6 @@ modded class MissionServer {
     if (!FileExist(EXP_AI_DYNAMIC_SETTINGS)) {
       if (!FileExist(EXP_DYNAMIC_FOLDER))
         MakeDirectory(EXP_DYNAMIC_FOLDER);
-
       LoggerDynPrint("WARNING: Couldn't find config file !");
       LoggerDynPrint("Dynamic config will be located in: " + EXP_DYNAMIC_FOLDER);
       DefaultDynamicSettings(m_Dynamic_Groups);
@@ -210,48 +203,38 @@ modded class MissionServer {
       JsonFileLoader < Dynamic_Groups > .JsonLoadFile(EXP_AI_DYNAMIC_SETTINGS, m_Dynamic_Groups);
       LoggerDynPrint("Loading config (" + EXP_AI_DYNAMIC_SETTINGS + ")");
     }
-
     if (m_Dynamic_Groups.Version != 10) { // dont like this. change it.
       LoggerDynPrint("Settings File Out of date. Please delete and restart server.");
       Dynamic_Version = false;
       return;
     }
-
     if (m_Dynamic_Groups.Dynamic_MinTimer < 300000) { // global minimum time of 5 mins 
       LoggerDynPrint("Timer Set too low. Defaulting to 5 minutes");
       m_Dynamic_Groups.Dynamic_MinTimer = 300000;
     }
-
     if (m_Dynamic_Groups.Dynamic_MaxTimer < m_Dynamic_Groups.Dynamic_MinTimer) { 
       LoggerDynPrint("Max Timer set lower than min timer, setting to the same.");
       m_Dynamic_Groups.Dynamic_MaxTimer = m_Dynamic_Groups.Dynamic_MinTimer;
     }
-
     if (m_Dynamic_Groups.MinDistance < 120) {
       LoggerDynPrint("Minimum Distance too low. setting to 120m");
       m_Dynamic_Groups.MinDistance = 120;
     }
-
     Dynamic_MinDistance = m_Dynamic_Groups.MinDistance;
-
     if (m_Dynamic_Groups.MaxDistance < m_Dynamic_Groups.MinDistance) {
       LoggerDynPrint("Max distance under min distance. setting +20m");
       m_Dynamic_Groups.MaxDistance = m_Dynamic_Groups.MinDistance + 20;
     }
-
     Dynamic_MaxDistance = m_Dynamic_Groups.MaxDistance;
-
     if (m_Dynamic_Groups.HuntMode != 0 && m_Dynamic_Groups.HuntMode != 1) {
       LoggerDynPrint("HuntMode setting wrong. setting to default.");
       m_Dynamic_Groups.HuntMode = 1;
     }
-
     if (m_Dynamic_Groups.Points_Enabled == 0) {
       LoggerDynPrint("points disabled");
     } else if (m_Dynamic_Groups.Points_Enabled == 1) {
       LoggerDynPrint("points enabled");
       foreach(Dynamic_Point point: m_Dynamic_Groups.Point) {
-
         if (point.Dynamic_Radius < 0) {
           LoggerDynPrint("Radius on group incorrect, setting to 100m");
           point.Dynamic_Radius = 100;
@@ -260,12 +243,10 @@ modded class MissionServer {
           LoggerDynPrint("Loadout Not Found: " + point.Dynamic_ZoneLoadout);
           point.Dynamic_ZoneLoadout = "HumanLoadout.json";
         }
-
         if (point.Dynamic_Safe != 1 && point.Dynamic_Safe != 0) {
           LoggerDynPrint("Zone safe value incorrect. setting to safe");
           point.Dynamic_Safe = 1;
         }
-
         eAIFaction faction = eAIFaction.Create(point.Dynamic_Faction);
 			  if (!faction)
 			  {
@@ -273,33 +254,26 @@ modded class MissionServer {
 				point.Dynamic_Faction = "Raiders";
 			  }
       }
-
     } else {
       LoggerDynPrint("error, disabling points");
       m_Dynamic_Groups.Points_Enabled = 0;
     }
-
     if (m_Dynamic_Groups.EngageTimer < 300000) { // global minimum time of 5 mins
       LoggerDynPrint("Minimum engagement too low. setting to 5m");
       m_Dynamic_Groups.EngageTimer = 300000;
     }
-
     EngageTimer = m_Dynamic_Groups.EngageTimer;
 
     if (m_Dynamic_Groups.CleanupTimer < m_Dynamic_Groups.EngageTimer) {
       LoggerDynPrint("Cleanup timer under engage timer. setting +1m");
       m_Dynamic_Groups.CleanupTimer = m_Dynamic_Groups.EngageTimer + 60000;
     }
-
     CleanupTimer = m_Dynamic_Groups.CleanupTimer;
-
     if (m_Dynamic_Groups.MessageType != 0 && m_Dynamic_Groups.MessageType != 1 && m_Dynamic_Groups.MessageType != 2 && m_Dynamic_Groups.MessageType != 3 && m_Dynamic_Groups.MessageType != 4) {
       LoggerDynPrint("Message type error. disabling.");
       m_Dynamic_Groups.MessageType = 0;
     }
-
     MessageType = m_Dynamic_Groups.MessageType;
-
     if (!m_Dynamic_Groups.MessageTitle) {
       LoggerDynPrint("Notification title error. setting default.");
       m_Dynamic_Groups.MessageTitle = "Dynamic AI";
@@ -307,9 +281,7 @@ modded class MissionServer {
       LoggerDynPrint("Notification title error. setting default.");
       m_Dynamic_Groups.MessageTitle = "Dynamic AI";
     }
-
     MessageTitle = m_Dynamic_Groups.MessageTitle;
-
     if (!m_Dynamic_Groups.MessageText) {
       LoggerDynPrint("Message text error. setting default.");
       m_Dynamic_Groups.MessageText = "AI Spotted in the Area. Be Careful.";
@@ -318,56 +290,46 @@ modded class MissionServer {
       m_Dynamic_Groups.MessageText = "AI Spotted in the Area. Be Careful.";
     }
     MessageText = m_Dynamic_Groups.MessageText;
-
     if (m_Dynamic_Groups.Lootable != true || m_Dynamic_Groups.Lootable != false){
       m_Dynamic_Groups.Lootable = false;
       LoggerDynPrint("lootable check error. setting default to false.");
     }
-
     if (m_Dynamic_Groups.Dynamic_InVehicle != true && m_Dynamic_Groups.Dynamic_InVehicle != false) {
       LoggerDynPrint("ignore vehicle check error - default off");
       m_Dynamic_Groups.Dynamic_InVehicle = false;
     }
     Dynamic_InVehicle = m_Dynamic_Groups.Dynamic_InVehicle;
-
     if (m_Dynamic_Groups.Dynamic_IsBleeding != true && m_Dynamic_Groups.Dynamic_IsBleeding != false) {
       LoggerDynPrint("ignore bleeding check error - default off");
       m_Dynamic_Groups.Dynamic_IsBleeding = false;
     }
     Dynamic_IsBleeding = m_Dynamic_Groups.Dynamic_IsBleeding;
-
     if (m_Dynamic_Groups.Dynamic_IsRestrained != true && m_Dynamic_Groups.Dynamic_IsRestrained != false) {
       LoggerDynPrint("ignore restrained check error - default off");
       m_Dynamic_Groups.Dynamic_IsRestrained = false;
     }
     Dynamic_IsRestrained = m_Dynamic_Groups.Dynamic_IsRestrained;
-
     if (m_Dynamic_Groups.Dynamic_IsUnconscious != true && m_Dynamic_Groups.Dynamic_IsUnconscious != false) {
       LoggerDynPrint("ignore Unconscious check error - default off");
       m_Dynamic_Groups.Dynamic_IsUnconscious = false;
     }
     Dynamic_IsUnconscious = m_Dynamic_Groups.Dynamic_IsUnconscious;
-
     if (m_Dynamic_Groups.Dynamic_IsInSafeZone != true && m_Dynamic_Groups.Dynamic_IsInSafeZone != false) {
       LoggerDynPrint("ignore expansion SafeZone check error - default off");
       m_Dynamic_Groups.Dynamic_IsInSafeZone = false;
     }
     Dynamic_IsInSafeZone = m_Dynamic_Groups.Dynamic_IsInSafeZone;
-
     if (m_Dynamic_Groups.Dynamic_TPSafeZone != true && m_Dynamic_Groups.Dynamic_TPSafeZone != false) {
       LoggerDynPrint("ignore traderplus SafeZone check error - default off");
       m_Dynamic_Groups.Dynamic_TPSafeZone = false;
     }
     Dynamic_TPSafeZone = m_Dynamic_Groups.Dynamic_TPSafeZone;
-
     if (m_Dynamic_Groups.Dynamic_InOwnTerritory != true && m_Dynamic_Groups.Dynamic_InOwnTerritory != false) {
       LoggerDynPrint("ignore expansion own territory check error - default off");
       m_Dynamic_Groups.Dynamic_InOwnTerritory = false;
     }
     Dynamic_InOwnTerritory = m_Dynamic_Groups.Dynamic_InOwnTerritory;
-
     foreach(Dynamic_Group group: m_Dynamic_Groups.Group) {
-
       if (group.Dynamic_MinCount > group.Dynamic_MaxCount) {
         LoggerDynPrint("Minimum cant be more than maximum: " + group.Dynamic_MinCount);
         continue;
