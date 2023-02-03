@@ -290,7 +290,7 @@ modded class MissionServer {
       m_Dynamic_Groups.MessageText = "AI Spotted in the Area. Be Careful.";
     }
     MessageText = m_Dynamic_Groups.MessageText;
-    if (m_Dynamic_Groups.Lootable != true || m_Dynamic_Groups.Lootable != false){
+    if (m_Dynamic_Groups.Lootable != true && m_Dynamic_Groups.Lootable != false){
       m_Dynamic_Groups.Lootable = false;
       LoggerDynPrint("lootable check error. setting default to false.");
     }
