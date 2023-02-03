@@ -81,7 +81,7 @@ modded class MissionServer {
       return false;
     }
     #endif
-    if (player.IsInVehicle() != Dynamic_InVehicle || player.Expansion_IsInSafeZone() != Dynamic_IsInSafeZone || player.IsBleeding() != Dynamic_IsBleeding || player.IsRestrained() != Dynamic_IsRestrained || player.IsUnconscious() != Dynamic_IsUnconscious) {
+    if (player.IsInVehicle() != Dynamic_InVehicle && player.Expansion_IsInSafeZone() != Dynamic_IsInSafeZone && player.IsBleeding() != Dynamic_IsBleeding && player.IsRestrained() != Dynamic_IsRestrained && player.IsUnconscious() != Dynamic_IsUnconscious) {
       return false;
     }
     #ifdef SZDEBUG
@@ -112,8 +112,10 @@ modded class MissionServer {
       sentry = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
         if (player.CheckZone() == true) {
           sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
+          ExpansionHumanLoadout.Apply(sentry, player.Dynamic_Loadout(), true);
         } else {
           sentry.GetGroup().SetFaction(eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction));
+          ExpansionHumanLoadout.Apply(sentry, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
         }
         GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, CleanupTimer, false, sentry);
     }
@@ -158,7 +160,6 @@ modded class MissionServer {
     eAIBase ai;
     if (!Class.CastTo(ai, GetGame().CreateObject(GetRandomAI(), pos))) return null;
     if (player.CheckZone() == true) {
-      ExpansionHumanLoadout.Apply(ai, player.Dynamic_Loadout(), true);
       ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
       if (m_Dynamic_Groups.HuntMode == 1) player.GetTargetInformation().AddAI(ai, EngageTimer); 
