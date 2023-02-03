@@ -116,24 +116,12 @@ modded class MissionServer {
       eAIBase sentry;
       if (!player) return;
       sentry = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
-      eAIFaction c = eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction);
-      if (!c) {
-        LoggerDynPrint("Faction name wrong = " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction);
-        LoggerDynPrint("Using Default Shamans");
-        if (player.CheckZone() == true) {
-          sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
-        } else {
-          sentry.GetGroup().SetFaction(new eAIFactionShamans());
-        }
-        GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, CleanupTimer, false, sentry);
-      } else {
         if (player.CheckZone() == true) {
           sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
         } else {
           sentry.GetGroup().SetFaction(eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction));
         }
         GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, CleanupTimer, false, sentry);
-      }
     }
     if (SpawnCount != 0) {
       Dynamic_message(player, MessageType, SpawnCount);
@@ -179,15 +167,8 @@ modded class MissionServer {
       ExpansionHumanLoadout.Apply(ai, player.Dynamic_Loadout(), true);
       ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-      if (m_Dynamic_Groups.HuntMode == 1) player.GetTargetInformation().AddAI(ai, EngageTimer);
+      if (m_Dynamic_Groups.HuntMode == 1) player.GetTargetInformation().AddAI(ai, EngageTimer); 
       return ai;
-    }
-    if (m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout) {
-      ExpansionHumanLoadout.Apply(ai, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
-    } else {
-      LoggerDynPrint("Loadout Filename wrong = " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-      LoggerDynPrint("Using Default WestLoadout.json");
-      ExpansionHumanLoadout.Apply(ai, "WestLoadout,json", true);
     }
     ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
     ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
@@ -338,6 +319,11 @@ modded class MissionServer {
     }
     MessageText = m_Dynamic_Groups.MessageText;
 
+    if (m_Dynamic_Groups.Lootable != true || m_Dynamic_Groups.Lootable != false){
+      m_Dynamic_Groups.Lootable = false;
+      LoggerDynPrint("lootable check error. setting default to false.");
+    }
+
     if (m_Dynamic_Groups.Dynamic_InVehicle != true && m_Dynamic_Groups.Dynamic_InVehicle != false) {
       LoggerDynPrint("ignore vehicle check error - default off");
       m_Dynamic_Groups.Dynamic_InVehicle = false;
@@ -411,15 +397,12 @@ modded class MissionServer {
         Dynamic_Trigger dynamic_trigger = Dynamic_Trigger.Cast(GetGame().CreateObjectEx("Dynamic_Trigger", point.Dynamic_Position, ECE_NONE));
         dynamic_trigger.SetCollisionCylinder(point.Dynamic_Radius, point.Dynamic_Radius / 2);
         dynamic_trigger.Dynamic_SetData(point.Dynamic_Safe, point.Dynamic_Faction, point.Dynamic_ZoneLoadout, point.Dynamic_MinCount, point.Dynamic_MaxCount);
-        LoggerDynPrint("Trigger at location: " + point.Dynamic_Position);
-        LoggerDynPrint("Data: " + point.Dynamic_Safe + ":" + point.Dynamic_Faction + ":" + point.Dynamic_ZoneLoadout + ":" + point.Dynamic_MinCount + ":" + point.Dynamic_MaxCount);
+        LoggerDynPrint("Trigger at location: " + point.Dynamic_Position + " - Radius: " + point.Dynamic_Radius);
+        LoggerDynPrint("Safe: " + point.Dynamic_Safe + " - Faction: " + point.Dynamic_Faction + " - Loadout: " + point.Dynamic_ZoneLoadout + " - counts: " + point.Dynamic_MinCount + ":" + point.Dynamic_MaxCount);
       }
     }
   }
-
-
-
-
+  
   //expansion logging
   void LoggerDynPrint(string msg) {
     if (GetExpansionSettings().GetLog().AIGeneral)
@@ -452,7 +435,7 @@ class Dynamic_Groups {
   int MessageType = 1;
   string MessageTitle = "Dynamic AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";
-  bool Lootable = true;
+  bool Lootable = false;
   bool Dynamic_InVehicle = false;
   bool Dynamic_IsBleeding = false;
   bool Dynamic_IsRestrained = false;
