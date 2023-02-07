@@ -16,6 +16,8 @@ modded class MissionServer {
   int EngageTimer;
   int CleanupTimer;
   int MessageType;
+  int m_PlayerChecks;
+  int Dynamic_Spawncount = 0;
   bool Dynamic_Version = true;
   bool Dynamic_InVehicle;
   bool Dynamic_IsBleeding;
@@ -28,7 +30,7 @@ modded class MissionServer {
   string MessageTitle;
   string Dynamic_Loadout;
   string Dynamic_Faction;
-
+  ref array<Man> Dynamic_PlayerList = new array<Man>;
   ref Dynamic_Groups m_Dynamic_Groups;
 
   #ifdef EXPANSIONMODSPAWNSELECTION
@@ -52,26 +54,45 @@ modded class MissionServer {
   //timer call for varied check loops
   void DynamicTimer() {
     GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).Remove(DynamicTimer);
-    DynamicPlayerCheck();
+    Dynamic2Check();
     int m_cor;
     m_cor = Math.RandomIntInclusive(m_Dynamic_Groups.Dynamic_MinTimer, m_Dynamic_Groups.Dynamic_MaxTimer);
     LoggerDynPrint("Next valid check in: " + m_cor + "ms");
     GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.DynamicTimer, m_cor, false); // horaaah.
   }
 
-  //loop for playerlist
-  void DynamicPlayerCheck() {
-    for (int i = 0; i < m_Players.Count(); i++) {
-      PlayerBase player = PlayerBase.Cast(m_Players[i]);
+
+  // new loop
+  void Dynamic2Check(){
+    int i = 0;
+    GetGame().GetPlayers(Dynamic_PlayerList);
+    if (Dynamic_PlayerList.Count() == 0) return;
+    while (Dynamic_PlayerList.Count() != 0){
+    if (m_PlayerChecks == 0){
+      PlayerBase player = PlayerBase.Cast(Dynamic_PlayerList.GetRandomElement());
+      Dynamic_PlayerList.RemoveItem(player);
       if (!player || !player.IsAlive() || !player.GetIdentity()) continue;
       
       #ifdef EXPANSIONMODSPAWNSELECTION
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
-      //shitty load balancing
       if (ValidPlayer(player)) GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
+    } else {
+      i++;
+      PlayerBase player2 = PlayerBase.Cast(Dynamic_PlayerList.GetRandomElement());
+      Dynamic_PlayerList.RemoveItem(player2);
+      if (!player2 || !player2.IsAlive() || !player2.GetIdentity()) continue;
+      
+      #ifdef EXPANSIONMODSPAWNSELECTION
+      if (InRespawnMenu(player2.GetIdentity())) continue;
+      #endif
+      if (ValidPlayer(player2)) GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
+      if (i == m_PlayerChecks) return;
+    }
+
     }
   }
+
   //checks and overrides for player
   bool ValidPlayer(PlayerBase player) {
     PlayerIdentity identity = player.GetIdentity();
@@ -93,6 +114,8 @@ modded class MissionServer {
       //LoggerDynPrint("debugger - player safe");
       return false;
     }
+    if (Dynamic_Spawncount > m_Dynamic_Groups.MaxAI) return false;
+
     return valid;
   }
 
@@ -120,6 +143,7 @@ modded class MissionServer {
         GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, CleanupTimer, false, sentry);
     }
     if (SpawnCount != 0) {
+      Dynamic_Spawncount += SpawnCount;
       Dynamic_message(player, MessageType, SpawnCount);
     }
   }
@@ -149,9 +173,32 @@ modded class MissionServer {
 
   //dirty cleanup
   void RemoveGroup(eAIBase target) {
+    Dynamic_Spawncount -= 1;
     if (target) {
       eAIGroup group = target.GetGroup();
       if (group) group.ClearAI();
+    }
+  }
+
+  void Dynamic_Movement(eAIBase ai, PlayerBase player){
+    switch (m_Dynamic_Groups.HuntMode)
+    {
+        case 1:
+        {
+          ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+          player.GetTargetInformation().AddAI(ai, EngageTimer);
+            break;
+        }
+        case 2:
+        {
+          ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+            break;
+        }
+        case 3:
+        {
+           // just spawn, dont chase unless standard internal contitions met.
+            break;
+        }
     }
   }
 
@@ -159,15 +206,8 @@ modded class MissionServer {
   eAIBase SpawnAI_Dynamic(vector pos, PlayerBase player) {
     eAIBase ai;
     if (!Class.CastTo(ai, GetGame().CreateObject(GetRandomAI(), pos))) return null;
-    if (player.CheckZone() == true) {
-      ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-      if (m_Dynamic_Groups.HuntMode == 1) player.GetTargetInformation().AddAI(ai, EngageTimer); 
-      return ai;
-    }
     ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
-    ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-    if (m_Dynamic_Groups.HuntMode == 1) player.GetTargetInformation().AddAI(ai, EngageTimer);
+    Dynamic_Movement(ai, player);
     return ai;
   }
   // Ingame chat message
@@ -204,11 +244,28 @@ modded class MissionServer {
       JsonFileLoader < Dynamic_Groups > .JsonLoadFile(EXP_AI_DYNAMIC_SETTINGS, m_Dynamic_Groups);
       LoggerDynPrint("Loading config (" + EXP_AI_DYNAMIC_SETTINGS + ")");
     }
-    if (m_Dynamic_Groups.Version != 10) { // dont like this. change it.
+    if (m_Dynamic_Groups.Version != 11) { // dont like this. change it.
       LoggerDynPrint("Settings File Out of date. Please delete and restart server.");
       Dynamic_Version = false;
       return;
     }
+    if (m_Dynamic_Groups.MaxAI < 1) {
+      LoggerDynPrint("MaxAI set under 1, disabling Dynamic AI.");
+      Dynamic_Version = false;
+      return;
+    } 
+    if (m_Dynamic_Groups.PlayerChecks < 0) {
+      LoggerDynPrint("PlayerChecks set under 0, disabling Dynamic AI.");
+      Dynamic_Version = false;
+      return;
+    }
+    if (m_Dynamic_Groups.PlayerChecks == 0) {
+      LoggerDynPrint("PlayerChecks set to 0, disabling player check limits.");
+      m_PlayerChecks = 0;
+    } else {
+      m_PlayerChecks = m_Dynamic_Groups.PlayerChecks;
+    }
+
     if (m_Dynamic_Groups.Dynamic_MinTimer < 300000) { // global minimum time of 5 mins 
       LoggerDynPrint("Timer Set too low. Defaulting to 5 minutes");
       m_Dynamic_Groups.Dynamic_MinTimer = 300000;
@@ -227,7 +284,7 @@ modded class MissionServer {
       m_Dynamic_Groups.MaxDistance = m_Dynamic_Groups.MinDistance + 20;
     }
     Dynamic_MaxDistance = m_Dynamic_Groups.MaxDistance;
-    if (m_Dynamic_Groups.HuntMode != 0 && m_Dynamic_Groups.HuntMode != 1) {
+    if (m_Dynamic_Groups.HuntMode < 0 && m_Dynamic_Groups.HuntMode > 3) {
       LoggerDynPrint("HuntMode setting wrong. setting to default.");
       m_Dynamic_Groups.HuntMode = 1;
     }
@@ -386,7 +443,7 @@ modded class MissionServer {
 }
 
 class Dynamic_Groups {
-  int Version = 10;
+  int Version = 11;
   int Dynamic_MinTimer = 1200000;
   int Dynamic_MaxTimer = 1200000;
   int MinDistance = 140;
@@ -395,6 +452,8 @@ class Dynamic_Groups {
   int Points_Enabled = 0;
   int EngageTimer = 300000;
   int CleanupTimer = 360000;
+  int PlayerChecks = 0;
+  int MaxAI = 20;
   int MessageType = 1;
   string MessageTitle = "Dynamic AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";
