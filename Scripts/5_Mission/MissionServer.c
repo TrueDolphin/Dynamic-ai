@@ -37,6 +37,7 @@ modded class MissionServer {
   private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
 
+
   void MissionServer() {
     InitDynamicSettings();
     initDynamicTriggers();
@@ -64,32 +65,19 @@ modded class MissionServer {
 
   // new loop
   void Dynamic2Check(){
-    int i = 0;
     GetGame().GetPlayers(Dynamic_PlayerList);
     if (Dynamic_PlayerList.Count() == 0) return;
-    while (Dynamic_PlayerList.Count() != 0){
-    if (m_PlayerChecks == 0){
-      PlayerBase player = PlayerBase.Cast(Dynamic_PlayerList.GetRandomElement());
-      Dynamic_PlayerList.RemoveItem(player);
+    for (int i = 0; i < Dynamic_PlayerList.Count(); i++) {
+       PlayerBase player = PlayerBase.Cast(Dynamic_PlayerList.GetRandomElement());
+       Dynamic_PlayerList.RemoveItem(player);
       if (!player || !player.IsAlive() || !player.GetIdentity()) continue;
-      
       #ifdef EXPANSIONMODSPAWNSELECTION
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
       if (ValidPlayer(player)) GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
-    } else {
-      i++;
-      PlayerBase player2 = PlayerBase.Cast(Dynamic_PlayerList.GetRandomElement());
-      Dynamic_PlayerList.RemoveItem(player2);
-      if (!player2 || !player2.IsAlive() || !player2.GetIdentity()) continue;
-      
-      #ifdef EXPANSIONMODSPAWNSELECTION
-      if (InRespawnMenu(player2.GetIdentity())) continue;
-      #endif
-      if (ValidPlayer(player2)) GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
-      if (i == m_PlayerChecks) return;
-    }
-
+      if (m_PlayerChecks != 0){
+       if (i == m_PlayerChecks) return;
+      }
     }
   }
 
@@ -202,7 +190,7 @@ modded class MissionServer {
     }
   }
 
-  // generic sentry spawn, loadout set and positional stuff
+  // generic sentry spawn and positional stuff
   eAIBase SpawnAI_Dynamic(vector pos, PlayerBase player) {
     eAIBase ai;
     if (!Class.CastTo(ai, GetGame().CreateObject(GetRandomAI(), pos))) return null;
