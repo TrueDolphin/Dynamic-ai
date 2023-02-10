@@ -21,9 +21,14 @@ class CfgMods
 		version = "0.1";
 		extra = 0;
 		type = "servermod";
-		dependencies[] = {"World","Mission"};
+		dependencies[] = {"Game","World","Mission"};
 		class defs
 		{
+			class gameScriptModule
+			{
+				value = "";
+				files[] = {"dolphin/DayZ-Expansion-AI-Dynamic/Scripts/3_Game"};
+			};
 			class worldScriptModule
 			{
 				value = "";
