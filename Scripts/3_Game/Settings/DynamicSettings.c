@@ -1,11 +1,10 @@
 /*
-10/2/2022
+10/2/2023
 dynamic settings
 tldr - learning
 */
-class DynamicSettings
-{
-//declares
+class DynamicSettings {
+  //declares
   private const static string EXP_DYNAMIC_FOLDER = "$profile:ExpansionMod\\AI\\Dynamic\\";
   private const static string EXP_AI_DYNAMIC_SETTINGS = EXP_DYNAMIC_FOLDER + "DynamicSettings.json";
   const int SZ_IN_SAFEZONE = 0x0001;
@@ -20,11 +19,11 @@ class DynamicSettings
   bool m_Dynamic_TPSafeZone;
   bool m_Dynamic_InOwnTerritory;
 
- //refs
+  //refs
   ref Dynamic_Groups m_Dynamic_Groups;
 
-//init
-bool Init(){
+  //init
+  bool Init() {
     Load();
     if (m_Dynamic_Total < 0) {
       Print("Dynamic AI Config Error - Disabled");
@@ -36,18 +35,16 @@ bool Init(){
       }
     }
     return false;
-}
+  }
 
-//load ref to use location
-void PullRef(out Dynamic_Groups Data){
+  //load ref to use location
+  void PullRef(out Dynamic_Groups Data) {
     if (!m_Dynamic_Groups) Load();
     Data = m_Dynamic_Groups;
-}
+  }
 
-//load from file/data checks
-void Load() 
-{
-    //loggerPrint("Dynamic Config Loader Start");
+  //load from file/data checks
+  void Load() {
     if (!FileExist(EXP_AI_DYNAMIC_SETTINGS)) {
       if (!FileExist(EXP_DYNAMIC_FOLDER))
         MakeDirectory(EXP_DYNAMIC_FOLDER);
@@ -68,7 +65,7 @@ void Load()
       loggerPrint("MaxAI set under 1, disabling Dynamic AI.");
       Dynamic_Version = false;
       return;
-    } 
+    }
     if (m_Dynamic_Groups.PlayerChecks < 0) {
       loggerPrint("PlayerChecks set under 0, disabling Dynamic AI.");
       Dynamic_Version = false;
@@ -79,7 +76,7 @@ void Load()
       loggerPrint("Timer Set too low. Defaulting to 5 minutes");
       m_Dynamic_Groups.Dynamic_MinTimer = 300000;
     }
-    if (m_Dynamic_Groups.Dynamic_MaxTimer < m_Dynamic_Groups.Dynamic_MinTimer) { 
+    if (m_Dynamic_Groups.Dynamic_MaxTimer < m_Dynamic_Groups.Dynamic_MinTimer) {
       loggerPrint("Max Timer set lower than min timer, setting to the same.");
       m_Dynamic_Groups.Dynamic_MaxTimer = m_Dynamic_Groups.Dynamic_MinTimer;
     }
@@ -95,8 +92,7 @@ void Load()
       loggerPrint("HuntMode setting wrong. setting to default.");
       m_Dynamic_Groups.HuntMode = 1;
     }
-    if (m_Dynamic_Groups.Points_Enabled == 0) {
-    } else if (m_Dynamic_Groups.Points_Enabled == 1) {
+    if (m_Dynamic_Groups.Points_Enabled == 0) {} else if (m_Dynamic_Groups.Points_Enabled == 1) {
       foreach(Dynamic_Point point: m_Dynamic_Groups.Point) {
         if (point.Dynamic_Radius < 0) {
           loggerPrint("Radius on group incorrect, setting to 100m");
@@ -111,11 +107,10 @@ void Load()
           point.Dynamic_Safe = 1;
         }
         eAIFaction faction = eAIFaction.Create(point.Dynamic_Faction);
-			  if (!faction)
-			  {
-        loggerPrint("Faction not correct: " + point.Dynamic_Faction);
-				point.Dynamic_Faction = "Raiders";
-			  }
+        if (!faction) {
+          loggerPrint("Faction not correct: " + point.Dynamic_Faction);
+          point.Dynamic_Faction = "Raiders";
+        }
       }
     } else {
       loggerPrint("error, disabling points");
@@ -150,7 +145,7 @@ void Load()
       loggerPrint("Message text error. setting default.");
       m_Dynamic_Groups.MessageText = "AI Spotted in the Area. Be Careful.";
     }
-    if (m_Dynamic_Groups.Lootable < 0 && m_Dynamic_Groups.Lootable > 4){
+    if (m_Dynamic_Groups.Lootable < 0 && m_Dynamic_Groups.Lootable > 4) {
       m_Dynamic_Groups.Lootable = 0;
       loggerPrint("lootable check error. setting default to no.");
     }
@@ -210,17 +205,14 @@ void Load()
         loggerPrint("Loadout Not Found: " + group.Dynamic_Loadout);
         continue;
       }
-        eAIFaction faction2 = eAIFaction.Create(group.Dynamic_Faction);
-			  if (!faction2)
-			  {
+      eAIFaction faction2 = eAIFaction.Create(group.Dynamic_Faction);
+      if (!faction2) {
         loggerPrint("Faction not correct: " + group.Dynamic_Faction);
-				group.Dynamic_Faction = "Raiders";
-			  }
+        group.Dynamic_Faction = "Raiders";
+      }
       m_Dynamic_Total += 1;
     }
-    //loggerPrint("Dynamic Config Loader End");
   }
-
 
   //generate default array data
   void DefaultDynamicSettings(out Dynamic_Groups Data) {
@@ -240,43 +232,42 @@ void Load()
       GetExpansionSettings().GetLog().PrintLog("[Dynamic Settings] " + msg);
   }
 
-
-//returns
-    int Dynamic_Total(){
+  //returns
+  int Dynamic_Total() {
     return m_Dynamic_Total;
   }
 
-  bool Dynamic_InVehicle(){
+  bool Dynamic_InVehicle() {
     return m_Dynamic_InVehicle;
   }
 
-  bool Dynamic_IsBleeding(){
+  bool Dynamic_IsBleeding() {
     return m_Dynamic_IsBleeding;
   }
 
-  bool Dynamic_IsRestrained(){
+  bool Dynamic_IsRestrained() {
     return m_Dynamic_IsRestrained;
   }
 
-  bool Dynamic_IsUnconscious(){
+  bool Dynamic_IsUnconscious() {
     return m_Dynamic_IsUnconscious;
   }
 
-  bool Dynamic_IsInSafeZone(){
+  bool Dynamic_IsInSafeZone() {
     return m_Dynamic_IsInSafeZone;
   }
 
-  bool Dynamic_TPSafeZone(){
+  bool Dynamic_TPSafeZone() {
     return m_Dynamic_TPSafeZone;
   }
 
-  bool Dynamic_InOwnTerritory(){
+  bool Dynamic_InOwnTerritory() {
     return m_Dynamic_InOwnTerritory;
   }
 
-  TStringArray Dynamic_WhiteList(){
+  TStringArray Dynamic_WhiteList() {
     if (!m_Dynamic_Groups) Load();
-     return m_Dynamic_Groups.LootWhitelist;
+    return m_Dynamic_Groups.LootWhitelist;
   }
 
 }
@@ -297,7 +288,11 @@ class Dynamic_Groups {
   string MessageTitle = "Dynamic AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";
   int Lootable = 0;
-  ref TStringArray LootWhitelist = {"Expansion_AWM","AKM","M4A1"};
+  ref TStringArray LootWhitelist = {
+    "Expansion_AWM",
+    "AKM",
+    "M4A1"
+  };
   bool Dynamic_InVehicle = false;
   bool Dynamic_IsBleeding = false;
   bool Dynamic_IsRestrained = false;
@@ -345,17 +340,13 @@ class Dynamic_Point {
   }
 };
 
-
+//expansion-external data access
 static ref DynamicSettings g_DynamicSettings;
 
-static DynamicSettings GetDynamicSettings()
-{
-	if ( g_DynamicSettings == NULL )
-	{
-		g_DynamicSettings = new DynamicSettings();
-		g_DynamicSettings.Load();
-
-	}
-
-	return g_DynamicSettings;
+static DynamicSettings GetDynamicSettings() {
+  if (g_DynamicSettings == NULL) {
+    g_DynamicSettings = new DynamicSettings();
+    g_DynamicSettings.Load();
+  }
+  return g_DynamicSettings;
 }
