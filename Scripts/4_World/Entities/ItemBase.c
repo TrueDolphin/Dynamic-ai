@@ -9,6 +9,7 @@ modded class ItemBase
 
         if (GetDynamicSettings().Dynamic_WhiteList() != NULL) {        
             foreach (string pName : GetDynamicSettings().Dynamic_WhiteList()){
+            if (!pName) return;
             if (IsKindOf(pName)) pState = true;
             }
         }
