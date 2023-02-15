@@ -1,7 +1,13 @@
-//name:TrueDolphin
-//date:10/2/2023
-//dynamic ai spawns
+/*
+name:TrueDolphin
+date:15/2/2023
+dynamic ai spawns
 
+this is becoming unwieldly again on server performance per check.
+triggers helped a lot, but idk what else to do as far as optimisation goes besides notes.
+stripped a lot of useless stuff out when moved settings back to 3_Game.
+
+*/
 modded class MissionServer {
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
@@ -13,6 +19,7 @@ modded class MissionServer {
   #ifdef EXPANSIONMODSPAWNSELECTION
   private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
+
 
   void MissionServer() {
     if (GetDynamicSettings().Init() == true) {
@@ -30,10 +37,11 @@ modded class MissionServer {
     int m_cor;
     m_cor = Math.RandomIntInclusive(m_Dynamic_Groups.Dynamic_MinTimer, m_Dynamic_Groups.Dynamic_MaxTimer);
     LoggerDynPrint("Next valid check in: " + m_cor + "ms");
-    GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.DynamicTimer, m_cor, false); // horaaah.
+    GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.DynamicTimer, m_cor, false);
   }
 
   //step 2 check
+  //standard loop through playerlist pulling randomly and removing that from list.
   void Dynamic2Check() {
     GetGame().GetPlayers(Dynamic_PlayerList);
     if (Dynamic_PlayerList.Count() == 0) return;
@@ -44,6 +52,7 @@ modded class MissionServer {
       #ifdef EXPANSIONMODSPAWNSELECTION
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
+      //this is shitty..)
       if (ValidPlayer(player)) GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
       if (m_Dynamic_Groups.PlayerChecks != 0) {
         if (i == m_Dynamic_Groups.PlayerChecks) return;
@@ -52,6 +61,7 @@ modded class MissionServer {
   }
 
   //checks and overrides
+  //this is slow i think. but idk how to optimise this
   bool ValidPlayer(PlayerBase player) {
     PlayerIdentity identity = player.GetIdentity();
     bool valid = true;
@@ -79,6 +89,7 @@ modded class MissionServer {
   }
 
   //create and faction stuff
+  //it's a mess
   void LocalSpawn(PlayerBase player) {
     m_cur = Math.RandomIntInclusive(0, m_Dynamic_Groups.Group.Count() - 1);
     int SpawnCount;
@@ -141,11 +152,20 @@ modded class MissionServer {
     case 3: {
       // just spawn, dont chase unless standard internal contitions met.
       break;
+    /*
+    actually want to do across from player, then in a square. but filler content
+    case 4:{
+    ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+    ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 120));
+    ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 120));
+    }
+    */
     }
     }
   }
 
   //Lootable parse
+  //could probably be neater.
   void Dynamic_LootCheck(eAIBase ai) {
     switch (m_Dynamic_Groups.Lootable) {
     case 0: {
@@ -188,6 +208,7 @@ modded class MissionServer {
   #endif
 
   //trigger zone initialisation
+  //fine i guess
   void InitDynamicTriggers() {
     if (m_Dynamic_Groups.Points_Enabled == 1) {
       LoggerDynPrint("Points Enabled");
@@ -205,6 +226,7 @@ modded class MissionServer {
   }
 
   //chat message or vanilla notification
+  //change to switch reverse order string building
   void Dynamic_message(PlayerBase player, int msg_no, int SpawnCount) {
     if (msg_no == 0) {
       LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
