@@ -187,7 +187,7 @@ class DynamicSettings {
     m_Dynamic_Total = 0;
     foreach(Dynamic_Group group: m_Dynamic_Groups.Group) {
 
-      if (!group.Dynamic_MinCount) {
+      if (group.Dynamic_MinCount < 0) {
         group.Dynamic_MinCount = 0;
         loggerPrint("Dynamic_MinCount error, setting to 0");
         continue;
