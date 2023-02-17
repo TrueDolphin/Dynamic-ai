@@ -189,7 +189,7 @@ class DynamicSettings {
 
       if (group.Dynamic_MinCount < 0) {
         group.Dynamic_MinCount = 0;
-        loggerPrint("Dynamic_MinCount error, setting to 0");
+        loggerPrint("Group Dynamic_MinCount error, setting to 0");
         continue;
       }
 
