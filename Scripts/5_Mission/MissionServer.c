@@ -20,7 +20,6 @@ modded class MissionServer {
   private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
 
-
   void MissionServer() {
     if (GetDynamicSettings().Init() == true) {
       GetDynamicSettings().PullRef(m_Dynamic_Groups);
@@ -53,7 +52,7 @@ modded class MissionServer {
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
       //this is shitty..)
-      if (ValidPlayer(player)) GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
+      if (CanSpawn(player)) GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
       if (m_Dynamic_Groups.PlayerChecks != 0) {
         if (i == m_Dynamic_Groups.PlayerChecks) return;
       }
@@ -62,22 +61,29 @@ modded class MissionServer {
 
   //checks and overrides
   //this is slow i think. but idk how to optimise this
-  bool ValidPlayer(PlayerBase player) {
+  bool CanSpawn(PlayerBase player) {
     PlayerIdentity identity = player.GetIdentity();
     bool valid = true;
+
+    //isnt as expected..
+    //LoggerDynPrint("player :" + player.GetIdentity().GetName() + " lifetime :" + player.GetLifeSpanState());
+
     #ifdef EXPANSIONMODBASEBUILDING
-    if (player.IsInsideOwnTerritory() != GetDynamicSettings().Dynamic_InOwnTerritory()) {
+    if (player.IsInsideOwnTerritory() && !GetDynamicSettings().Dynamic_InOwnTerritory()) {
       return false;
     }
     #endif
-    if (player.IsInVehicle() != GetDynamicSettings().Dynamic_InVehicle() && player.Expansion_IsInSafeZone() != GetDynamicSettings().Dynamic_IsInSafeZone() && player.IsBleeding() != GetDynamicSettings().Dynamic_IsBleeding() && player.IsRestrained() != GetDynamicSettings().Dynamic_IsRestrained() && player.IsUnconscious() != GetDynamicSettings().Dynamic_IsUnconscious()) {
+
+    if (player.IsInVehicle() && !GetDynamicSettings().Dynamic_InVehicle() || player.Expansion_IsInSafeZone() && !GetDynamicSettings().Dynamic_IsInSafeZone() || player.IsBleeding() && !GetDynamicSettings().Dynamic_IsBleeding() || player.IsRestrained() && !GetDynamicSettings().Dynamic_IsRestrained() || player.IsUnconscious() && !GetDynamicSettings().Dynamic_IsUnconscious()) {
       return false;
     }
+
     #ifdef SZDEBUG
-    if (player.GetSafeZoneStatus() == SZ_IN_SAFEZONE && GetDynamicSettings().Dynamic_TPSafeZone() == false) {
+    if (player.GetSafeZoneStatus() == SZ_IN_SAFEZONE && !GetDynamicSettings().Dynamic_TPSafeZone()) {
       return false;
     }
     #endif
+
     if (m_Dynamic_Groups.Points_Enabled == 1 && player.CheckSafe()) {
       return false;
     }
@@ -152,14 +158,15 @@ modded class MissionServer {
     case 3: {
       // just spawn, dont chase unless standard internal contitions met.
       break;
-    /*
-    actually want to do across from player, then in a square. but filler content
-    case 4:{
-    ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-    ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 120));
-    ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 120));
     }
-    */
+    case 4: {
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      break;
     }
     }
   }
