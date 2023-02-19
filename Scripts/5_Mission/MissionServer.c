@@ -114,7 +114,7 @@ modded class MissionServer {
       return false;
     }
     #endif
-
+    //main overrides checks
     if (player.IsInVehicle() && !GetDynamicSettings().Dynamic_InVehicle() || player.Expansion_IsInSafeZone() && !GetDynamicSettings().Dynamic_IsInSafeZone() || player.IsBleeding() && !GetDynamicSettings().Dynamic_IsBleeding() || player.IsRestrained() && !GetDynamicSettings().Dynamic_IsRestrained() || player.IsUnconscious() && !GetDynamicSettings().Dynamic_IsUnconscious()) {
       return false;
     }
@@ -140,12 +140,13 @@ modded class MissionServer {
   void LocalSpawn(PlayerBase player) {
     m_cur = Math.RandomIntInclusive(0, m_Dynamic_Groups.Group.Count() - 1);
     int SpawnCount;
+    vector m_pos;
     if (player.CheckZone() == true) {
       SpawnCount = Math.RandomIntInclusive(player.Dynamic_MinCount, player.Dynamic_MaxCount);
     } else {
       SpawnCount = Math.RandomIntInclusive(m_Dynamic_Groups.Group[m_cur].Dynamic_MinCount, m_Dynamic_Groups.Group[m_cur].Dynamic_MaxCount);
     }
-    vector m_pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Dynamic_Groups.MinDistance, m_Dynamic_Groups.MaxDistance)));
+    m_pos = ValidPos(player);
     for (int i = 0; i < SpawnCount; i++) {
       m_Dynamic_cur = i;
       eAIBase sentry;
@@ -165,6 +166,27 @@ modded class MissionServer {
       Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount);
     }
   }
+
+
+  //could be scuffed
+  vector ValidPos(PlayerBase player){
+    vector pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Dynamic_Groups.MinDistance, m_Dynamic_Groups.MaxDistance)));
+    float x, z;
+    x = pos[0];
+    z = pos[2];
+    int i = 0;
+    while (GetGame().SurfaceIsSea(x, z) || GetGame().SurfaceIsPond(x, z))
+		{
+      pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Dynamic_Groups.MinDistance, m_Dynamic_Groups.MaxDistance)));
+      x = pos[0];
+      z = pos[2];
+      //i++;
+      //Print(i.ToString());
+    }
+    return pos;
+  }
+
+
 
   //dirty cleanup
   void RemoveGroup(eAIBase target) {

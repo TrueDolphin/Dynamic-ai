@@ -1,7 +1,6 @@
 /*
-10/2/2023
+19/2/2023
 dynamic settings
-tldr - learning
 */
 class DynamicSettings {
   //declares
