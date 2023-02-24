@@ -21,14 +21,19 @@ modded class MissionServer {
   #endif
 
   void MissionServer() {
+
+
     if (GetDynamicSettings().Init() == true) {
+
       GetDynamicSettings().PullRef(m_Dynamic_Groups);
       InitDynamicTriggers();
+
+
+      
       LoggerDynPrint("Dynamic AI Enabled");
       DynamicTimer();
     }
   }
-
 
   /*
   Template turned idea for mirroring internal patrols but with map warnings
@@ -72,10 +77,8 @@ modded class MissionServer {
 
   //timer call for varied check loops
   void DynamicTimer() {
-    GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).Remove(DynamicTimer);
     Dynamic2Check();
-    int m_cor;
-    m_cor = Math.RandomIntInclusive(m_Dynamic_Groups.Dynamic_MinTimer, m_Dynamic_Groups.Dynamic_MaxTimer);
+    int m_cor = Math.RandomIntInclusive(m_Dynamic_Groups.Dynamic_MinTimer, m_Dynamic_Groups.Dynamic_MaxTimer);
     LoggerDynPrint("Next valid check in: " + m_cor + "ms");
     GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.DynamicTimer, m_cor, false);
   }
@@ -138,29 +141,47 @@ modded class MissionServer {
   //create and faction stuff
   //it's a mess
   void LocalSpawn(PlayerBase player) {
+    if (!player) return;
     m_cur = Math.RandomIntInclusive(0, m_Dynamic_Groups.Group.Count() - 1);
     int SpawnCount;
     vector m_pos;
+    eAIGroup AiGroup;
+
     if (player.CheckZone() == true) {
       SpawnCount = Math.RandomIntInclusive(player.Dynamic_MinCount, player.Dynamic_MaxCount);
     } else {
       SpawnCount = Math.RandomIntInclusive(m_Dynamic_Groups.Group[m_cur].Dynamic_MinCount, m_Dynamic_Groups.Group[m_cur].Dynamic_MaxCount);
     }
     m_pos = ValidPos(player);
-    for (int i = 0; i < SpawnCount; i++) {
-      m_Dynamic_cur = i;
-      eAIBase sentry;
-      if (!player) return;
-      sentry = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
-      if (player.CheckZone() == true) {
-        sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
-        ExpansionHumanLoadout.Apply(sentry, player.Dynamic_Loadout(), true);
-      } else {
-        sentry.GetGroup().SetFaction(eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction));
-        ExpansionHumanLoadout.Apply(sentry, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
+    if (SpawnCount > 0){
+    if (!m_pos) return;
+          eAIBase sentry;
+          sentry = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
+          Dynamic_Movement(sentry, player);
+          AiGroup = sentry.GetGroup();
+          if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(sentry);
+          if (player.CheckZone() == true) {
+            sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
+            ExpansionHumanLoadout.Apply(sentry, player.Dynamic_Loadout(), true);
+          } else {
+            sentry.GetGroup().SetFaction(eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction));
+            ExpansionHumanLoadout.Apply(sentry, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
+          }
+      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, m_Dynamic_Groups.CleanupTimer, false, sentry, SpawnCount);
+  }
+    if (SpawnCount > 1){
+        for (int i = 1; i < SpawnCount; i++) {
+          m_Dynamic_cur = i;
+          eAIBase sentry2;
+          sentry2 = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
+          sentry2.SetGroup(AiGroup, false);
+          if (player.CheckZone() == true) {
+            ExpansionHumanLoadout.Apply(sentry2, player.Dynamic_Loadout(), true);
+          } else {
+            ExpansionHumanLoadout.Apply(sentry2, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
+          }
+        }
       }
-      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, m_Dynamic_Groups.CleanupTimer, false, sentry);
-    }
     if (SpawnCount != 0) {
       Dynamic_Spawncount += SpawnCount;
       Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount);
@@ -180,17 +201,18 @@ modded class MissionServer {
       pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Dynamic_Groups.MinDistance, m_Dynamic_Groups.MaxDistance)));
       x = pos[0];
       z = pos[2];
-      //i++;
-      //Print(i.ToString());
-    }
+      //i++; 
+      //LoggerDynPrint(i.ToString());
+    } 
+    //LoggerDynPrint("ValidPos LoopCount :" + i.ToString());
     return pos;
   }
 
 
 
   //dirty cleanup
-  void RemoveGroup(eAIBase target) {
-    Dynamic_Spawncount -= 1;
+  void RemoveGroup(eAIBase target, int count) {
+    Dynamic_Spawncount -= count;
     if (target) {
       eAIGroup group = target.GetGroup();
       if (group) group.ClearAI();
@@ -202,7 +224,7 @@ modded class MissionServer {
     eAIBase ai;
     if (!Class.CastTo(ai, GetGame().CreateObject(GetRandomAI(), pos))) return null;
     Dynamic_LootCheck(ai);
-    Dynamic_Movement(ai, player);
+    ai.eAI_SetAccuracy(0,0);
     return ai;
   }
 
@@ -219,7 +241,9 @@ modded class MissionServer {
       break;
     }
     case 3: {
+      /*
       // just spawn, dont chase unless standard internal contitions met.
+      */
       break;
     }
     case 4: {
@@ -231,6 +255,16 @@ modded class MissionServer {
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
       break;
     }
+      case 5:
+      {
+        float c = m_Dynamic_Groups.EngageTimer / 2500;
+        for (int i = 0; i < c; i++) {
+          int d = Math.RandomIntInclusive(0, 100);
+          if ( d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+          if ( d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
+          if ( d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
+        }
+      }
     }
   }
 
@@ -333,4 +367,5 @@ modded class MissionServer {
     if (GetExpansionSettings().GetLog().AIGeneral)
       GetExpansionSettings().GetLog().PrintLog("[Dynamic AI] " + msg);
   }
+
 };
