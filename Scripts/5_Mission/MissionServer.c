@@ -22,14 +22,11 @@ modded class MissionServer {
 
   void MissionServer() {
 
-
     if (GetDynamicSettings().Init() == true) {
 
       GetDynamicSettings().PullRef(m_Dynamic_Groups);
       InitDynamicTriggers();
 
-
-      
       LoggerDynPrint("Dynamic AI Enabled");
       DynamicTimer();
     }
@@ -73,7 +70,6 @@ modded class MissionServer {
 	}
 	#endif
 */
-
 
   //timer call for varied check loops
   void DynamicTimer() {
@@ -146,69 +142,64 @@ modded class MissionServer {
     int SpawnCount;
     vector m_pos;
     eAIGroup AiGroup;
-
     if (player.CheckZone() == true) {
       SpawnCount = Math.RandomIntInclusive(player.Dynamic_MinCount, player.Dynamic_MaxCount);
     } else {
       SpawnCount = Math.RandomIntInclusive(m_Dynamic_Groups.Group[m_cur].Dynamic_MinCount, m_Dynamic_Groups.Group[m_cur].Dynamic_MaxCount);
     }
     m_pos = ValidPos(player);
-    if (SpawnCount > 0){
-    if (!m_pos) return;
-          eAIBase sentry;
-          sentry = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
-          Dynamic_Movement(sentry, player);
-          AiGroup = sentry.GetGroup();
-          if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(sentry);
-          if (player.CheckZone() == true) {
-            sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
-            ExpansionHumanLoadout.Apply(sentry, player.Dynamic_Loadout(), true);
-          } else {
-            sentry.GetGroup().SetFaction(eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction));
-            ExpansionHumanLoadout.Apply(sentry, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
-          }
+    if (SpawnCount > 0) {
+      if (!m_pos) return;
+      eAIBase sentry;
+      sentry = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
+      Dynamic_Movement(sentry, player);
+      AiGroup = sentry.GetGroup();
+      if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(sentry);
+      if (player.CheckZone() == true) {
+        sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
+        ExpansionHumanLoadout.Apply(sentry, player.Dynamic_Loadout(), true);
+      } else {
+        sentry.GetGroup().SetFaction(eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction));
+        ExpansionHumanLoadout.Apply(sentry, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
+      }
       GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, m_Dynamic_Groups.CleanupTimer, false, sentry, SpawnCount);
-  }
-    if (SpawnCount > 1){
-        for (int i = 1; i < SpawnCount; i++) {
-          m_Dynamic_cur = i;
-          eAIBase sentry2;
-          sentry2 = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
-          sentry2.SetGroup(AiGroup, false);
-          if (player.CheckZone() == true) {
-            ExpansionHumanLoadout.Apply(sentry2, player.Dynamic_Loadout(), true);
-          } else {
-            ExpansionHumanLoadout.Apply(sentry2, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
-          }
+    }
+    if (SpawnCount > 1) {
+      for (int i = 1; i < SpawnCount; i++) {
+        m_Dynamic_cur = i;
+        eAIBase sentry2;
+        sentry2 = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
+        sentry2.SetGroup(AiGroup, false);
+        if (player.CheckZone() == true) {
+          ExpansionHumanLoadout.Apply(sentry2, player.Dynamic_Loadout(), true);
+        } else {
+          ExpansionHumanLoadout.Apply(sentry2, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
         }
       }
+    }
     if (SpawnCount != 0) {
       Dynamic_Spawncount += SpawnCount;
       Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount);
     }
   }
 
-
   //could be scuffed
-  vector ValidPos(PlayerBase player){
+  vector ValidPos(PlayerBase player) {
     vector pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Dynamic_Groups.MinDistance, m_Dynamic_Groups.MaxDistance)));
     float x, z;
     x = pos[0];
     z = pos[2];
     int i = 0;
-    while (GetGame().SurfaceIsSea(x, z) || GetGame().SurfaceIsPond(x, z))
-		{
+    while (GetGame().SurfaceIsSea(x, z) || GetGame().SurfaceIsPond(x, z)) {
       pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Dynamic_Groups.MinDistance, m_Dynamic_Groups.MaxDistance)));
       x = pos[0];
       z = pos[2];
       //i++; 
       //LoggerDynPrint(i.ToString());
-    } 
+    }
     //LoggerDynPrint("ValidPos LoopCount :" + i.ToString());
     return pos;
   }
-
-
 
   //dirty cleanup
   void RemoveGroup(eAIBase target, int count) {
@@ -224,7 +215,7 @@ modded class MissionServer {
     eAIBase ai;
     if (!Class.CastTo(ai, GetGame().CreateObject(GetRandomAI(), pos))) return null;
     Dynamic_LootCheck(ai);
-    ai.eAI_SetAccuracy(0,0);
+    ai.eAI_SetAccuracy(0, 0);
     return ai;
   }
 
@@ -255,17 +246,38 @@ modded class MissionServer {
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
       break;
     }
-      case 5:
-      {
-        float c = m_Dynamic_Groups.EngageTimer / 2500;
-        for (int i = 0; i < c; i++) {
-          int d = Math.RandomIntInclusive(0, 100);
-          if ( d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
-          if ( d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
-          if ( d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
-        }
+    case 5: {
+      float c = m_Dynamic_Groups.EngageTimer / 2500;
+      for (int i = 0; i < c; i++) {
+        int d = Math.RandomIntInclusive(0, 100);
+        if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+        if (d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
+        if (d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
       }
     }
+    case 6: {
+      //curious idea..
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
+      TrailTrigger(ai, player);
+    }
+    }
+  }
+
+  //trigger and looped delete/create so they follow the player.
+  void TrailTrigger(eAIBase ai, PlayerBase player) {
+    Reactive_Trigger Reactive_trigger = Reactive_Trigger.Cast(GetGame().CreateObjectEx("Reactive_Trigger", ai.GetPosition(), ECE_NONE));
+    Reactive_trigger.SetCollisionCylinder(90, 90 / 2);
+    Reactive_trigger.Dynamic_SetData(ai, player, 70, 5000);
+    thread TrailTimer(ai, player, Reactive_trigger);
+  }
+  void TrailTimer(eAIBase ai, PlayerBase player, Reactive_Trigger trigger) {
+    Sleep(10000);
+    if (!ai || !player || !trigger) return;
+    trigger.Delete();
+    Reactive_Trigger Reactive_trigger = Reactive_Trigger.Cast(GetGame().CreateObjectEx("Reactive_Trigger", ai.GetPosition(), ECE_NONE));
+    Reactive_trigger.SetCollisionCylinder(80, 80 / 2);
+    Reactive_trigger.Dynamic_SetData(ai, player, 80, 5000);
+    thread TrailTimer(ai, player, Reactive_trigger);
   }
 
   //Lootable parse
