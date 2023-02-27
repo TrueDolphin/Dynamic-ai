@@ -220,7 +220,7 @@ modded class MissionServer {
     case 6: {
       //curious idea..
       group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-      TrailingGroup(ai, player, "0 0 0");
+     thread TrailingGroup(ai, player, "0 0 0");
     }
     }
   }
