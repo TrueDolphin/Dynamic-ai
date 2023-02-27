@@ -1,3 +1,30 @@
+
+
+
+
+/*
+  idea. changed idea.
+      //TrailTrigger(ai, player);
+
+  //trigger and looped delete/create so they follow the player.
+  void TrailTrigger(eAIBase ai, PlayerBase player) {
+    Reactive_Trigger Reactive_trigger = Reactive_Trigger.Cast(GetGame().CreateObjectEx("Reactive_Trigger", ai.GetPosition(), ECE_NONE));
+    Reactive_trigger.SetCollisionCylinder(90, 90 / 2);
+    Reactive_trigger.Dynamic_SetData(ai, player, 60, 5000);
+    thread TrailTimer(ai, player, Reactive_trigger);
+  }
+  void TrailTimer(eAIBase ai, PlayerBase player, Reactive_Trigger trigger) {
+    Sleep(10000);
+    if (!ai || !player || !trigger) return;
+    trigger.Delete();
+    Reactive_Trigger Reactive_trigger = Reactive_Trigger.Cast(GetGame().CreateObjectEx("Reactive_Trigger", ai.GetPosition(), ECE_NONE));
+    Reactive_trigger.SetCollisionCylinder(90, 90 / 2);
+    Reactive_trigger.Dynamic_SetData(ai, player, 60, 5000);
+    thread TrailTimer(ai, player, Reactive_trigger);
+  }
+ */
+
+
 class Reactive_Trigger: CylinderTrigger {
   eAIBase c_ai;
   PlayerBase c_player;
@@ -27,23 +54,19 @@ class Reactive_Trigger: CylinderTrigger {
       return;
     }
     if (player == c_player) {
-      if (c_allow) {
+      if (!c_running) {
+        thread AllowTail(this);
         eAIGroup AiGroup = eAIGroup.Cast(c_ai.GetGroup());
         if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(c_ai);
         c_ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), c_TailDistance, c_TailDistance + 20));
-        c_allow = false;
-      } else {
-        if (c_running) return;
-        c_running = true;
-        thread AllowTail(this);
       }
     }
   }
 
   void AllowTail(Reactive_Trigger trigger) {
+    c_running = true;
     Sleep(c_Cooldown);
     if (!trigger) return;
-    c_allow = true;
     c_running = false;
   }
 

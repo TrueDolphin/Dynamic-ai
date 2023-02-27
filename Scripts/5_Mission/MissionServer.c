@@ -32,45 +32,6 @@ modded class MissionServer {
     }
   }
 
-  /*
-  Template turned idea for mirroring internal patrols but with map warnings
-  requires navigation so....questionable for native additions.
-
-      #ifdef EXPANSIONMODNAVIGATION
-      CreateMissionMarker("Test Position", player.GetPosition(), 5);
-	    #endif
-
-	#ifdef EXPANSIONMODNAVIGATION
-
-	private ExpansionMarkerModule m_MarkerModule;
-	private ExpansionMarkerData m_ServerMarker;
-
-	void CreateMissionMarker(string markerName, vector location, int timer)
-	{
-		if (!m_MarkerModule){
-      initMarkerModule();
-      if (!m_MarkerModule) {
-        Print("MarkerModule error");
-        return;
-      }
-    }
-		m_ServerMarker = m_MarkerModule.CreateServerMarker( markerName, "Territory", location, ARGB(255, 235, 59, 90), true);
-   GetGame().GetCallQueue( CALL_CATEGORY_SYSTEM ).CallLater( this.RemoveMissionMarker, timer, false, m_ServerMarker.GetUID());
-				 
-	}
-  void initMarkerModule(){
-    CF_Modules<ExpansionMarkerModule>.Get(m_MarkerModule);
-  }
-
-	void RemoveMissionMarker(string uid)
-	{
-		if ( !m_ServerMarker )
-			return;
-		m_MarkerModule.RemoveServerMarker( uid );
-	}
-	#endif
-*/
-
   //timer call for varied check loops
   void DynamicTimer() {
     Dynamic2Check();
@@ -221,14 +182,15 @@ modded class MissionServer {
 
   //Hunt parse
   void Dynamic_Movement(eAIBase ai, PlayerBase player) {
+    eAIGroup group = ai.GetGroup();
     switch (m_Dynamic_Groups.HuntMode) {
     case 1: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
       player.GetTargetInformation().AddAI(ai, m_Dynamic_Groups.EngageTimer);
       break;
     }
     case 2: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
       break;
     }
     case 3: {
@@ -238,47 +200,45 @@ modded class MissionServer {
       break;
     }
     case 4: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
       break;
     }
     case 5: {
       float c = m_Dynamic_Groups.EngageTimer / 2500;
       for (int i = 0; i < c; i++) {
         int d = Math.RandomIntInclusive(0, 100);
-        if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
-        if (d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
-        if (d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
+        if (d < 16) group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+        if (d > 15 && d < 95) group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
+        if (d > 94) group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
       }
     }
     case 6: {
       //curious idea..
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-      TrailTrigger(ai, player);
+      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
+      TrailingGroup(ai, player, "0 0 0");
     }
     }
   }
 
-  //trigger and looped delete/create so they follow the player.
-  void TrailTrigger(eAIBase ai, PlayerBase player) {
-    Reactive_Trigger Reactive_trigger = Reactive_Trigger.Cast(GetGame().CreateObjectEx("Reactive_Trigger", ai.GetPosition(), ECE_NONE));
-    Reactive_trigger.SetCollisionCylinder(90, 90 / 2);
-    Reactive_trigger.Dynamic_SetData(ai, player, 70, 5000);
-    thread TrailTimer(ai, player, Reactive_trigger);
+  //less code than triggers.
+  void TrailingGroup(eAIBase ai, PlayerBase player, vector pos) {
+    Sleep(15000);
+    if (!player || !ai) {
+      return;
+    }
+    if (pos == ai.GetPosition()) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
+    if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 100) {
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+    }
+    pos = ai.GetPosition();
+    thread TrailingGroup(ai, player, pos);
   }
-  void TrailTimer(eAIBase ai, PlayerBase player, Reactive_Trigger trigger) {
-    Sleep(10000);
-    if (!ai || !player || !trigger) return;
-    trigger.Delete();
-    Reactive_Trigger Reactive_trigger = Reactive_Trigger.Cast(GetGame().CreateObjectEx("Reactive_Trigger", ai.GetPosition(), ECE_NONE));
-    Reactive_trigger.SetCollisionCylinder(80, 80 / 2);
-    Reactive_trigger.Dynamic_SetData(ai, player, 80, 5000);
-    thread TrailTimer(ai, player, Reactive_trigger);
-  }
+
 
   //Lootable parse
   //could probably be neater.
