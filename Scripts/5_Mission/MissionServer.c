@@ -221,24 +221,23 @@ modded class MissionServer {
       thread TrailingGroup(ai, player, player.GetPosition(), 15000);
     }
     }
-
   }
 
   //less code than triggers.
   void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
     Sleep(timer);
-    if (!player || !ai) {
-      return;
+    if (!player || !ai) return;
+    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
+    if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(ai);
+    if (pos == player.GetPosition()){
+      if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
     }
-    if (pos == player.GetPosition()) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
-    
     if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 100) {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+      if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
     }
-    pos = player.GetPosition();
+    if (player) pos = player.GetPosition();
     thread TrailingGroup(ai, player, pos, timer);
   }
-
 
   //Lootable parse
   //could probably be neater.
@@ -304,6 +303,7 @@ modded class MissionServer {
   //chat message or vanilla notification
   //change to switch reverse order string building
   void Dynamic_message(PlayerBase player, int msg_no, int SpawnCount) {
+    if (!player) return;
     if (msg_no == 0) {
       LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
     }
