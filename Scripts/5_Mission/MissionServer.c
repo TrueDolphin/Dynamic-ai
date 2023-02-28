@@ -23,14 +23,13 @@ modded class MissionServer {
   void MissionServer() {
 
     if (GetDynamicSettings().Init() == true) {
-
       GetDynamicSettings().PullRef(m_Dynamic_Groups);
       InitDynamicTriggers();
-
       LoggerDynPrint("Dynamic AI Enabled");
       DynamicTimer();
     }
   }
+
 
   //timer call for varied check loops
   void DynamicTimer() {
@@ -182,15 +181,14 @@ modded class MissionServer {
 
   //Hunt parse
   void Dynamic_Movement(eAIBase ai, PlayerBase player) {
-    eAIGroup group = ai.GetGroup();
     switch (m_Dynamic_Groups.HuntMode) {
     case 1: {
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
       player.GetTargetInformation().AddAI(ai, m_Dynamic_Groups.EngageTimer);
       break;
     }
     case 2: {
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
       break;
     }
     case 3: {
@@ -200,43 +198,45 @@ modded class MissionServer {
       break;
     }
     case 4: {
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
       break;
     }
     case 5: {
       float c = m_Dynamic_Groups.EngageTimer / 2500;
       for (int i = 0; i < c; i++) {
         int d = Math.RandomIntInclusive(0, 100);
-        if (d < 16) group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
-        if (d > 15 && d < 95) group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
-        if (d > 94) group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
+        if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+        if (d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
+        if (d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
       }
     }
     case 6: {
       //curious idea..
-      group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-      TrailingGroup(ai, player, "0 0 0");
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
+      thread TrailingGroup(ai, player, player.GetPosition(), 15000);
     }
     }
+
   }
 
   //less code than triggers.
-  void TrailingGroup(eAIBase ai, PlayerBase player, vector pos) {
-    Sleep(15000);
+  void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
+    Sleep(timer);
     if (!player || !ai) {
       return;
     }
-    if (pos == ai.GetPosition()) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
+    if (pos == player.GetPosition()) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
+    
     if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 100) {
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
     }
-    pos = ai.GetPosition();
-    thread TrailingGroup(ai, player, pos);
+    pos = player.GetPosition();
+    thread TrailingGroup(ai, player, pos, timer);
   }
 
 

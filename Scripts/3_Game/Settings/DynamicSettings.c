@@ -87,7 +87,7 @@ class DynamicSettings {
       loggerPrint("Max distance under min distance. setting +20m");
       m_Dynamic_Groups.MaxDistance = m_Dynamic_Groups.MinDistance + 20;
     }
-    if (m_Dynamic_Groups.HuntMode < 0 && m_Dynamic_Groups.HuntMode > 3) {
+    if (m_Dynamic_Groups.HuntMode < 0 || m_Dynamic_Groups.HuntMode > 8) {
       loggerPrint("HuntMode setting wrong. setting to default.");
       m_Dynamic_Groups.HuntMode = 1;
     }

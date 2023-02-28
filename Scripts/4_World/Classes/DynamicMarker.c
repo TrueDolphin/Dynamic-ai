@@ -1,39 +1,37 @@
 
-  /*
-  Template turned idea for mirroring internal patrols but with map warnings
-  requires navigation so....questionable for native additions.
+/*
+  doesnt work. idk why
 
-      #ifdef EXPANSIONMODNAVIGATION
-      CreateMissionMarker("Test Position", player.GetPosition(), 5);
-	    #endif
+
+   //declares
+	#ifdef EXPANSIONMODNAVIGATION
+	[NonSerialized()]
+	ExpansionMarkerModule m_MarkerModule;
+
+	[NonSerialized()]
+	ExpansionMarkerData m_ServerMarker;
+	#endif
+
+	//create
+    #ifdef EXPANSIONMODNAVIGATION
+		if (CF_Modules<ExpansionMarkerModule>.Get(m_MarkerModule))
+			m_ServerMarker = m_MarkerModule.CreateServerMarker("AI Spawn", "Territory", ai.GetPosition(), ARGB(255, 235, 59, 90), true);
+    #endif
+
+
+	//remove
+	#ifdef EXPANSIONMODNAVIGATION
+    //thread RemoveMissionMarker(m_ServerMarker.GetUID(), timer);
+	#endif
 
 	#ifdef EXPANSIONMODNAVIGATION
-
-	private ExpansionMarkerModule m_MarkerModule;
-	private ExpansionMarkerData m_ServerMarker;
-
-	void CreateMissionMarker(string markerName, vector location, int timer)
+	void RemoveMissionMarker(string uid, int timer)
 	{
-		if (!m_MarkerModule){
-      initMarkerModule();
-      if (!m_MarkerModule) {
-        Print("MarkerModule error");
-        return;
-      }
-    }
-		m_ServerMarker = m_MarkerModule.CreateServerMarker( markerName, "Territory", location, ARGB(255, 235, 59, 90), true);
-   GetGame().GetCallQueue( CALL_CATEGORY_SYSTEM ).CallLater( this.RemoveMissionMarker, timer, false, m_ServerMarker.GetUID());
-				 
-	}
-  void initMarkerModule(){
-    CF_Modules<ExpansionMarkerModule>.Get(m_MarkerModule);
-  }
-
-	void RemoveMissionMarker(string uid)
-	{
+    Sleep(timer);
 		if ( !m_ServerMarker )
 			return;
 		m_MarkerModule.RemoveServerMarker( uid );
 	}
 	#endif
+
 */
