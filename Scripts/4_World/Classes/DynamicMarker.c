@@ -14,12 +14,12 @@
 
 	//remove
 	#ifdef EXPANSIONMODNAVIGATION
-	GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.LocalSpawn, timer, false, player);
+	GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(removeMissionMarker), 15000, false, m_ServerMarker.GetUID());
 	#endif
 
 
 	#ifdef EXPANSIONMODNAVIGATION
-	void RemoveMissionMarker(string uid, int timer)
+	void RemoveMissionMarker(string uid)
 	{
 		if ( !m_ServerMarker )
 		return;
