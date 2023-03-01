@@ -16,6 +16,11 @@ modded class MissionServer {
   ref array < Man > Dynamic_PlayerList = new array < Man > ;
   ref Dynamic_Groups m_Dynamic_Groups;
 
+
+
+
+
+
   #ifdef EXPANSIONMODSPAWNSELECTION
   private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
@@ -30,13 +35,12 @@ modded class MissionServer {
     }
   }
 
-
   //timer call for varied check loops
   void DynamicTimer() {
     Dynamic2Check();
     int m_cor = Math.RandomIntInclusive(m_Dynamic_Groups.Dynamic_MinTimer, m_Dynamic_Groups.Dynamic_MaxTimer);
     LoggerDynPrint("Next valid check in: " + m_cor + "ms");
-    GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.DynamicTimer, m_cor, false);
+    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.DynamicTimer, m_cor, false);
   }
 
   //step 2 check
@@ -52,7 +56,7 @@ modded class MissionServer {
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
       //this is shitty..)
-      if (CanSpawn(player)) GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
+      if (CanSpawn(player)) GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
       if (m_Dynamic_Groups.PlayerChecks != 0) {
         if (i == m_Dynamic_Groups.PlayerChecks) return;
       }
@@ -218,25 +222,24 @@ modded class MissionServer {
     case 6: {
       //curious idea..
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-      thread TrailingGroup(ai, player, player.GetPosition(), 15000);
+      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, 15000, false, ai, player, "0.0 0.0 0.0", 15000);
     }
     }
   }
 
   //less code than triggers.
   void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
-    Sleep(timer);
     if (!player || !ai) return;
     eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
     if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(ai);
-    if (pos == player.GetPosition()){
+    if (pos == player.GetPosition()) {
       if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
     }
     if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 100) {
       if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
     }
     if (player) pos = player.GetPosition();
-    thread TrailingGroup(ai, player, pos, timer);
+    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, ai, player, pos, timer);
   }
 
   //Lootable parse
