@@ -114,9 +114,9 @@ modded class MissionServer {
     if (SpawnCount > 0) {
       if (!m_pos) return;
       if (player.CheckZone() == true) {
-        Dynamic_Spawn(player, SpawnCount, player.Dynamic_Faction(), player.Dynamic_Loadout(), lootableCheck())
+        Dynamic_Spawn(player, SpawnCount, player.Dynamic_Faction(), player.Dynamic_Loadout(), lootableCheck());
       } else {
-        Dynamic_Spawn(player, SpawnCount, m_Dynamic_Groups.Group[m_cur].Dynamic_Faction, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, lootableCheck())
+        Dynamic_Spawn(player, SpawnCount, m_Dynamic_Groups.Group[m_cur].Dynamic_Faction, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, lootableCheck());
       }
     }
     if (SpawnCount != 0) {
@@ -244,7 +244,7 @@ modded class MissionServer {
 
   void Dynamic_Spawn(PlayerBase player, int bod, string fac, string loa, bool canbelooted) {
     ExpansionAIPatrol patrol = new ExpansionAIPatrol;
-    Dynamic_Group group = m_Dynamic_Groups.Group.GetRandomElement()
+    Dynamic_Group group = m_Dynamic_Groups.Group.GetRandomElement();
     if (group) {
       patrol.NumberOfAI = bod;
       patrol.Speed = "WALK";
@@ -263,7 +263,8 @@ modded class MissionServer {
       if (dynPatrol) {
         LoggerDynPrint("Patrol initialised correctly");
         dynPatrol.SetAccuracy(0, 0);
-        Dynamic_Movement(dynPatrol.m_Group.GetLeader(), player);
+        eAIBase ai = eAIBase.Cast(dynPatrol.m_Group.GetLeader());
+        Dynamic_Movement(ai, player);
         GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Dynamic_PatrolCleanup, m_Dynamic_Groups.CleanupTimer, false, dynPatrol, bod);
       } else {
         LoggerDynPrint("Patrol initialised incorrectly");
@@ -274,7 +275,7 @@ modded class MissionServer {
   void Dynamic_PatrolCleanup(eAIDynamicPatrol patrol, int count) {
     Dynamic_Spawncount -= count;
     if (patrol) {
-      patrol.Despawn()
+      patrol.Despawn();
     }
   }
 
