@@ -113,15 +113,14 @@ modded class MissionServer {
     m_pos = ValidPos(player);
     if (SpawnCount > 0) {
       if (!m_pos) return;
+      Dynamic_Spawncount += SpawnCount;
       if (player.CheckZone() == true) {
         Dynamic_Spawn(player, SpawnCount, player.Dynamic_Faction(), player.Dynamic_Loadout(), lootableCheck());
+        Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount, player.Dynamic_Faction(), player.Dynamic_Loadout());
       } else {
         Dynamic_Spawn(player, SpawnCount, m_Dynamic_Groups.Group[m_cur].Dynamic_Faction, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, lootableCheck());
+        Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount, m_Dynamic_Groups.Group[m_cur].Dynamic_Faction, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
       }
-    }
-    if (SpawnCount != 0) {
-      Dynamic_Spawncount += SpawnCount;
-      Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount);
     }
   }
 
@@ -299,27 +298,27 @@ modded class MissionServer {
 
   //chat message or vanilla notification
   //change to switch reverse order string building
-  void Dynamic_message(PlayerBase player, int msg_no, int SpawnCount) {
+  void Dynamic_message(PlayerBase player, int msg_no, int SpawnCount, string faction, string loadout) {
     if (!player) return;
     if (msg_no == 0) {
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
+      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + faction + ", Loadout: " + loadout);
     }
     if (msg_no == 1) {
       WarningMessage(player, SpawnCount.ToString() + " " + m_Dynamic_Groups.MessageText);
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-    }
+      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + faction + ", Loadout: " + loadout);
+      }
     if (msg_no == 2) {
       WarningMessage(player, m_Dynamic_Groups.MessageText);
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-    }
+      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + faction + ", Loadout: " + loadout);
+      }
     if (msg_no == 3) {
       NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Dynamic_Groups.MessageTitle, SpawnCount.ToString() + " " + m_Dynamic_Groups.MessageText, "set:dayz_gui image:tutorials");
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-    }
+      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + faction + ", Loadout: " + loadout);
+      }
     if (msg_no == 4) {
       NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Dynamic_Groups.MessageTitle, m_Dynamic_Groups.MessageText, "set:dayz_gui image:tutorials");
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-    }
+      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + faction + ", Loadout: " + loadout);
+      }
   }
 
   // Ingame chat message
