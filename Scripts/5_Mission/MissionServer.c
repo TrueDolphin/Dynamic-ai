@@ -143,6 +143,7 @@ modded class MissionServer {
   void Dynamic_Movement(eAIBase ai, PlayerBase player) {
     eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
     if (!group) return;
+    AiGroup.ClearWaypoints();
     switch (m_Dynamic_Groups.HuntMode) {
     case 1: {
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
@@ -156,12 +157,12 @@ modded class MissionServer {
     case 3: {
       /*
       // just spawn, dont chase unless standard internal contitions met.
+
       */
       break;
     }
     case 4: {
       //mostly irrelevant - generic waypoints do better
-      AiGroup.ClearWaypoints();
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
@@ -172,7 +173,6 @@ modded class MissionServer {
     }
     case 5: {
       float c = m_Dynamic_Groups.EngageTimer / 2500;
-      AiGroup.ClearWaypoints();
       for (int i = 0; i < c; i++) {
         int d = Math.RandomIntInclusive(0, 100);
         if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
@@ -210,7 +210,6 @@ modded class MissionServer {
   void Dynamic_Spawn(PlayerBase player, int bod, string fac, string loa) {
     vector startpos = ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120);
     TVectorArray waypoints = {
-      ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120),
       ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120)
     };
     string Formation = "RANDOM";
