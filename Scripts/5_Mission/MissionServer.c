@@ -206,14 +206,7 @@ modded class MissionServer {
     GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, ai, player, pos, timer);
   }
 
-  //new check
-  bool lootableCheck(eAIGroup group) {
-    bool b_check = false;
-
-    return b_check;
-  }
-
-  //Dynamic_Spawn(player, SpawnCount, faction, loadout, lootableCheck())
+  //Dynamic_Spawn(player, SpawnCount, faction, loadout)
   void Dynamic_Spawn(PlayerBase player, int bod, string fac, string loa) {
     vector startpos = ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120);
     TVectorArray waypoints = {
