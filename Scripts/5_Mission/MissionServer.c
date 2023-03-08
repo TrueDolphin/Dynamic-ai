@@ -24,6 +24,7 @@ modded class MissionServer {
   private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
 
+ //init
   void MissionServer() {
 
     if (GetDynamicSettings().Init() == true) {
@@ -43,7 +44,6 @@ modded class MissionServer {
     GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.DynamicTimer, m_cor, false);
   }
 
-  //step 2 check
   //standard loop through playerlist pulling randomly and removing that from list.
   void Dynamic_Check() {
     GetGame().GetPlayers(Dynamic_PlayerList);
@@ -55,7 +55,7 @@ modded class MissionServer {
       #ifdef EXPANSIONMODSPAWNSELECTION
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
-      //this is shitty..)
+      //this is shitty..
       if (CanSpawn(player)) GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
       if (m_Dynamic_Groups.PlayerChecks != 0) {
         if (i == m_Dynamic_Groups.PlayerChecks) return;
@@ -96,7 +96,7 @@ modded class MissionServer {
   }
 
   //create and stuff.
-  //moved to patrols
+  //moved to custom patrol
   void LocalSpawn(PlayerBase player) {
     if (!player) return;
     m_cur = Math.RandomIntInclusive(0, m_Dynamic_Groups.Group.Count() - 1);
@@ -140,9 +140,10 @@ modded class MissionServer {
   }
 
   //Hunt parse
+  //Dynamic_Movement(ai, player)
   void Dynamic_Movement(eAIBase ai, PlayerBase player) {
     eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
-    if (!group) return;
+    if (!AiGroup) return;
     AiGroup.ClearWaypoints();
     switch (m_Dynamic_Groups.HuntMode) {
     case 1: {
@@ -189,6 +190,7 @@ modded class MissionServer {
   }
 
   //less code than triggers.
+  //TrailingGroup(ai, player, Vector(0, 0, 0), 15000)
   void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
     if (!player || !ai) return;
     eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
@@ -219,7 +221,7 @@ modded class MissionServer {
     maxdistradius = 1200;
     despawnradius = 1200;
     bool UnlimitedReload = false;
-    auto dynPatrol = eAIDynamicPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Dynamic_Groups.CleanupTimer + 500, m_Dynamic_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, false, UnlimitedReload);
+    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Dynamic_Groups.CleanupTimer + 500, m_Dynamic_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, false, UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetAccuracy(-1, -1);
       eAIGroup group = eAIGroup.Cast(dynPatrol.m_Group);
@@ -252,8 +254,6 @@ modded class MissionServer {
       if (!ai) return;
       switch (m_Dynamic_Groups.Lootable) {
       case 0:
-        ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
-        break;
       case 1:
         ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
         break;
@@ -329,7 +329,7 @@ modded class MissionServer {
   }
 
   //required
-  void Dynamic_PatrolCleanup(eAIDynamicPatrol patrol, eAIGroup group, int count) {
+  void Dynamic_PatrolCleanup(eAISpatialPatrol patrol, eAIGroup group, int count) {
     Dynamic_Spawncount -= count;
     if (group) group.ClearAI();
     if (patrol) patrol.Delete();
