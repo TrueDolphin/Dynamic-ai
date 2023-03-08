@@ -1,14 +1,16 @@
 /*
 name:TrueDolphin
-date:15/2/2023
+date:07/03/2023
 dynamic ai spawns
 
 this is becoming unwieldly again on server performance per check.
 triggers helped a lot, but idk what else to do as far as optimisation goes besides notes.
 stripped a lot of useless stuff out when moved settings back to 3_Game.
+changed over to CreateEx
 
 */
 modded class MissionServer {
+  ref array < ref ExpansionAIPatrol > Patrols;
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   int Dynamic_Spawncount = 0;
@@ -16,15 +18,13 @@ modded class MissionServer {
   ref array < Man > Dynamic_PlayerList = new array < Man > ;
   ref Dynamic_Groups m_Dynamic_Groups;
 
-
-
-
-
+  ref ExpansionAIPatrolManager AIPatrolManager;
 
   #ifdef EXPANSIONMODSPAWNSELECTION
   private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
 
+ //init
   void MissionServer() {
 
     if (GetDynamicSettings().Init() == true) {
@@ -32,20 +32,20 @@ modded class MissionServer {
       InitDynamicTriggers();
       LoggerDynPrint("Dynamic AI Enabled");
       DynamicTimer();
+      AIPatrolManager = new ExpansionAIPatrolManager;
     }
   }
 
   //timer call for varied check loops
   void DynamicTimer() {
-    Dynamic2Check();
+    Dynamic_Check();
     int m_cor = Math.RandomIntInclusive(m_Dynamic_Groups.Dynamic_MinTimer, m_Dynamic_Groups.Dynamic_MaxTimer);
     LoggerDynPrint("Next valid check in: " + m_cor + "ms");
     GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.DynamicTimer, m_cor, false);
   }
 
-  //step 2 check
   //standard loop through playerlist pulling randomly and removing that from list.
-  void Dynamic2Check() {
+  void Dynamic_Check() {
     GetGame().GetPlayers(Dynamic_PlayerList);
     if (Dynamic_PlayerList.Count() == 0) return;
     for (int i = 0; i < Dynamic_PlayerList.Count(); i++) {
@@ -55,7 +55,7 @@ modded class MissionServer {
       #ifdef EXPANSIONMODSPAWNSELECTION
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
-      //this is shitty..)
+      //this is shitty..
       if (CanSpawn(player)) GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
       if (m_Dynamic_Groups.PlayerChecks != 0) {
         if (i == m_Dynamic_Groups.PlayerChecks) return;
@@ -68,9 +68,6 @@ modded class MissionServer {
   bool CanSpawn(PlayerBase player) {
     PlayerIdentity identity = player.GetIdentity();
     bool valid = true;
-
-    //isnt as expected..
-    //LoggerDynPrint("player :" + player.GetIdentity().GetName() + " lifetime :" + player.GetLifeSpanState());
 
     #ifdef EXPANSIONMODBASEBUILDING
     if (player.IsInsideOwnTerritory() && !GetDynamicSettings().Dynamic_InOwnTerritory()) {
@@ -98,52 +95,29 @@ modded class MissionServer {
     return valid;
   }
 
-  //create and faction stuff
-  //it's a mess
+  //create and stuff.
+  //moved to custom patrol
   void LocalSpawn(PlayerBase player) {
     if (!player) return;
     m_cur = Math.RandomIntInclusive(0, m_Dynamic_Groups.Group.Count() - 1);
     int SpawnCount;
+    string faction, loadout;
     vector m_pos;
-    eAIGroup AiGroup;
     if (player.CheckZone() == true) {
       SpawnCount = Math.RandomIntInclusive(player.Dynamic_MinCount, player.Dynamic_MaxCount);
+      faction = player.Dynamic_Faction();
+      loadout = player.Dynamic_Loadout();
     } else {
       SpawnCount = Math.RandomIntInclusive(m_Dynamic_Groups.Group[m_cur].Dynamic_MinCount, m_Dynamic_Groups.Group[m_cur].Dynamic_MaxCount);
+      faction = m_Dynamic_Groups.Group[m_cur].Dynamic_Faction;
+      loadout = m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout;
     }
     m_pos = ValidPos(player);
     if (SpawnCount > 0) {
       if (!m_pos) return;
-      eAIBase sentry;
-      sentry = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
-      Dynamic_Movement(sentry, player);
-      AiGroup = sentry.GetGroup();
-      if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(sentry);
-      if (player.CheckZone() == true) {
-        sentry.GetGroup().SetFaction(eAIFaction.Create(player.Dynamic_Faction()));
-        ExpansionHumanLoadout.Apply(sentry, player.Dynamic_Loadout(), true);
-      } else {
-        sentry.GetGroup().SetFaction(eAIFaction.Create(m_Dynamic_Groups.Group[m_cur].Dynamic_Faction));
-        ExpansionHumanLoadout.Apply(sentry, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
-      }
-      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.RemoveGroup, m_Dynamic_Groups.CleanupTimer, false, sentry, SpawnCount);
-    }
-    if (SpawnCount > 1) {
-      for (int i = 1; i < SpawnCount; i++) {
-        m_Dynamic_cur = i;
-        eAIBase sentry2;
-        sentry2 = SpawnAI_Dynamic((ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(m_pos, 0, 2))), player);
-        sentry2.SetGroup(AiGroup, false);
-        if (player.CheckZone() == true) {
-          ExpansionHumanLoadout.Apply(sentry2, player.Dynamic_Loadout(), true);
-        } else {
-          ExpansionHumanLoadout.Apply(sentry2, m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout, true);
-        }
-      }
-    }
-    if (SpawnCount != 0) {
       Dynamic_Spawncount += SpawnCount;
-      Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount);
+      Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount, faction, loadout);
+      Dynamic_Spawn(player, SpawnCount, faction, loadout);
     }
   }
 
@@ -165,26 +139,12 @@ modded class MissionServer {
     return pos;
   }
 
-  //dirty cleanup
-  void RemoveGroup(eAIBase target, int count) {
-    Dynamic_Spawncount -= count;
-    if (target) {
-      eAIGroup group = target.GetGroup();
-      if (group) group.ClearAI();
-    }
-  }
-
-  // generic sentry spawn and positional stuff
-  eAIBase SpawnAI_Dynamic(vector pos, PlayerBase player) {
-    eAIBase ai;
-    if (!Class.CastTo(ai, GetGame().CreateObject(GetRandomAI(), pos))) return null;
-    Dynamic_LootCheck(ai);
-    ai.eAI_SetAccuracy(0, 0);
-    return ai;
-  }
-
   //Hunt parse
+  //Dynamic_Movement(ai, player)
   void Dynamic_Movement(eAIBase ai, PlayerBase player) {
+    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
+    if (!AiGroup) return;
+    AiGroup.ClearWaypoints();
     switch (m_Dynamic_Groups.HuntMode) {
     case 1: {
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
@@ -198,10 +158,12 @@ modded class MissionServer {
     case 3: {
       /*
       // just spawn, dont chase unless standard internal contitions met.
+
       */
       break;
     }
     case 4: {
+      //mostly irrelevant - generic waypoints do better
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
@@ -222,12 +184,13 @@ modded class MissionServer {
     case 6: {
       //curious idea..
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, 15000, false, ai, player, "0.0 0.0 0.0", 15000);
+      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, 15000, false, ai, player, Vector(0, 0, 0), 15000);
     }
     }
   }
 
   //less code than triggers.
+  //TrailingGroup(ai, player, Vector(0, 0, 0), 15000)
   void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
     if (!player || !ai) return;
     eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
@@ -235,55 +198,80 @@ modded class MissionServer {
     if (pos == player.GetPosition()) {
       if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
     }
-    if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 100) {
-      if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+    if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 140) {
+      if (player && ai) {
+        AiGroup.ClearWaypoints();
+        AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 80, 100));
+      }
     }
     if (player) pos = player.GetPosition();
     GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, ai, player, pos, timer);
   }
 
-  //Lootable parse
-  //could probably be neater.
-  void Dynamic_LootCheck(eAIBase ai) {
-    switch (m_Dynamic_Groups.Lootable) {
-    case 0: {
-      ai.Expansion_SetCanBeLooted(false);
-      break;
-    }
-    case 1: {
-      ai.Expansion_SetCanBeLooted(true);
-      break;
-    }
-    case 2: {
-      int i = Math.RandomIntInclusive(0, 1);
-      if (i == 1) {
-        ai.Expansion_SetCanBeLooted(true);
-      } else {
-        ai.Expansion_SetCanBeLooted(false);
+  //Dynamic_Spawn(player, SpawnCount, faction, loadout)
+  void Dynamic_Spawn(PlayerBase player, int bod, string fac, string loa) {
+    vector startpos = ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120);
+    TVectorArray waypoints = {
+      ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120)
+    };
+    string Formation = "RANDOM";
+    eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
+    int mindistradius, maxdistradius, despawnradius;
+    mindistradius = 0;
+    maxdistradius = 1200;
+    despawnradius = 1200;
+    bool UnlimitedReload = false;
+    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Dynamic_Groups.CleanupTimer + 500, m_Dynamic_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, false, UnlimitedReload);
+    if (dynPatrol) {
+      dynPatrol.SetAccuracy(-1, -1);
+      eAIGroup group = eAIGroup.Cast(dynPatrol.m_Group);
+      if (!group) {
+        return;
       }
-      break;
-    }
-    case 3: {
-      if (m_Dynamic_cur == 1) {
-        ai.Expansion_SetCanBeLooted(true);
-      } else {
-        ai.Expansion_SetCanBeLooted(false);
-      }
-      break;
-    }
+      eAIBase ai = eAIBase.Cast(group.GetMember(0));
+      Dynamic_Movement(ai, player); //custom waypoint gen applied to ai member's group - no leader = no new waypoint gen
+      SetGroupAccuracy(group); //sigh
+      SetMembersLootable(group); //sigh
+      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Dynamic_PatrolCleanup, m_Dynamic_Groups.CleanupTimer, false, dynPatrol, group, bod);
+    } else {}
+  }
+
+  //no group accuracy setting for after group has init
+  void SetGroupAccuracy(eAIGroup group) {
+    if (!group) return;
+    for (int i = 0; i < group.Count(); i++) {
+      eAIBase ai = eAIBase.Cast(group.GetMember(i));
+      if (!ai) return;
+      ai.eAI_SetAccuracy(-1, -1);
     }
   }
 
-  #ifdef EXPANSIONMODSPAWNSELECTION
-  //LM's code altered to a bool in class
-  bool InRespawnMenu(PlayerIdentity identity) {
-    CF_Modules < ExpansionRespawnHandlerModule > .Get(m_RespawnModule);
-    if (m_RespawnModule && m_RespawnModule.IsPlayerInSpawnSelect(identity)) {
-      return true;
+  //no group loot setting for after group has init
+  void SetMembersLootable(eAIGroup group) {
+    if (!group) return;
+    for (int i = 0; i < group.Count(); i++) {
+      eAIBase ai = eAIBase.Cast(group.GetMember(i));
+      if (!ai) return;
+      switch (m_Dynamic_Groups.Lootable) {
+      case 0:
+      case 1:
+        ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
+        break;
+      case 2:
+        int r = Math.RandomIntInclusive(0, 1);
+        ai.Expansion_SetCanBeLooted(r);
+        break;
+      case 3:
+        //leader only
+        if (i == 0) {
+          ai.Expansion_SetCanBeLooted(true);
+        } else {
+          ai.Expansion_SetCanBeLooted(false);
+        }
+        break;
+      }
     }
-    return false;
   }
-  #endif
 
   //trigger zone initialisation
   //fine i guess
@@ -304,27 +292,24 @@ modded class MissionServer {
   }
 
   //chat message or vanilla notification
-  //change to switch reverse order string building
-  void Dynamic_message(PlayerBase player, int msg_no, int SpawnCount) {
+  //changed to format. tidy up.
+  void Dynamic_message(PlayerBase player, int msg_no, int SpawnCount, string faction, string loadout) {
     if (!player) return;
+    string message = string.Format("Player: %1 Number: %2, Faction name: %3, Loadout: %4", player.GetIdentity().GetName(), SpawnCount, faction, loadout);
     if (msg_no == 0) {
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-    }
-    if (msg_no == 1) {
-      WarningMessage(player, SpawnCount.ToString() + " " + m_Dynamic_Groups.MessageText);
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-    }
-    if (msg_no == 2) {
+      LoggerDynPrint(message);
+    } else if (msg_no == 1) {
+      WarningMessage(player, string.Format("%1 %2", SpawnCount, m_Dynamic_Groups.MessageText));
+      LoggerDynPrint(message);
+    } else if (msg_no == 2) {
       WarningMessage(player, m_Dynamic_Groups.MessageText);
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-    }
-    if (msg_no == 3) {
-      NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Dynamic_Groups.MessageTitle, SpawnCount.ToString() + " " + m_Dynamic_Groups.MessageText, "set:dayz_gui image:tutorials");
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
-    }
-    if (msg_no == 4) {
+      LoggerDynPrint(message);
+    } else if (msg_no == 3) {
+      NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Dynamic_Groups.MessageTitle, string.Format("$1 %2", SpawnCount, m_Dynamic_Groups.MessageText), "set:dayz_gui image:tutorials");
+      LoggerDynPrint(message);
+    } else if (msg_no == 4) {
       NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Dynamic_Groups.MessageTitle, m_Dynamic_Groups.MessageText, "set:dayz_gui image:tutorials");
-      LoggerDynPrint("Player: " + player.GetIdentity().GetName() + " Number: " + SpawnCount.ToString() + ", Faction name: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Faction + ", Loadout: " + m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout);
+      LoggerDynPrint(message);
     }
   }
 
@@ -342,5 +327,23 @@ modded class MissionServer {
     if (GetExpansionSettings().GetLog().AIGeneral)
       GetExpansionSettings().GetLog().PrintLog("[Dynamic AI] " + msg);
   }
+
+  //required
+  void Dynamic_PatrolCleanup(eAISpatialPatrol patrol, eAIGroup group, int count) {
+    Dynamic_Spawncount -= count;
+    if (group) group.ClearAI();
+    if (patrol) patrol.Delete();
+  }
+
+  #ifdef EXPANSIONMODSPAWNSELECTION
+  //LM's code altered to a bool in class
+  bool InRespawnMenu(PlayerIdentity identity) {
+    CF_Modules < ExpansionRespawnHandlerModule > .Get(m_RespawnModule);
+    if (m_RespawnModule && m_RespawnModule.IsPlayerInSpawnSelect(identity)) {
+      return true;
+    }
+    return false;
+  }
+  #endif
 
 };
