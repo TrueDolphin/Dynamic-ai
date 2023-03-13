@@ -1,5 +1,5 @@
 /*
-19/2/2023
+14/3/2023
 dynamic settings
 */
 class DynamicSettings {
@@ -55,7 +55,7 @@ class DynamicSettings {
       m_Dynamic_Groups = new Dynamic_Groups();
       JsonFileLoader < Dynamic_Groups > .JsonLoadFile(EXP_AI_DYNAMIC_SETTINGS, m_Dynamic_Groups);
     }
-    if (m_Dynamic_Groups.Version != 12) { // dont like this. change it.
+    if (m_Dynamic_Groups.Version != 13) { // dont like this. change it.
       loggerPrint("Settings File Out of date. Please delete and restart server.");
       Dynamic_Version = false;
       return;
@@ -110,6 +110,13 @@ class DynamicSettings {
           loggerPrint("Faction not correct: " + point.Dynamic_Faction);
           point.Dynamic_Faction = "Raiders";
         }
+        
+        if (point.Dynamic_HuntMode < 0 || point.Dynamic_HuntMode > 8) {
+          loggerPrint("Point huntmode set incorrectly. setting to 3.");
+          point.Dynamic_HuntMode = 3;
+        }
+
+
       }
     } else {
       loggerPrint("error, disabling points");
@@ -216,13 +223,13 @@ class DynamicSettings {
   //generate default array data
   void DefaultDynamicSettings(out Dynamic_Groups Data) {
     Data = new Dynamic_Groups();
-    Data.Group.Insert(new Dynamic_Group(0, 3, "WestLoadout.json", "Shamans"));
-    Data.Group.Insert(new Dynamic_Group(0, 3, "HumanLoadout.json", "Shamans"));
-    Data.Group.Insert(new Dynamic_Group(0, 3, "EastLoadout.json", "Shamans"));
+    Data.Group.Insert(new Dynamic_Group(2, 2, 200, "NBCLoadout.json", "Guards"));
+    Data.Group.Insert(new Dynamic_Group(1, 3, 300, "HumanLoadout.json", "Shamans"));
+    Data.Group.Insert(new Dynamic_Group(2, 3, 350, "EastLoadout.json", "Passive"));
 
-    Data.Point.Insert(new Dynamic_Point(1, 50, "HumanLoadout.json", 0, 4, "Shamans", "0.0 0.0 0.0"));
-    Data.Point.Insert(new Dynamic_Point(0, 100, "HumanLoadout.json", 0, 5, "West", "0.0 0.0 0.0"));
-    Data.Point.Insert(new Dynamic_Point(0, 150, "HumanLoadout.json", 3, 4, "East", "0.0 0.0 0.0"));
+    Data.Point.Insert(new Dynamic_Point(0, 50, "EastLoadout.json", 0, 4, 6, "East", "0.0 0.0 0.0"));
+    Data.Point.Insert(new Dynamic_Point(0, 100, "WestLoadout.json", 0, 5, 1, "West", "0.0 0.0 0.0"));
+    Data.Point.Insert(new Dynamic_Point(1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", "0.0 0.0 0.0"));
   }
 
   //expansion logging (Dynamic AI prefex)
@@ -272,7 +279,7 @@ class DynamicSettings {
 }
 //json data
 class Dynamic_Groups {
-  int Version = 12;
+  int Version = 13;
   int Dynamic_MinTimer = 1200000;
   int Dynamic_MaxTimer = 1200000;
   int MinDistance = 140;
@@ -310,13 +317,15 @@ class Dynamic_Groups {
 class Dynamic_Group {
   int Dynamic_MinCount;
   int Dynamic_MaxCount;
+  float Dynamic_Weight;
   string Dynamic_Loadout;
   string Dynamic_Faction;
-  void Dynamic_Group(int a, int b, string c, string d) {
+  void Dynamic_Group(int a, int b, float c, string d, string e) {
     Dynamic_MinCount = a;
     Dynamic_MaxCount = b;
-    Dynamic_Loadout = c;
-    Dynamic_Faction = d;
+    Dynamic_Weight = c;
+    Dynamic_Loadout = d;
+    Dynamic_Faction = e;
   }
 }
 
@@ -324,16 +333,18 @@ class Dynamic_Point {
   float Dynamic_Radius;
   string Dynamic_ZoneLoadout;
   string Dynamic_Faction;
+  int Dynamic_HuntMode;
   int Dynamic_MinCount;
   int Dynamic_MaxCount;
   bool Dynamic_Safe;
   vector Dynamic_Position;
-  void Dynamic_Point(bool a, float b, string c, int d, int e, string f, vector g) {
+  void Dynamic_Point(bool a, float b, string c, int d, int e, int h, string f, vector g) {
     Dynamic_Safe = a;
     Dynamic_Radius = b;
     Dynamic_ZoneLoadout = c;
     Dynamic_MinCount = d;
     Dynamic_MaxCount = e;
+    Dynamic_HuntMode = h;
     Dynamic_Faction = f;
     Dynamic_Position = g;
   }

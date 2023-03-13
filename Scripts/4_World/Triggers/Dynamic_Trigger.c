@@ -5,13 +5,15 @@ class Dynamic_Trigger: CylinderTrigger
     string Zone_Loadout;
     int Dynamic_MinCount;
     int Dynamic_MaxCount;
+    int Dynamic_HuntMode;
 
-    void Dynamic_SetData(bool saf, string fac, string lod, int c, int d){
+    void Dynamic_SetData(bool saf, string fac, string lod, int c, int d, int e){
     Zone_Status = saf;
     Zone_Faction = fac;
     Zone_Loadout = lod;
     Dynamic_MinCount = c;
     Dynamic_MaxCount = d;
+    Dynamic_HuntMode = e;
     }
 
     override void Enter(TriggerInsider insider)
@@ -22,7 +24,7 @@ class Dynamic_Trigger: CylinderTrigger
         if (player) {
             player.SetInZone(true);
             player.SetSafe(Zone_Status);
-            player.Dynamic_SetData(Zone_Faction, Zone_Loadout, Dynamic_MinCount, Dynamic_MaxCount);
+            player.Dynamic_SetData(Zone_Faction, Zone_Loadout, Dynamic_MinCount, Dynamic_MaxCount, Dynamic_HuntMode);
         }
     }
         
