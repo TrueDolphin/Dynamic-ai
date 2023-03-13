@@ -1,6 +1,6 @@
 /*
 name:TrueDolphin
-date:14/3/2023
+date:07/03/2023
 dynamic ai spawns
 
 this is becoming unwieldly again on server performance per check.
@@ -24,7 +24,7 @@ modded class MissionServer {
   private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
 
-  //init
+ //init
   void MissionServer() {
 
     if (GetDynamicSettings().Init() == true) {
@@ -101,40 +101,24 @@ modded class MissionServer {
     if (!player) return;
     m_cur = Math.RandomIntInclusive(0, m_Dynamic_Groups.Group.Count() - 1);
     int SpawnCount;
-    Dynamic_Group group;
     string faction, loadout;
+    vector m_pos;
     if (player.CheckZone() == true) {
       SpawnCount = Math.RandomIntInclusive(player.Dynamic_MinCount, player.Dynamic_MaxCount);
       faction = player.Dynamic_Faction();
       loadout = player.Dynamic_Loadout();
     } else {
-      group = GetWeightedGroup(m_Dynamic_Groups.Group);
-      SpawnCount = Math.RandomIntInclusive(group.Dynamic_MinCount, group.Dynamic_MaxCount);
-      faction = group.Dynamic_Faction;
-      loadout = group.Dynamic_Loadout;
+      SpawnCount = Math.RandomIntInclusive(m_Dynamic_Groups.Group[m_cur].Dynamic_MinCount, m_Dynamic_Groups.Group[m_cur].Dynamic_MaxCount);
+      faction = m_Dynamic_Groups.Group[m_cur].Dynamic_Faction;
+      loadout = m_Dynamic_Groups.Group[m_cur].Dynamic_Loadout;
     }
+    m_pos = ValidPos(player);
     if (SpawnCount > 0) {
+      if (!m_pos) return;
       Dynamic_Spawncount += SpawnCount;
       Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount, faction, loadout);
       Dynamic_Spawn(player, SpawnCount, faction, loadout);
     }
-  }
-
-  //expansion lightweight weighted group calcs
-  Dynamic_Group GetWeightedGroup(array < ref Dynamic_Group > groups, array < float > weights = NULL) {
-    array < float > weights_T = weights;
-    if (weights_T == NULL) {
-      weights_T = new array < float > ;
-      for (int i = 0; i < groups.Count(); i++) {
-        weights_T.Insert(groups[i].Dynamic_Weight);
-      }
-    }
-    int index = ExpansionStatic.GetWeightedRandom(weights_T);
-    if (index > -1)
-      return groups[index];
-    //! Should not happen
-    Print("[Dynamic_Group] GetWeightedGroup: All Groups have a 'Weight' of zero. Selecting pure random group instead.");
-    return groups.GetRandomElement();
   }
 
   //could be scuffed
@@ -161,13 +145,6 @@ modded class MissionServer {
     eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
     if (!AiGroup) return;
     AiGroup.ClearWaypoints();
-    int m_Mode;
-    if (player.CheckZone() == true) {
-      m_Mode = player.Dynamic_HuntMode();
-    } else {
-      m_Mode = m_Dynamic_Groups.HuntMode;
-    }
-
     switch (m_Dynamic_Groups.HuntMode) {
     case 1: {
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
@@ -205,6 +182,7 @@ modded class MissionServer {
       }
     }
     case 6: {
+      //curious idea..
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
       GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, 15000, false, ai, player, Vector(0, 0, 0), 15000);
     }
@@ -232,9 +210,9 @@ modded class MissionServer {
 
   //Dynamic_Spawn(player, SpawnCount, faction, loadout)
   void Dynamic_Spawn(PlayerBase player, int bod, string fac, string loa) {
-    vector startpos = ValidPos(player);
+    vector startpos = ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120);
     TVectorArray waypoints = {
-      ValidPos(player)
+      ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120)
     };
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
@@ -303,7 +281,7 @@ modded class MissionServer {
       foreach(Dynamic_Point point: m_Dynamic_Groups.Point) {
         Dynamic_Trigger dynamic_trigger = Dynamic_Trigger.Cast(GetGame().CreateObjectEx("Dynamic_Trigger", point.Dynamic_Position, ECE_NONE));
         dynamic_trigger.SetCollisionCylinder(point.Dynamic_Radius, point.Dynamic_Radius / 2);
-        dynamic_trigger.Dynamic_SetData(point.Dynamic_Safe, point.Dynamic_Faction, point.Dynamic_ZoneLoadout, point.Dynamic_MinCount, point.Dynamic_MaxCount, point.Dynamic_HuntMode);
+        dynamic_trigger.Dynamic_SetData(point.Dynamic_Safe, point.Dynamic_Faction, point.Dynamic_ZoneLoadout, point.Dynamic_MinCount, point.Dynamic_MaxCount);
         LoggerDynPrint("Trigger at location: " + point.Dynamic_Position + " - Radius: " + point.Dynamic_Radius);
         LoggerDynPrint("Safe: " + point.Dynamic_Safe + " - Faction: " + point.Dynamic_Faction + " - Loadout: " + point.Dynamic_ZoneLoadout + " - counts: " + point.Dynamic_MinCount + ":" + point.Dynamic_MaxCount);
       }
