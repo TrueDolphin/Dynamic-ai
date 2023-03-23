@@ -91,7 +91,7 @@ class DynamicSettings {
       loggerPrint("HuntMode setting wrong. setting to default.");
       m_Dynamic_Groups.HuntMode = 1;
     }
-    if (m_Dynamic_Groups.Points_Enabled == 0) {} else if (m_Dynamic_Groups.Points_Enabled == 1) {
+    if (m_Dynamic_Groups.Points_Enabled == 0) {} else if (m_Dynamic_Groups.Points_Enabled == 1 || m_Dynamic_Groups.Points_Enabled == 2 ) {
       foreach(Dynamic_Point point: m_Dynamic_Groups.Point) {
         if (point.Dynamic_Radius < 0) {
           loggerPrint("Radius on group incorrect, setting to 100m");

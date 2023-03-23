@@ -85,9 +85,14 @@ modded class MissionServer {
     }
     #endif
 
-    if (m_Dynamic_Groups.Points_Enabled == 1 && player.CheckSafe()) {
+    if (m_Dynamic_Groups.Points_Enabled == 1 || m_Dynamic_Groups.Points_Enabled == 2 && player.CheckSafe()) {
       return false;
     }
+
+    if (m_Dynamic_Groups.Points_Enabled == 2 && !player.CheckZone()) {
+      return false;
+    }
+
     if (Dynamic_Spawncount > m_Dynamic_Groups.MaxAI) {
       return false;
     }
@@ -298,7 +303,7 @@ modded class MissionServer {
   //trigger zone initialisation
   //fine i guess
   void InitDynamicTriggers() {
-    if (m_Dynamic_Groups.Points_Enabled == 1) {
+    if (m_Dynamic_Groups.Points_Enabled == 1 || m_Dynamic_Groups.Points_Enabled == 2) {
       LoggerDynPrint("Points Enabled");
       foreach(Dynamic_Point point: m_Dynamic_Groups.Point) {
         Dynamic_Trigger dynamic_trigger = Dynamic_Trigger.Cast(GetGame().CreateObjectEx("Dynamic_Trigger", point.Dynamic_Position, ECE_NONE));
