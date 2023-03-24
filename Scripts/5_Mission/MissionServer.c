@@ -85,7 +85,7 @@ modded class MissionServer {
     }
     #endif
 
-    if (m_Dynamic_Groups.Points_Enabled == 1 || m_Dynamic_Groups.Points_Enabled == 2 && player.CheckSafe()) {
+    if (m_Dynamic_Groups.Points_Enabled != 0 && player.CheckSafe() == true) {
       return false;
     }
 
