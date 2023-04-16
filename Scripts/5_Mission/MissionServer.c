@@ -18,8 +18,6 @@ modded class MissionServer {
   ref array < Man > Dynamic_PlayerList = new array < Man > ;
   ref Dynamic_Groups m_Dynamic_Groups;
 
-  ref ExpansionAIPatrolManager AIPatrolManager;
-
   #ifdef EXPANSIONMODSPAWNSELECTION
   private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
@@ -32,7 +30,6 @@ modded class MissionServer {
       InitDynamicTriggers();
       LoggerDynPrint("Dynamic AI Enabled");
       DynamicTimer();
-      AIPatrolManager = new ExpansionAIPatrolManager;
     }
   }
 
@@ -46,11 +43,16 @@ modded class MissionServer {
 
   //standard loop through playerlist pulling randomly and removing that from list.
   void Dynamic_Check() {
+    eAIGroup PlayerGroup;
     GetGame().GetPlayers(Dynamic_PlayerList);
     if (Dynamic_PlayerList.Count() == 0) return;
     for (int i = 0; i < Dynamic_PlayerList.Count(); i++) {
       PlayerBase player = PlayerBase.Cast(Dynamic_PlayerList.GetRandomElement());
       Dynamic_PlayerList.RemoveItem(player);
+      if (m_Dynamic_Groups.Chance < Math.RandomFloat(0.0, 1.0)) continue;  
+      PlayerGroup = eAIGroup.Cast(player.GetGroup());
+      if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
+      if (player != player.GetGroup().GetLeader()) continue;
       if (!player || !player.IsAlive() || !player.GetIdentity()) continue;
       #ifdef EXPANSIONMODSPAWNSELECTION
       if (InRespawnMenu(player.GetIdentity())) continue;
@@ -119,6 +121,12 @@ modded class MissionServer {
       loadout = group.Dynamic_Loadout;
     }
     if (SpawnCount > 0) {
+      if (m_Dynamic_Groups.GroupDifficulty == 1){
+        eAIGroup PlayerGroup;
+        PlayerGroup = eAIGroup.Cast(player.GetGroup());
+        if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
+        if (PlayerGroup.Count() > 1) SpawnCount += (PlayerGroup.Count() - 1);
+      }
       Dynamic_Spawncount += SpawnCount;
       Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount, faction, loadout);
       Dynamic_Spawn(player, SpawnCount, faction, loadout);

@@ -55,7 +55,7 @@ class DynamicSettings {
       m_Dynamic_Groups = new Dynamic_Groups();
       JsonFileLoader < Dynamic_Groups > .JsonLoadFile(EXP_AI_DYNAMIC_SETTINGS, m_Dynamic_Groups);
     }
-    if (m_Dynamic_Groups.Version != 13) { // dont like this. change it.
+    if (m_Dynamic_Groups.Version != 14) { // dont like this. change it.
       loggerPrint("Settings File Out of date. Please delete and restart server.");
       Dynamic_Version = false;
       return;
@@ -135,6 +135,19 @@ class DynamicSettings {
     if (m_Dynamic_Groups.MessageType < 0 && m_Dynamic_Groups.MessageType > 4) {
       loggerPrint("Message type error. disabling.");
       m_Dynamic_Groups.MessageType = 0;
+    }
+
+    if (!m_Dynamic_Groups.Chance){
+      loggerPrint("chance incorreect. setting to 0.5");
+      m_Dynamic_Groups.Chance = 0.5;
+    }
+    if (m_Dynamic_Groups.Chance > 1.0){
+      loggerPrint("chance incorreect. setting to 1.0");
+      m_Dynamic_Groups.Chance = 1.0;
+    }
+    if (m_Dynamic_Groups.Chance < 0){
+      loggerPrint("chance incorreect. setting to 1.0");
+      m_Dynamic_Groups.Chance = 1.0;
     }
 
     if (!m_Dynamic_Groups.MessageTitle) {
@@ -279,7 +292,7 @@ class DynamicSettings {
 }
 //json data
 class Dynamic_Groups {
-  int Version = 13;
+  int Version = 14;
   int Dynamic_MinTimer = 1200000;
   int Dynamic_MaxTimer = 1200000;
   int MinDistance = 140;
@@ -290,6 +303,8 @@ class Dynamic_Groups {
   int CleanupTimer = 360000;
   int PlayerChecks = 0;
   int MaxAI = 20;
+  int GroupDifficulty = 1;
+  float Chance = 0.5;
   int MessageType = 1;
   string MessageTitle = "Dynamic AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";
