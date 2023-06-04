@@ -1,42 +1,49 @@
 modded class PlayerBase
 {
-bool Dynamic_InZone = false;
+bool Spatial_InZone = false;
 bool Zone_Safe = false;
 string Zone_Faction = "Shamans";
 string Zone_Loadout = "HumanLoadout.json";
-int Dynamic_MaxCount = 4;
-int Dynamic_MinCount = 0;
-int Dynamic_HuntMode = 3;
+string Zone_Name = "Survivor";
+int Spatial_MaxCount = 4;
+int Spatial_MinCount = 0;
+int Spatial_HuntMode = 3;
 
-void Dynamic_SetData(string fac, string lod, int c, int d, int e){
+void Spatial_SetData(string fac, string lod, int c, int d, int e, string f){
 Zone_Faction = fac;
 Zone_Loadout = lod;
-Dynamic_MinCount = c;
-Dynamic_MaxCount = d;
-Dynamic_HuntMode = e;
+Spatial_MinCount = c;
+Spatial_MaxCount = d;
+Spatial_HuntMode = e;
+Zone_Name = f;
 }
 
-string Dynamic_Faction() {
+string Spatial_Faction() {
     return Zone_Faction;
 }
 
-string Dynamic_Loadout() {
+string Spatial_Loadout() {
     return Zone_Loadout;
 }
+
+string Spatial_Name() {
+    return Zone_Name;
+}
+
 void SetInZone(bool in){
-    Dynamic_InZone = in;
+    Spatial_InZone = in;
 }
 
-int Dynamic_MinCount(){
-    return Dynamic_MinCount;
+int Spatial_MinCount(){
+    return Spatial_MinCount;
 }
 
-int Dynamic_MaxCount(){
-    return Dynamic_MaxCount;
+int Spatial_MaxCount(){
+    return Spatial_MaxCount;
 }
 
-int Dynamic_HuntMode(){
-    return Dynamic_HuntMode;
+int Spatial_HuntMode(){
+    return Spatial_HuntMode;
 }
 
 void SetSafe(bool a){
@@ -48,7 +55,7 @@ bool CheckSafe(){
 }
 
 bool CheckZone(){
-    return Dynamic_InZone;
+    return Spatial_InZone;
 }
 
 };

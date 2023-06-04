@@ -4,7 +4,7 @@ class CfgPatches
 {
 	class DayZ_Expansion_AI_Dynamic_scripts
 	{
-		requiredAddons[] = {"DayZExpansion_AI_Scripts", "EXP_AI_Dynamic_Define"};
+		requiredAddons[] = {"DayZExpansion_AI_Scripts"};
 	};
 };
 class CfgMods
@@ -14,7 +14,7 @@ class CfgMods
 		action = "";
 		hideName = 0;
 		hidePicture = 0;
-		name = "AI Additional Scripts";
+		name = "Spatial AI";
 		credits = "DayZ Expansion and dolphin";
 		author = "Dolphin";
 		authorID = "";

@@ -7,8 +7,8 @@ modded class ItemBase
     override void Expansion_SetLootable(bool pState)
     {
 
-        if (GetDynamicSettings().Dynamic_WhiteList() != NULL) {        
-            foreach (string pName : GetDynamicSettings().Dynamic_WhiteList()){
+        if (GetSpatialSettings().Spatial_WhiteList() != NULL) {        
+            foreach (string pName : GetSpatialSettings().Spatial_WhiteList()){
             if (!pName) return;
             if (IsKindOf(pName)) pState = true;
             }

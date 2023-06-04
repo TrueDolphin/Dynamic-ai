@@ -1,10 +1,9 @@
 //! because too many things are private..
-//! i wanted to change the exp log to [Dynamic AI] for the spawn() function
-
+//! i wanted to change the exp log to [Spatial AI] for the spawn() function
 
 class eAISpatialPatrol : eAIPatrol
 {
-	private static int m_NumberOfDynamicPatrols;
+	private static int m_NumberOfSpatialPatrols;
 
 	vector m_Position;
 	autoptr array<vector> m_Waypoints;
@@ -22,17 +21,18 @@ class eAISpatialPatrol : eAIPatrol
 	ref eAIFormation m_Formation;
 	bool m_CanBeLooted;
 	bool m_UnlimitedReload;
+	float m_SniperProneDistanceThreshold;
 	float m_AccuracyMin;
 	float m_AccuracyMax;
 	float m_ThreatDistanceLimit;
 	float m_DamageMultiplier;
 
 	eAIGroup m_Group;
+	string m_GroupName;
 	float m_TimeSinceLastSpawn;
 	bool m_CanSpawn;
 	private bool m_WasGroupDestroyed;
 
-	//! @note hard function param limit seems to be 17, adding anymore will cause CTD
 	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, bool autoStart = true, float minR = 300, float maxR = 800, float despawnR = 880, float speedLimit = 3.0, float threatspeedLimit = 3.0, bool canBeLooted = true, bool unlimitedReload = false/*, float accuracyMin = -1, float accuracyMax = -1*/)
 	{
 		#ifdef EAI_TRACE
@@ -85,6 +85,16 @@ class eAISpatialPatrol : eAIPatrol
 		m_DamageMultiplier = multiplier;
 	}
 
+	void SetGroupName(string name)
+	{
+		m_GroupName = name;
+	}
+
+	void SetSniperProneDistanceThreshold(float distance)
+	{
+		m_SniperProneDistanceThreshold = distance;
+	}
+
 	private eAIBase SpawnAI(vector pos)
 	{
 		#ifdef EAI_TRACE
@@ -109,6 +119,7 @@ class eAISpatialPatrol : eAIPatrol
 		ai.eAI_SetAccuracy(m_AccuracyMin, m_AccuracyMax);
 		ai.eAI_SetThreatDistanceLimit(m_ThreatDistanceLimit);
 		ai.eAI_SetDamageMultiplier(m_DamageMultiplier);
+		ai.eAI_SetSniperProneDistanceThreshold(m_SniperProneDistanceThreshold);
 
 		return ai;
 	}
@@ -132,8 +143,8 @@ class eAISpatialPatrol : eAIPatrol
 
 		m_WasGroupDestroyed = true;
 
-		if (m_NumberOfDynamicPatrols)
-			m_NumberOfDynamicPatrols--;
+		if (m_NumberOfSpatialPatrols)
+			m_NumberOfSpatialPatrols--;
 
 		return true;
 	}
@@ -141,13 +152,18 @@ class eAISpatialPatrol : eAIPatrol
 	void Spawn()
 	{
 		#ifdef EAI_TRACE
-		auto trace = CF_Trace_0(this, "Spawn");
+		auto trace = CF_Trace_0(this, "Spatial Spawn");
 		#endif
 
 		if (m_Group) return;
 
 		if (GetExpansionSettings().GetLog().AIPatrol)
-            GetExpansionSettings().GetLog().PrintLog("[Dynamic AI] Spawning " + m_NumberOfAI + " " + m_Faction.ClassName().Substring(10, m_Faction.ClassName().Length() - 10) + " bots at " + m_Position);
+		{
+			string name = m_GroupName;
+			if (name == string.Empty)
+				name = m_Faction.ClassName().Substring(10, m_Faction.ClassName().Length() - 10);
+            GetExpansionSettings().GetLog().PrintLog("[Spatial AI] Spawning " + m_NumberOfAI + " " + name + " bots at " + m_Position);
+        }
 
 		m_TimeSinceLastSpawn = 0;
 		m_CanSpawn = false;
@@ -158,6 +174,7 @@ class eAISpatialPatrol : eAIPatrol
 		m_Group.SetFaction(m_Faction);
 		m_Group.SetFormation(m_Formation);
 		m_Group.SetWaypointBehaviour(m_WaypointBehaviour);
+		m_Group.SetName(m_GroupName);
 		for (int idx = 0; idx < m_Waypoints.Count(); idx++)
 		{
 			m_Group.AddWaypoint(m_Waypoints[idx]);
@@ -175,29 +192,31 @@ class eAISpatialPatrol : eAIPatrol
 			ai.SetGroup(m_Group);
 		}
 
-		m_NumberOfDynamicPatrols++;
+		m_NumberOfSpatialPatrols++;
 	}
 
-	void Despawn()
+	void Despawn(bool deferDespawnUntilLoosingAggro = false)
 	{
 		#ifdef EAI_TRACE
-		auto trace = CF_Trace_0(this, "Despawn");
+		auto trace = CF_Trace_0(this, "Spatial Despawn");
 		#endif
+
+		m_TimeSinceLastSpawn = 0;
 
 		if (m_Group)
 		{
-			m_Group.ClearAI();
+			m_Group.ClearAI(true, deferDespawnUntilLoosingAggro);
 			m_Group = null;
 		}
 
-		if (!m_WasGroupDestroyed && m_NumberOfDynamicPatrols)
-			m_NumberOfDynamicPatrols--;
+		if (!m_WasGroupDestroyed && m_NumberOfSpatialPatrols)
+			m_NumberOfSpatialPatrols--;
 	}
 
 	override void OnUpdate()
 	{
 		#ifdef EAI_TRACE
-		auto trace = CF_Trace_0(this, "OnUpdate");
+		auto trace = CF_Trace_0(this, "Spatial OnUpdate");
 		#endif
 
 		if ( WasGroupDestroyed() && m_RespawnTime < 0 )
@@ -219,7 +238,7 @@ class eAISpatialPatrol : eAIPatrol
 			}
 
 			int maxPatrols = GetExpansionSettings().GetAI().MaximumDynamicPatrols;
-			if (maxPatrols > -1 && m_NumberOfDynamicPatrols >= maxPatrols)
+			if (maxPatrols > -1 && m_NumberOfSpatialPatrols >= maxPatrols)
 			{
 				return;
 			}

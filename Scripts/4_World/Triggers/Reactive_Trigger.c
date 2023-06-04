@@ -10,7 +10,7 @@
   void TrailTrigger(eAIBase ai, PlayerBase player) {
     Reactive_Trigger Reactive_trigger = Reactive_Trigger.Cast(GetGame().CreateObjectEx("Reactive_Trigger", ai.GetPosition(), ECE_NONE));
     Reactive_trigger.SetCollisionCylinder(90, 90 / 2);
-    Reactive_trigger.Dynamic_SetData(ai, player, 60, 5000);
+    Reactive_trigger.Spatial_SetData(ai, player, 60, 5000);
     thread TrailTimer(ai, player, Reactive_trigger);
   }
   void TrailTimer(eAIBase ai, PlayerBase player, Reactive_Trigger trigger) {
@@ -19,7 +19,7 @@
     trigger.Delete();
     Reactive_Trigger Reactive_trigger = Reactive_Trigger.Cast(GetGame().CreateObjectEx("Reactive_Trigger", ai.GetPosition(), ECE_NONE));
     Reactive_trigger.SetCollisionCylinder(90, 90 / 2);
-    Reactive_trigger.Dynamic_SetData(ai, player, 60, 5000);
+    Reactive_trigger.Spatial_SetData(ai, player, 60, 5000);
     thread TrailTimer(ai, player, Reactive_trigger);
   }
  */
@@ -33,7 +33,7 @@ class Reactive_Trigger: CylinderTrigger {
   bool c_allow = true;
   bool c_running = false;
 
-  void Dynamic_SetData(eAIBase a, PlayerBase b, int c, int d) {
+  void Spatial_SetData(eAIBase a, PlayerBase b, int c, int d) {
     c_ai = a;
     c_player = b;
     c_TailDistance = c;

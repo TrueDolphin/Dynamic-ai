@@ -1,19 +1,22 @@
-class Dynamic_Trigger: CylinderTrigger
+class Spatial_Trigger: CylinderTrigger
 {     
     bool Zone_Status;   
     string Zone_Faction;
     string Zone_Loadout;
-    int Dynamic_MinCount;
-    int Dynamic_MaxCount;
-    int Dynamic_HuntMode;
+    string Spatial_Name;
+    int Spatial_MinCount;
+    int Spatial_MaxCount;
+    int Spatial_HuntMode;
 
-    void Dynamic_SetData(bool saf, string fac, string lod, int c, int d, int e){
+
+    void Spatial_SetData(bool saf, string fac, string lod, int c, int d, int e, string f){
     Zone_Status = saf;
     Zone_Faction = fac;
     Zone_Loadout = lod;
-    Dynamic_MinCount = c;
-    Dynamic_MaxCount = d;
-    Dynamic_HuntMode = e;
+    Spatial_MinCount = c;
+    Spatial_MaxCount = d;
+    Spatial_HuntMode = e;
+    Spatial_Name = f;
     }
 
     override void Enter(TriggerInsider insider)
@@ -24,7 +27,7 @@ class Dynamic_Trigger: CylinderTrigger
         if (player) {
             player.SetInZone(true);
             player.SetSafe(Zone_Status);
-            player.Dynamic_SetData(Zone_Faction, Zone_Loadout, Dynamic_MinCount, Dynamic_MaxCount, Dynamic_HuntMode);
+            player.Spatial_SetData(Zone_Faction, Zone_Loadout, Spatial_MinCount, Spatial_MaxCount, Spatial_HuntMode, Spatial_Name);
         }
     }
         

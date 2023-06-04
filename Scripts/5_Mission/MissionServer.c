@@ -1,7 +1,7 @@
 /*
 name:TrueDolphin
 date:14/3/2023
-dynamic ai spawns
+spatial ai spawns
 
 this is becoming unwieldly again on server performance per check.
 triggers helped a lot, but idk what else to do as far as optimisation goes besides notes.
@@ -10,13 +10,12 @@ changed over to CreateEx
 
 */
 modded class MissionServer {
-  ref array < ref ExpansionAIPatrol > Patrols;
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
-  int Dynamic_Spawncount = 0;
-  int m_Dynamic_cur = 0;
-  ref array < Man > Dynamic_PlayerList = new array < Man > ;
-  ref Dynamic_Groups m_Dynamic_Groups;
+  int Spatial_Spawncount = 0;
+  int m_Spatial_cur = 0;
+  ref array < Man > Spatial_PlayerList = new array < Man > ;
+  ref Spatial_Groups m_Spatial_Groups;
 
   #ifdef EXPANSIONMODSPAWNSELECTION
   private ExpansionRespawnHandlerModule m_RespawnModule;
@@ -25,31 +24,31 @@ modded class MissionServer {
   //init
   void MissionServer() {
 
-    if (GetDynamicSettings().Init() == true) {
-      GetDynamicSettings().PullRef(m_Dynamic_Groups);
-      InitDynamicTriggers();
-      LoggerDynPrint("Dynamic AI Enabled");
-      DynamicTimer();
+    if (GetSpatialSettings().Init() == true) {
+      GetSpatialSettings().PullRef(m_Spatial_Groups);
+      InitSpatialTriggers();
+      SpatialLoggerPrint("Spatial AI Enabled");
+      SpatialTimer();
     }
   }
 
   //timer call for varied check loops
-  void DynamicTimer() {
-    Dynamic_Check();
-    int m_cor = Math.RandomIntInclusive(m_Dynamic_Groups.Dynamic_MinTimer, m_Dynamic_Groups.Dynamic_MaxTimer);
-    LoggerDynPrint("Next valid check in: " + m_cor + "ms");
-    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.DynamicTimer, m_cor, false);
+  void SpatialTimer() {
+    Spatial_Check();
+    int m_cor = Math.RandomIntInclusive(m_Spatial_Groups.Spatial_MinTimer, m_Spatial_Groups.Spatial_MaxTimer);
+    SpatialLoggerPrint("Next valid check in: " + m_cor + "ms");
+    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.SpatialTimer, m_cor, false);
   }
 
   //standard loop through playerlist pulling randomly and removing that from list.
-  void Dynamic_Check() {
+  void Spatial_Check() {
     eAIGroup PlayerGroup;
-    GetGame().GetPlayers(Dynamic_PlayerList);
-    if (Dynamic_PlayerList.Count() == 0) return;
-    for (int i = 0; i < Dynamic_PlayerList.Count(); i++) {
-      PlayerBase player = PlayerBase.Cast(Dynamic_PlayerList.GetRandomElement());
-      Dynamic_PlayerList.RemoveItem(player);
-      if (m_Dynamic_Groups.Chance < Math.RandomFloat(0.0, 1.0)) continue;  
+    GetGame().GetPlayers(Spatial_PlayerList);
+    if (Spatial_PlayerList.Count() == 0) return;
+    for (int i = 0; i < Spatial_PlayerList.Count(); i++) {
+      PlayerBase player = PlayerBase.Cast(Spatial_PlayerList.GetRandomElement());
+      Spatial_PlayerList.RemoveItem(player);
+      if (m_Spatial_Groups.Chance < Math.RandomFloat(0.0, 1.0)) continue;  
       PlayerGroup = eAIGroup.Cast(player.GetGroup());
       if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
       if (player != player.GetGroup().GetLeader()) continue;
@@ -59,8 +58,8 @@ modded class MissionServer {
       #endif
       //this is shitty..
       if (CanSpawn(player)) GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
-      if (m_Dynamic_Groups.PlayerChecks != 0) {
-        if (i == m_Dynamic_Groups.PlayerChecks) return;
+      if (m_Spatial_Groups.PlayerChecks != 0) {
+        if (i == m_Spatial_Groups.PlayerChecks) return;
       }
     }
   }
@@ -72,30 +71,30 @@ modded class MissionServer {
     bool valid = true;
 
     #ifdef EXPANSIONMODBASEBUILDING
-    if (player.IsInsideOwnTerritory() && !GetDynamicSettings().Dynamic_InOwnTerritory()) {
+    if (player.IsInsideOwnTerritory() && !GetSpatialSettings().Spatial_InOwnTerritory()) {
       return false;
     }
     #endif
     //main overrides checks
-    if (player.IsInVehicle() && !GetDynamicSettings().Dynamic_InVehicle() || player.Expansion_IsInSafeZone() && !GetDynamicSettings().Dynamic_IsInSafeZone() || player.IsBleeding() && !GetDynamicSettings().Dynamic_IsBleeding() || player.IsRestrained() && !GetDynamicSettings().Dynamic_IsRestrained() || player.IsUnconscious() && !GetDynamicSettings().Dynamic_IsUnconscious()) {
+    if (player.IsInVehicle() && !GetSpatialSettings().Spatial_InVehicle() || player.Expansion_IsInSafeZone() && !GetSpatialSettings().Spatial_IsInSafeZone() || player.IsBleeding() && !GetSpatialSettings().Spatial_IsBleeding() || player.IsRestrained() && !GetSpatialSettings().Spatial_IsRestrained() || player.IsUnconscious() && !GetSpatialSettings().Spatial_IsUnconscious()) {
       return false;
     }
 
     #ifdef SZDEBUG
-    if (player.GetSafeZoneStatus() == SZ_IN_SAFEZONE && !GetDynamicSettings().Dynamic_TPSafeZone()) {
+    if (player.GetSafeZoneStatus() == SZ_IN_SAFEZONE && !GetSpatialSettings().Spatial_TPSafeZone()) {
       return false;
     }
     #endif
 
-    if (m_Dynamic_Groups.Points_Enabled != 0 && player.CheckSafe() == true) {
+    if (m_Spatial_Groups.Points_Enabled != 0 && player.CheckSafe() == true) {
       return false;
     }
 
-    if (m_Dynamic_Groups.Points_Enabled == 2 && !player.CheckZone()) {
+    if (m_Spatial_Groups.Points_Enabled == 2 && !player.CheckZone()) {
       return false;
     }
 
-    if (Dynamic_Spawncount > m_Dynamic_Groups.MaxAI) {
+    if (Spatial_Spawncount > m_Spatial_Groups.MaxAI) {
       return false;
     }
 
@@ -106,85 +105,87 @@ modded class MissionServer {
   //moved to custom patrol
   void LocalSpawn(PlayerBase player) {
     if (!player) return;
-    m_cur = Math.RandomIntInclusive(0, m_Dynamic_Groups.Group.Count() - 1);
+    m_cur = Math.RandomIntInclusive(0, m_Spatial_Groups.Group.Count() - 1);
     int SpawnCount;
-    Dynamic_Group group;
-    string faction, loadout;
+    Spatial_Group group;
+    string faction, loadout, name;
     if (player.CheckZone() == true) {
-      SpawnCount = Math.RandomIntInclusive(player.Dynamic_MinCount, player.Dynamic_MaxCount);
-      faction = player.Dynamic_Faction();
-      loadout = player.Dynamic_Loadout();
+      SpawnCount = Math.RandomIntInclusive(player.Spatial_MinCount, player.Spatial_MaxCount);
+      faction = player.Spatial_Faction();
+      loadout = player.Spatial_Loadout();
+      name = player.Spatial_Name();
     } else {
-      group = GetWeightedGroup(m_Dynamic_Groups.Group);
-      SpawnCount = Math.RandomIntInclusive(group.Dynamic_MinCount, group.Dynamic_MaxCount);
-      faction = group.Dynamic_Faction;
-      loadout = group.Dynamic_Loadout;
+      group = GetWeightedGroup(m_Spatial_Groups.Group);
+      SpawnCount = Math.RandomIntInclusive(group.Spatial_MinCount, group.Spatial_MaxCount);
+      faction = group.Spatial_Faction;
+      loadout = group.Spatial_Loadout;
+      name = group.Spatial_Name;
     }
     if (SpawnCount > 0) {
-      if (m_Dynamic_Groups.GroupDifficulty == 1){
+      if (m_Spatial_Groups.GroupDifficulty == 1){
         eAIGroup PlayerGroup;
         PlayerGroup = eAIGroup.Cast(player.GetGroup());
         if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
         if (PlayerGroup.Count() > 1) SpawnCount += (PlayerGroup.Count() - 1);
       }
-      Dynamic_Spawncount += SpawnCount;
-      Dynamic_message(player, m_Dynamic_Groups.MessageType, SpawnCount, faction, loadout);
-      Dynamic_Spawn(player, SpawnCount, faction, loadout);
+      Spatial_Spawncount += SpawnCount;
+      Spatial_message(player, m_Spatial_Groups.MessageType, SpawnCount, faction, loadout);
+      Spatial_Spawn(player, SpawnCount, faction, loadout, name);
     }
   }
 
   //expansion lightweight weighted group calcs
-  Dynamic_Group GetWeightedGroup(array < ref Dynamic_Group > groups, array < float > weights = NULL) {
+  Spatial_Group GetWeightedGroup(array < ref Spatial_Group > groups, array < float > weights = NULL) {
     array < float > weights_T = weights;
     if (weights_T == NULL) {
       weights_T = new array < float > ;
       for (int i = 0; i < groups.Count(); i++) {
-        weights_T.Insert(groups[i].Dynamic_Weight);
+        weights_T.Insert(groups[i].Spatial_Weight);
       }
     }
     int index = ExpansionStatic.GetWeightedRandom(weights_T);
     if (index > -1)
       return groups[index];
     //! Should not happen
-    Print("[Dynamic_Group] GetWeightedGroup: All Groups have a 'Weight' of zero. Selecting pure random group instead.");
+    Print("[Spatial_Group] GetWeightedGroup: All Groups have a 'Weight' of zero. Selecting pure random group instead.");
     return groups.GetRandomElement();
   }
 
   //could be scuffed
   vector ValidPos(PlayerBase player) {
-    vector pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Dynamic_Groups.MinDistance, m_Dynamic_Groups.MaxDistance)));
+    vector pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
     float x, z;
     x = pos[0];
     z = pos[2];
     int i = 0;
     while (GetGame().SurfaceIsSea(x, z) || GetGame().SurfaceIsPond(x, z)) {
-      pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Dynamic_Groups.MinDistance, m_Dynamic_Groups.MaxDistance)));
+      pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
       x = pos[0];
       z = pos[2];
       //i++; 
-      //LoggerDynPrint(i.ToString());
+      //SpatialLoggerPrint(i.ToString());
     }
-    //LoggerDynPrint("ValidPos LoopCount :" + i.ToString());
+    //SpatialLoggerPrint("ValidPos LoopCount :" + i.ToString());
     return pos;
   }
 
   //Hunt parse
-  //Dynamic_Movement(ai, player)
-  void Dynamic_Movement(eAIBase ai, PlayerBase player) {
+  //Spatial_Movement(ai, player)
+  void Spatial_Movement(eAIBase ai, PlayerBase player) {
     eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
     if (!AiGroup) return;
     AiGroup.ClearWaypoints();
     int m_Mode;
     if (player.CheckZone() == true) {
-      m_Mode = player.Dynamic_HuntMode();
+      m_Mode = player.Spatial_HuntMode();
     } else {
-      m_Mode = m_Dynamic_Groups.HuntMode;
+      m_Mode = m_Spatial_Groups.HuntMode;
     }
 
-    switch (m_Dynamic_Groups.HuntMode) {
+    switch (m_Mode) {
     case 1: {
       ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-      player.GetTargetInformation().AddAI(ai, m_Dynamic_Groups.EngageTimer);
+      player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
       break;
     }
     case 2: {
@@ -209,7 +210,7 @@ modded class MissionServer {
       break;
     }
     case 5: {
-      float c = m_Dynamic_Groups.EngageTimer / 2500;
+      float c = m_Spatial_Groups.EngageTimer / 2500;
       for (int i = 0; i < c; i++) {
         int d = Math.RandomIntInclusive(0, 100);
         if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
@@ -243,8 +244,8 @@ modded class MissionServer {
     GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, ai, player, pos, timer);
   }
 
-  //Dynamic_Spawn(player, SpawnCount, faction, loadout)
-  void Dynamic_Spawn(PlayerBase player, int bod, string fac, string loa) {
+  //Spatial_Spawn(player, SpawnCount, faction, loadout)
+  void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName) {
     vector startpos = ValidPos(player);
     TVectorArray waypoints = {
       ValidPos(player)
@@ -256,18 +257,20 @@ modded class MissionServer {
     maxdistradius = 1200;
     despawnradius = 1200;
     bool UnlimitedReload = false;
-    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Dynamic_Groups.CleanupTimer + 500, m_Dynamic_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, false, UnlimitedReload);
+    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, false, UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetAccuracy(-1, -1);
+      dynPatrol.SetGroupName(GroupName);
+      dynPatrol.SetSniperProneDistanceThreshold(maxdistradius * 3);
       eAIGroup group = eAIGroup.Cast(dynPatrol.m_Group);
       if (!group) {
         return;
       }
       eAIBase ai = eAIBase.Cast(group.GetMember(0));
-      Dynamic_Movement(ai, player); //custom waypoint gen applied to ai member's group - no leader = no new waypoint gen
+      Spatial_Movement(ai, player); //custom waypoints gen applied to ai member's group - no leader = no new waypoints gen
       SetGroupAccuracy(group); //sigh
       SetMembersLootable(group); //sigh
-      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Dynamic_PatrolCleanup, m_Dynamic_Groups.CleanupTimer, false, dynPatrol, group, bod);
+      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Spatial_PatrolCleanup, m_Spatial_Groups.CleanupTimer, false, dynPatrol, group, bod);
     } else {}
   }
 
@@ -287,12 +290,14 @@ modded class MissionServer {
     for (int i = 0; i < group.Count(); i++) {
       eAIBase ai = eAIBase.Cast(group.GetMember(i));
       if (!ai) return;
-      switch (m_Dynamic_Groups.Lootable) {
+      switch (m_Spatial_Groups.Lootable) {
       case 0:
       case 1:
-        ai.Expansion_SetCanBeLooted(m_Dynamic_Groups.Lootable);
+        //true-false
+        ai.Expansion_SetCanBeLooted(m_Spatial_Groups.Lootable);
         break;
       case 2:
+        //ranfom
         int r = Math.RandomIntInclusive(0, 1);
         ai.Expansion_SetCanBeLooted(r);
         break;
@@ -310,41 +315,53 @@ modded class MissionServer {
 
   //trigger zone initialisation
   //fine i guess
-  void InitDynamicTriggers() {
-    if (m_Dynamic_Groups.Points_Enabled == 1 || m_Dynamic_Groups.Points_Enabled == 2) {
-      LoggerDynPrint("Points Enabled");
-      foreach(Dynamic_Point point: m_Dynamic_Groups.Point) {
-        Dynamic_Trigger dynamic_trigger = Dynamic_Trigger.Cast(GetGame().CreateObjectEx("Dynamic_Trigger", point.Dynamic_Position, ECE_NONE));
-        dynamic_trigger.SetCollisionCylinder(point.Dynamic_Radius, point.Dynamic_Radius / 2);
-        dynamic_trigger.Dynamic_SetData(point.Dynamic_Safe, point.Dynamic_Faction, point.Dynamic_ZoneLoadout, point.Dynamic_MinCount, point.Dynamic_MaxCount, point.Dynamic_HuntMode);
-        LoggerDynPrint("Trigger at location: " + point.Dynamic_Position + " - Radius: " + point.Dynamic_Radius);
-        LoggerDynPrint("Safe: " + point.Dynamic_Safe + " - Faction: " + point.Dynamic_Faction + " - Loadout: " + point.Dynamic_ZoneLoadout + " - counts: " + point.Dynamic_MinCount + ":" + point.Dynamic_MaxCount);
+  void InitSpatialTriggers() {
+    if (m_Spatial_Groups.Points_Enabled == 1 || m_Spatial_Groups.Points_Enabled == 2) {
+      SpatialLoggerPrint("points Enabled");
+      foreach(Spatial_Point points: m_Spatial_Groups.Point) {
+        Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
+        spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
+        spatial_trigger.Spatial_SetData(points.Spatial_Safe, points.Spatial_Faction, points.Spatial_ZoneLoadout, points.Spatial_MinCount, points.Spatial_MaxCount, points.Spatial_HuntMode, points.Spatial_Name);
+        SpatialLoggerPrint("Trigger at location: " + points.Spatial_Position + " - Radius: " + points.Spatial_Radius);
+        SpatialLoggerPrint("Safe: " + points.Spatial_Safe + " - Faction: " + points.Spatial_Faction + " - Loadout: " + points.Spatial_ZoneLoadout + " - counts: " + points.Spatial_MinCount + ":" + points.Spatial_MaxCount);
       }
     } else {
-      LoggerDynPrint("Points Disabled");
+      SpatialLoggerPrint("points Disabled");
     }
 
+    if (m_Spatial_Groups.Locations_Enabled == 1) {
+      SpatialLoggerPrint("Locations Enabled");
+      foreach(Spatial_Location location: m_Spatial_Groups.Location) {
+        Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
+        location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
+        location_trigger.Spatial_SetData(location.Spatial_Name, location.Spatial_TriggerRadius, location.Spatial_ZoneLoadout, location.Spatial_MinCount, location.Spatial_MaxCount, location.Spatial_HuntMode, location.Spatial_Faction, location.Spatial_TriggerPosition, location.Spatial_SpawnPosition);
+        SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
+        SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
+      }
+    } else {
+      SpatialLoggerPrint("Locations Disabled");
+    }
   }
 
   //chat message or vanilla notification
   //changed to format. tidy up.
-  void Dynamic_message(PlayerBase player, int msg_no, int SpawnCount, string faction, string loadout) {
+  void Spatial_message(PlayerBase player, int msg_no, int SpawnCount, string faction, string loadout) {
     if (!player) return;
     string message = string.Format("Player: %1 Number: %2, Faction name: %3, Loadout: %4", player.GetIdentity().GetName(), SpawnCount, faction, loadout);
     if (msg_no == 0) {
-      LoggerDynPrint(message);
+      SpatialLoggerPrint(message);
     } else if (msg_no == 1) {
-      WarningMessage(player, string.Format("%1 %2", SpawnCount, m_Dynamic_Groups.MessageText));
-      LoggerDynPrint(message);
+      WarningMessage(player, string.Format("%1 %2", SpawnCount, m_Spatial_Groups.MessageText));
+      SpatialLoggerPrint(message);
     } else if (msg_no == 2) {
-      WarningMessage(player, m_Dynamic_Groups.MessageText);
-      LoggerDynPrint(message);
+      WarningMessage(player, m_Spatial_Groups.MessageText);
+      SpatialLoggerPrint(message);
     } else if (msg_no == 3) {
-      NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Dynamic_Groups.MessageTitle, string.Format("$1 %2", SpawnCount, m_Dynamic_Groups.MessageText), "set:dayz_gui image:tutorials");
-      LoggerDynPrint(message);
+      NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, string.Format("%1 %2", SpawnCount, m_Spatial_Groups.MessageText), "set:dayz_gui image:tutorials");
+      SpatialLoggerPrint(message);
     } else if (msg_no == 4) {
-      NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Dynamic_Groups.MessageTitle, m_Dynamic_Groups.MessageText, "set:dayz_gui image:tutorials");
-      LoggerDynPrint(message);
+      NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, m_Spatial_Groups.MessageText, "set:dayz_gui image:tutorials");
+      SpatialLoggerPrint(message);
     }
   }
 
@@ -358,14 +375,14 @@ modded class MissionServer {
   }
 
   //expansion logging
-  void LoggerDynPrint(string msg) {
+  void SpatialLoggerPrint(string msg) {
     if (GetExpansionSettings().GetLog().AIGeneral)
-      GetExpansionSettings().GetLog().PrintLog("[Dynamic AI] " + msg);
+      GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
   }
 
   //required
-  void Dynamic_PatrolCleanup(eAISpatialPatrol patrol, eAIGroup group, int count) {
-    Dynamic_Spawncount -= count;
+  void Spatial_PatrolCleanup(eAISpatialPatrol patrol, eAIGroup group, int count) {
+    Spatial_Spawncount -= count;
     if (group) group.ClearAI();
     if (patrol) patrol.Delete();
   }
