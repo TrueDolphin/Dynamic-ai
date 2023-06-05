@@ -48,7 +48,7 @@ modded class MissionServer {
     for (int i = 0; i < Spatial_PlayerList.Count(); i++) {
       PlayerBase player = PlayerBase.Cast(Spatial_PlayerList.GetRandomElement());
       Spatial_PlayerList.RemoveItem(player);
-      if (m_Spatial_Groups.Chance < Math.RandomFloat(0.0, 1.0)) continue;  
+      if (m_Spatial_Groups.Chance < Math.RandomFloat(0.0, 1.0)) continue;
       PlayerGroup = eAIGroup.Cast(player.GetGroup());
       if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
       if (player != player.GetGroup().GetLeader()) continue;
@@ -122,7 +122,7 @@ modded class MissionServer {
       name = group.Spatial_Name;
     }
     if (SpawnCount > 0) {
-      if (m_Spatial_Groups.GroupDifficulty == 1){
+      if (m_Spatial_Groups.GroupDifficulty == 1) {
         eAIGroup PlayerGroup;
         PlayerGroup = eAIGroup.Cast(player.GetGroup());
         if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
@@ -194,8 +194,7 @@ modded class MissionServer {
     }
     case 3: {
       /*
-      // just spawn, dont chase unless standard internal contitions met.
-
+      just spawn, dont chase unless standard internal contitions met.
       */
       break;
     }
@@ -247,9 +246,7 @@ modded class MissionServer {
   //Spatial_Spawn(player, SpawnCount, faction, loadout)
   void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName) {
     vector startpos = ValidPos(player);
-    TVectorArray waypoints = {
-      ValidPos(player)
-    };
+    TVectorArray waypoints = { ValidPos(player) };
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
     int mindistradius, maxdistradius, despawnradius;
@@ -257,16 +254,18 @@ modded class MissionServer {
     maxdistradius = 1200;
     despawnradius = 1200;
     bool UnlimitedReload = false;
-    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, false, UnlimitedReload);
+    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, Spatial_Lootable(), UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetAccuracy(-1, -1);
       dynPatrol.SetGroupName(GroupName);
       dynPatrol.SetSniperProneDistanceThreshold(maxdistradius * 3);
       eAIGroup group = eAIGroup.Cast(dynPatrol.m_Group);
       if (!group) {
+        Print("dynPatrol group error");
+        Print(dynPatrol);
         return;
       }
-      eAIBase ai = eAIBase.Cast(group.GetMember(0));
+      eAIBase ai = eAIBase.Cast(group.GetLeader());
       Spatial_Movement(ai, player); //custom waypoints gen applied to ai member's group - no leader = no new waypoints gen
       SetGroupAccuracy(group); //sigh
       SetMembersLootable(group); //sigh
@@ -282,6 +281,14 @@ modded class MissionServer {
       if (!ai) return;
       ai.eAI_SetAccuracy(-1, -1);
     }
+  }
+
+  //sigh - needs changing
+  bool Spatial_Lootable() {
+    if (m_Spatial_Groups.Lootable < 2) {
+      return m_Spatial_Groups.Lootable;
+    }
+    return true;
   }
 
   //no group loot setting for after group has init

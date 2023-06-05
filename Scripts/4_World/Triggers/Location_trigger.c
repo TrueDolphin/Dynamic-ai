@@ -73,7 +73,7 @@ class Location_Trigger: CylinderTrigger
     maxdistradius = 1200;
     despawnradius = 1200;
     bool UnlimitedReload = false;
-    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, false, UnlimitedReload);
+    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, Spatial_Lootable(), UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetAccuracy(-1, -1);
       dynPatrol.SetGroupName(GroupName);
@@ -98,6 +98,14 @@ class Location_Trigger: CylinderTrigger
       if (!ai) return;
       ai.eAI_SetAccuracy(-1, -1);
     }
+  }
+
+  //sigh - needs changing
+  bool Spatial_Lootable() {
+    if (m_Spatial_Groups.Lootable < 2) {
+      return m_Spatial_Groups.Lootable;
+    }
+    return true;
   }
 
   //no group loot setting for after group has init
