@@ -62,6 +62,7 @@ class Location_Trigger: CylinderTrigger
 
   //Spatial_Spawn(player, SpawnCount, faction, loadout)
   void Spatial_Spawn(int bod, string fac, string loa, string GroupName) {
+    PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
     vector startpos = ValidPos();
     TVectorArray waypoints = {
       ValidPos()
@@ -73,125 +74,20 @@ class Location_Trigger: CylinderTrigger
     maxdistradius = 1200;
     despawnradius = 1200;
     bool UnlimitedReload = false;
-    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, Spatial_Lootable(), UnlimitedReload);
+    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, m_Spatial_Groups.Lootable, UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetAccuracy(-1, -1);
       dynPatrol.SetGroupName(GroupName);
       dynPatrol.SetSniperProneDistanceThreshold(maxdistradius * 3);
-      eAIGroup group = eAIGroup.Cast(dynPatrol.m_Group);
-      if (!group) {
-        return;
-      }
-      eAIBase ai = eAIBase.Cast(group.GetMember(0));
-      Spatial_Movement(ai); //custom waypoints gen applied to ai member's group - no leader = no new waypoints gen
-      SetGroupAccuracy(group); //sigh
-      SetMembersLootable(group); //sigh
-      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Spatial_PatrolCleanup, m_Spatial_Groups.CleanupTimer, false, dynPatrol, group, bod);
-    } else {}
-  }
-
-  //no group accuracy setting for after group has init
-  void SetGroupAccuracy(eAIGroup group) {
-    if (!group) return;
-    for (int i = 0; i < group.Count(); i++) {
-      eAIBase ai = eAIBase.Cast(group.GetMember(i));
-      if (!ai) return;
-      ai.eAI_SetAccuracy(-1, -1);
-    }
-  }
-
-  //sigh - needs changing
-  bool Spatial_Lootable() {
-    if (m_Spatial_Groups.Lootable < 2) {
-      return m_Spatial_Groups.Lootable;
-    }
-    return true;
-  }
-
-  //no group loot setting for after group has init
-  void SetMembersLootable(eAIGroup group) {
-    if (!group) return;
-    for (int i = 0; i < group.Count(); i++) {
-      eAIBase ai = eAIBase.Cast(group.GetMember(i));
-      if (!ai) return;
-      switch (m_Spatial_Groups.Lootable) {
-      case 0:
-      case 1:
-        //true-false
-        ai.Expansion_SetCanBeLooted(m_Spatial_Groups.Lootable);
-        break;
-      case 2:
-        //ranfom
-        int r = Math.RandomIntInclusive(0, 1);
-        ai.Expansion_SetCanBeLooted(r);
-        break;
-      case 3:
-        //leader only
-        if (i == 0) {
-          ai.Expansion_SetCanBeLooted(true);
-        } else {
-          ai.Expansion_SetCanBeLooted(false);
-        }
-        break;
-      }
-    }
-  }
-
-  void Spatial_Movement(eAIBase ai) {
-    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
-    if (!AiGroup) return;
-    AiGroup.ClearWaypoints();
-    if (Spatial_HuntMode >= 6) Spatial_HuntMode = 5;
-    switch (Spatial_HuntMode) {
-    case 1: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_SpawnPosition, 0, 3));
-      break;
-    }
-    case 2: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_TriggerPosition, 0, 3));
-      break;
-    }
-    case 3: {
-      break;
-    }
-    case 4: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_SpawnPosition, 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_TriggerPosition, 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_TriggerPosition, 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_SpawnPosition, 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_TriggerPosition, 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_TriggerPosition, 70, 80));
-      break;
-    }
-    case 5: {
-      float c = m_Spatial_Groups.EngageTimer / 2500;
-      for (int i = 0; i < c; i++) {
-        int d = Math.RandomIntInclusive(0, 100);
-        if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_SpawnPosition, 70, 120));
-        if (d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_TriggerPosition, 80, 200));
-        if (d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(Spatial_TriggerPosition, 10, 20));
-      }
-    }
+      dynPatrol.SetHunted(playerInsider);
+      dynPatrol.SetLocation();
+      dynPatrol.Spatial_Movement();
     }
   }
 
   vector ValidPos() {
-    vector pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(Spatial_SpawnPosition, m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
-    float x, z;
-    x = pos[0];
-    z = pos[2];
-    int i = 0;
-    while (GetGame().SurfaceIsSea(x, z) || GetGame().SurfaceIsPond(x, z)) {
-      pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(Spatial_SpawnPosition, m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
-      x = pos[0];
-      z = pos[2];
-    }
-    return pos;
+    return ExpansionStatic.GetSurfacePosition(Spatial_SpawnPosition);
   }
 
-  void Spatial_PatrolCleanup(eAISpatialPatrol patrol, eAIGroup group, int count) {
-    if (group) group.ClearAI();
-    if (patrol) patrol.Delete();
-  }
 
 }

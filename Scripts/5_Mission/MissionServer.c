@@ -169,80 +169,6 @@ modded class MissionServer {
     return pos;
   }
 
-  //Hunt parse
-  //Spatial_Movement(ai, player)
-  void Spatial_Movement(eAIBase ai, PlayerBase player) {
-    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
-    if (!AiGroup) return;
-    AiGroup.ClearWaypoints();
-    int m_Mode;
-    if (player.CheckZone() == true) {
-      m_Mode = player.Spatial_HuntMode();
-    } else {
-      m_Mode = m_Spatial_Groups.HuntMode;
-    }
-
-    switch (m_Mode) {
-    case 1: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-      player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
-      break;
-    }
-    case 2: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-      break;
-    }
-    case 3: {
-      /*
-      just spawn, dont chase unless standard internal contitions met.
-      */
-      break;
-    }
-    case 4: {
-      //mostly irrelevant - generic waypoints do better
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      break;
-    }
-    case 5: {
-      float c = m_Spatial_Groups.EngageTimer / 2500;
-      for (int i = 0; i < c; i++) {
-        int d = Math.RandomIntInclusive(0, 100);
-        if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
-        if (d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
-        if (d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
-      }
-    }
-    case 6: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, 15000, false, ai, player, Vector(0, 0, 0), 15000);
-    }
-    }
-  }
-
-  //less code than triggers.
-  //TrailingGroup(ai, player, Vector(0, 0, 0), 15000)
-  void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
-    if (!player || !ai) return;
-    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
-    if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(ai);
-    if (pos == player.GetPosition()) {
-      if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
-    }
-    if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 140) {
-      if (player && ai) {
-        AiGroup.ClearWaypoints();
-        AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 80, 100));
-      }
-    }
-    if (player) pos = player.GetPosition();
-    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, ai, player, pos, timer);
-  }
-
   //Spatial_Spawn(player, SpawnCount, faction, loadout)
   void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName) {
     vector startpos = ValidPos(player);
@@ -254,69 +180,13 @@ modded class MissionServer {
     maxdistradius = 1200;
     despawnradius = 1200;
     bool UnlimitedReload = false;
-    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, Spatial_Lootable(), UnlimitedReload);
+    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, m_Spatial_Groups.Lootable, UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetAccuracy(-1, -1);
       dynPatrol.SetGroupName(GroupName);
       dynPatrol.SetSniperProneDistanceThreshold(maxdistradius * 3);
-      eAIGroup group = eAIGroup.Cast(dynPatrol.m_Group);
-      if (!group) {
-        Print("dynPatrol group error");
-        Print(dynPatrol);
-        return;
-      }
-      eAIBase ai = eAIBase.Cast(group.GetLeader());
-      Spatial_Movement(ai, player); //custom waypoints gen applied to ai member's group - no leader = no new waypoints gen
-      SetGroupAccuracy(group); //sigh
-      SetMembersLootable(group); //sigh
-      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Spatial_PatrolCleanup, m_Spatial_Groups.CleanupTimer, false, dynPatrol, group, bod);
-    } else {}
-  }
-
-  //no group accuracy setting for after group has init
-  void SetGroupAccuracy(eAIGroup group) {
-    if (!group) return;
-    for (int i = 0; i < group.Count(); i++) {
-      eAIBase ai = eAIBase.Cast(group.GetMember(i));
-      if (!ai) return;
-      ai.eAI_SetAccuracy(-1, -1);
-    }
-  }
-
-  //sigh - needs changing
-  bool Spatial_Lootable() {
-    if (m_Spatial_Groups.Lootable < 2) {
-      return m_Spatial_Groups.Lootable;
-    }
-    return true;
-  }
-
-  //no group loot setting for after group has init
-  void SetMembersLootable(eAIGroup group) {
-    if (!group) return;
-    for (int i = 0; i < group.Count(); i++) {
-      eAIBase ai = eAIBase.Cast(group.GetMember(i));
-      if (!ai) return;
-      switch (m_Spatial_Groups.Lootable) {
-      case 0:
-      case 1:
-        //true-false
-        ai.Expansion_SetCanBeLooted(m_Spatial_Groups.Lootable);
-        break;
-      case 2:
-        //ranfom
-        int r = Math.RandomIntInclusive(0, 1);
-        ai.Expansion_SetCanBeLooted(r);
-        break;
-      case 3:
-        //leader only
-        if (i == 0) {
-          ai.Expansion_SetCanBeLooted(true);
-        } else {
-          ai.Expansion_SetCanBeLooted(false);
-        }
-        break;
-      }
+      dynPatrol.SetHunted(player);
+      dynPatrol.Spatial_Movement();
     }
   }
 

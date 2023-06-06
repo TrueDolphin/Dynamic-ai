@@ -19,6 +19,7 @@ class eAISpatialPatrol : eAIPatrol
 	string m_Loadout;
 	ref eAIFaction m_Faction;
 	ref eAIFormation m_Formation;
+	ref Spatial_Groups m_Spatial_Groups;
 	bool m_CanBeLooted;
 	bool m_UnlimitedReload;
 	float m_SniperProneDistanceThreshold;
@@ -26,14 +27,18 @@ class eAISpatialPatrol : eAIPatrol
 	float m_AccuracyMax;
 	float m_ThreatDistanceLimit;
 	float m_DamageMultiplier;
+	PlayerBase m_Hunted;
 
-	eAIGroup m_Group;
+	ref eAIGroup m_Group;
+	eAIBase TrueLead;
+	int m_lootcheck;
+	int m_Location;
 	string m_GroupName;
 	float m_TimeSinceLastSpawn;
 	bool m_CanSpawn;
 	private bool m_WasGroupDestroyed;
 
-	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, bool autoStart = true, float minR = 300, float maxR = 800, float despawnR = 880, float speedLimit = 3.0, float threatspeedLimit = 3.0, bool canBeLooted = true, bool unlimitedReload = false/*, float accuracyMin = -1, float accuracyMax = -1*/)
+	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, bool autoStart = true, float minR = 300, float maxR = 800, float despawnR = 880, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false/*, float accuracyMin = -1, float accuracyMax = -1*/)
 	{
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0("eAISpatialPatrol", "Create");
@@ -55,7 +60,8 @@ class eAISpatialPatrol : eAIPatrol
 		patrol.m_MovementThreatSpeedLimit = threatspeedLimit;
 		patrol.m_Faction = faction;
 		patrol.m_Formation = formation;
-		patrol.m_CanBeLooted = canBeLooted;
+		patrol.m_CanBeLooted = true;
+		patrol.m_lootcheck = lootcheck;
 		patrol.m_UnlimitedReload = unlimitedReload;
 		patrol.m_CanSpawn = true;
 		if (patrol.m_Faction == null) patrol.m_Faction = new eAIFactionCivilian();
@@ -64,9 +70,9 @@ class eAISpatialPatrol : eAIPatrol
 		return patrol;
 	}
 
-	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, eAIFaction faction = null, bool autoStart = true, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, bool canBeLooted = true, bool unlimitedReload = false)
+	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, eAIFaction faction = null, bool autoStart = true, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
 	{
-		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, 600, faction, null, autoStart, minR, maxR, maxR * 1.1, speedLimit, threatspeedLimit, canBeLooted, unlimitedReload);
+		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, 600, faction, null, autoStart, minR, maxR, maxR * 1.1, speedLimit, threatspeedLimit, lootcheck, unlimitedReload);
 	}
 
 	void SetAccuracy(float accuracyMin, float accuracyMax)
@@ -89,12 +95,22 @@ class eAISpatialPatrol : eAIPatrol
 	{
 		m_GroupName = name;
 	}
+	void SetHunted(PlayerBase p){
+		m_Hunted = p;
+	}
 
 	void SetSniperProneDistanceThreshold(float distance)
 	{
 		m_SniperProneDistanceThreshold = distance;
 	}
 
+	eAIGroup GetGroup(){
+		return m_Group;
+	}
+
+	void SetLocation(){
+		m_Location = 1;
+	}
 	private eAIBase SpawnAI(vector pos)
 	{
 		#ifdef EAI_TRACE
@@ -112,9 +128,8 @@ class eAISpatialPatrol : eAIPatrol
 			m_Loadout = m_Faction.GetDefaultLoadout();
 
 		ExpansionHumanLoadout.Apply(ai, m_Loadout, false);
-				
+		GetSpatialSettings().PullRef(m_Spatial_Groups);		
 		ai.SetMovementSpeedLimits(m_MovementSpeedLimit, m_MovementThreatSpeedLimit);
-		ai.Expansion_SetCanBeLooted(m_CanBeLooted);
 		ai.eAI_SetUnlimitedReload(m_UnlimitedReload);
 		ai.eAI_SetAccuracy(m_AccuracyMin, m_AccuracyMax);
 		ai.eAI_SetThreatDistanceLimit(m_ThreatDistanceLimit);
@@ -122,6 +137,31 @@ class eAISpatialPatrol : eAIPatrol
 		ai.eAI_SetSniperProneDistanceThreshold(m_SniperProneDistanceThreshold);
 
 		return ai;
+	}
+
+	//sigh
+	bool CheckMemberLootable(eAIBase ai, int lootcheck) {
+		switch (lootcheck) {
+			case 0:
+			case 1:
+				//true-false
+				return lootcheck;
+				break;
+			case 2:
+				//ranfom
+				int r = Math.RandomIntInclusive(0, 1);
+				return r;
+				break;
+			case 3:
+				//leader only
+				if (ai.GetGroup().GetLeader() == ai) {
+				return true;
+				} else {
+				return false;
+				}
+				break;
+		}
+		return false;
 	}
 
 	bool WasGroupDestroyed()
@@ -170,11 +210,15 @@ class eAISpatialPatrol : eAIPatrol
 		m_WasGroupDestroyed = false;
 
 		eAIBase ai = SpawnAI(m_Position);
+		TrueLead = ai;
 		m_Group = ai.GetGroup();
 		m_Group.SetFaction(m_Faction);
 		m_Group.SetFormation(m_Formation);
 		m_Group.SetWaypointBehaviour(m_WaypointBehaviour);
 		m_Group.SetName(m_GroupName);
+
+		
+
 		for (int idx = 0; idx < m_Waypoints.Count(); idx++)
 		{
 			m_Group.AddWaypoint(m_Waypoints[idx]);
@@ -190,9 +234,11 @@ class eAISpatialPatrol : eAIPatrol
 		{
 			ai = SpawnAI(m_Formation.ToWorld(m_Formation.GetPosition(i)));
 			ai.SetGroup(m_Group);
+			ai.Expansion_SetCanBeLooted(CheckMemberLootable(ai, m_lootcheck));
+			ai.eAI_SetAccuracy(-1, -1);
 		}
-
 		m_NumberOfSpatialPatrols++;
+      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false);
 	}
 
 	void Despawn(bool deferDespawnUntilLoosingAggro = false)
@@ -273,7 +319,91 @@ class eAISpatialPatrol : eAIPatrol
 			}
 		}
 	}
-	
+
+  //Spatial_Movement(ai, player)
+  void Spatial_Movement() {
+	PlayerBase player = m_Hunted;
+	eAIBase ai = TrueLead;
+    eAIGroup AiGroup = ai.GetGroup();
+    if (!AiGroup) return;
+    AiGroup.ClearWaypoints();
+    int m_Mode;
+    if (player.CheckZone() == true) {
+      m_Mode = player.Spatial_HuntMode();
+    } else {
+      m_Mode = m_Spatial_Groups.HuntMode;
+    }
+	if (m_Location == 1) m_Mode = 3;
+    switch (m_Mode) {
+    case 1: {
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+      player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
+      break;
+    }
+    case 2: {
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+      break;
+    }
+    case 3: {
+      /*
+      just spawn, dont chase unless standard internal contitions met.
+      */
+      break;
+    }
+    case 4: {
+      //mostly irrelevant - generic waypoints do better
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+      break;
+    }
+    case 5: {
+      float c = m_Spatial_Groups.EngageTimer / 2500;
+      for (int i = 0; i < c; i++) {
+        int d = Math.RandomIntInclusive(0, 100);
+        if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+        if (d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
+        if (d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
+      }
+    }
+    case 6: {
+      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
+      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, 15000, false, ai, player, Vector(0, 0, 0), 15000);
+    }
+    }
+  }
+
+
+  void SetGroupAccuracy(eAIGroup group) {
+    if (!group) return;
+    for (int i = 0; i < group.Count(); i++) {
+      eAIBase ai = eAIBase.Cast(group.GetMember(i));
+      if (!ai) return;
+      ai.eAI_SetAccuracy(-1, -1);
+    }
+  }
+
+  //TrailingGroup(ai, player, Vector(0, 0, 0), 15000)
+  void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
+    if (!player || !ai) return;
+    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
+    if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(ai);
+    if (pos == player.GetPosition()) {
+      if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
+    }
+    if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 140) {
+      if (player && ai) {
+        AiGroup.ClearWaypoints();
+        AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 80, 100));
+      }
+    }
+    if (player) pos = player.GetPosition();
+    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, ai, player, pos, timer);
+  }
+
 	override void Debug()
 	{
 		super.Debug();
