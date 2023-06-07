@@ -324,7 +324,8 @@ class eAISpatialPatrol : eAIPatrol
   void Spatial_Movement() {
 	PlayerBase player = m_Hunted;
 	eAIBase ai = TrueLead;
-    eAIGroup AiGroup = ai.GetGroup();
+	if (!ai) return;
+    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
     if (!AiGroup) return;
     AiGroup.ClearWaypoints();
     int m_Mode;
