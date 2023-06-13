@@ -74,14 +74,11 @@ class Location_Trigger: CylinderTrigger
     maxdistradius = 1200;
     despawnradius = 1200;
     bool UnlimitedReload = false;
-    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), true, mindistradius, maxdistradius, despawnradius, 2, 3, m_Spatial_Groups.Lootable, UnlimitedReload);
+    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, 2, 3, m_Spatial_Groups.Lootable, UnlimitedReload);
     if (dynPatrol) {
-      dynPatrol.SetAccuracy(-1, -1);
       dynPatrol.SetGroupName(GroupName);
       dynPatrol.SetSniperProneDistanceThreshold(maxdistradius * 3);
-      dynPatrol.SetHunted(playerInsider);
       dynPatrol.SetLocation();
-      dynPatrol.Spatial_Movement();
     }
   }
 

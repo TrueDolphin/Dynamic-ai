@@ -38,7 +38,7 @@ class eAISpatialPatrol : eAIPatrol
 	bool m_CanSpawn;
 	private bool m_WasGroupDestroyed;
 
-	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, bool autoStart = true, float minR = 300, float maxR = 800, float despawnR = 880, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false/*, float accuracyMin = -1, float accuracyMax = -1*/)
+	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase c_player, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false/*, float accuracyMin = -1, float accuracyMax = -1*/)
 	{
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0("eAISpatialPatrol", "Create");
@@ -63,16 +63,17 @@ class eAISpatialPatrol : eAIPatrol
 		patrol.m_CanBeLooted = true;
 		patrol.m_lootcheck = lootcheck;
 		patrol.m_UnlimitedReload = unlimitedReload;
+		patrol.m_Hunted = c_player;
 		patrol.m_CanSpawn = true;
 		if (patrol.m_Faction == null) patrol.m_Faction = new eAIFactionCivilian();
 		if (patrol.m_Formation == null) patrol.m_Formation = new eAIFormationVee();
-		if (autoStart) patrol.Start();
+		patrol.Start();
 		return patrol;
 	}
 
-	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, eAIFaction faction = null, bool autoStart = true, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
+	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
 	{
-		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, 600, faction, null, autoStart, minR, maxR, maxR * 1.1, speedLimit, threatspeedLimit, lootcheck, unlimitedReload);
+		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, 600, faction, null, player, minR, maxR, maxR * 1.1, speedLimit, threatspeedLimit, lootcheck, unlimitedReload);
 	}
 
 	void SetAccuracy(float accuracyMin, float accuracyMax)
@@ -217,8 +218,6 @@ class eAISpatialPatrol : eAIPatrol
 		m_Group.SetWaypointBehaviour(m_WaypointBehaviour);
 		m_Group.SetName(m_GroupName);
 
-		
-
 		for (int idx = 0; idx < m_Waypoints.Count(); idx++)
 		{
 			m_Group.AddWaypoint(m_Waypoints[idx]);
@@ -229,7 +228,7 @@ class eAISpatialPatrol : eAIPatrol
 					m_Group.m_BackTracking = true;
 			}
 		}
-
+		Spatial_Movement(ai, m_Group);
 		for (int i = 1; i < m_NumberOfAI; i++)
 		{
 			ai = SpawnAI(m_Formation.ToWorld(m_Formation.GetPosition(i)));
@@ -238,7 +237,6 @@ class eAISpatialPatrol : eAIPatrol
 			ai.eAI_SetAccuracy(-1, -1);
 		}
 		m_NumberOfSpatialPatrols++;
-      GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false);
 	}
 
 	void Despawn(bool deferDespawnUntilLoosingAggro = false)
@@ -257,6 +255,7 @@ class eAISpatialPatrol : eAIPatrol
 
 		if (!m_WasGroupDestroyed && m_NumberOfSpatialPatrols)
 			m_NumberOfSpatialPatrols--;
+			if (this) this.Delete();
 	}
 
 	override void OnUpdate()
@@ -290,7 +289,7 @@ class eAISpatialPatrol : eAIPatrol
 			}
 		}
 
-		//! CE API is only avaialble after game is loaded
+		//! CE API is only avaliable after game is loaded
 		if (!GetCEApi())
 			return;
 
@@ -313,20 +312,19 @@ class eAISpatialPatrol : eAIPatrol
 		}
 		else
 		{
-			if (!GetCEApi().AvoidPlayer(patrolPos, m_MaximumRadius) && GetCEApi().AvoidPlayer(patrolPos, m_MinimumRadius))
-			{
-				Spawn();
-			}
+			//if (this) this.Delete();
+			if (!GetCEApi().AvoidPlayer(patrolPos, m_MaximumRadius) && GetCEApi().AvoidPlayer(patrolPos, m_MinimumRadius)){
+			Spawn();	
+			GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false, true);
+			} 
+
 		}
 	}
 
   //Spatial_Movement(ai, player)
-  void Spatial_Movement() {
+  void Spatial_Movement(eAIBase ai, eAiGroup AiGroup) {
 	PlayerBase player = m_Hunted;
-	eAIBase ai = TrueLead;
-	if (!ai) return;
-    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
-    if (!AiGroup) return;
+	if (!player || !AiGroup || !ai) return;
     AiGroup.ClearWaypoints();
     int m_Mode;
     if (player.CheckZone() == true) {
@@ -377,16 +375,6 @@ class eAISpatialPatrol : eAIPatrol
     }
   }
 
-
-  void SetGroupAccuracy(eAIGroup group) {
-    if (!group) return;
-    for (int i = 0; i < group.Count(); i++) {
-      eAIBase ai = eAIBase.Cast(group.GetMember(i));
-      if (!ai) return;
-      ai.eAI_SetAccuracy(-1, -1);
-    }
-  }
-
   //TrailingGroup(ai, player, Vector(0, 0, 0), 15000)
   void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
     if (!player || !ai) return;
@@ -407,12 +395,12 @@ class eAISpatialPatrol : eAIPatrol
 
 	override void Debug()
 	{
-		super.Debug();
-		
+		///super.Debug();
+		Print("=======Dynamic Debug========");
+		Print(m_Hunted)
 		Print(m_Group);
-		Print(m_TimeSinceLastSpawn);
-		Print(m_CanSpawn);
 		Print(m_NumberOfAI);
 		Print(WasGroupDestroyed());
+		Print("=======Dynamic Debug========");
 	}
 };
