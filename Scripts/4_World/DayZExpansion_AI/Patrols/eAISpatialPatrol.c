@@ -38,7 +38,7 @@ class eAISpatialPatrol : eAIPatrol
 	bool m_CanSpawn;
 	private bool m_WasGroupDestroyed;
 
-	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase c_player, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false/*, float accuracyMin = -1, float accuracyMax = -1*/)
+	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false/*, float accuracyMin = -1, float accuracyMax = -1*/)
 	{
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0("eAISpatialPatrol", "Create");
@@ -63,7 +63,7 @@ class eAISpatialPatrol : eAIPatrol
 		patrol.m_CanBeLooted = true;
 		patrol.m_lootcheck = lootcheck;
 		patrol.m_UnlimitedReload = unlimitedReload;
-		patrol.m_Hunted = c_player;
+		patrol.m_Hunted = player;
 		patrol.m_CanSpawn = true;
 		if (patrol.m_Faction == null) patrol.m_Faction = new eAIFactionCivilian();
 		if (patrol.m_Formation == null) patrol.m_Formation = new eAIFormationVee();
@@ -71,9 +71,9 @@ class eAISpatialPatrol : eAIPatrol
 		return patrol;
 	}
 
-	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
+	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
 	{
-		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, 600, faction, null, player, minR, maxR, maxR * 1.1, speedLimit, threatspeedLimit, lootcheck, unlimitedReload);
+		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, despawnTime, faction, null, player, minR, maxR, maxR * 1.1, speedLimit, threatspeedLimit, lootcheck, unlimitedReload);
 	}
 
 	void SetAccuracy(float accuracyMin, float accuracyMax)
@@ -322,7 +322,7 @@ class eAISpatialPatrol : eAIPatrol
 	}
 
   //Spatial_Movement(ai, player)
-  void Spatial_Movement(eAIBase ai, eAiGroup AiGroup) {
+  void Spatial_Movement(eAIBase ai, eAIGroup AiGroup) {
 	PlayerBase player = m_Hunted;
 	if (!player || !AiGroup || !ai) return;
     AiGroup.ClearWaypoints();
@@ -397,7 +397,7 @@ class eAISpatialPatrol : eAIPatrol
 	{
 		///super.Debug();
 		Print("=======Dynamic Debug========");
-		Print(m_Hunted)
+		Print(m_Hunted);
 		Print(m_Group);
 		Print(m_NumberOfAI);
 		Print(WasGroupDestroyed());
