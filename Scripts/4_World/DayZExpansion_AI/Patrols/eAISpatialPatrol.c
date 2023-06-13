@@ -32,11 +32,16 @@ class eAISpatialPatrol : eAIPatrol
 	ref eAIGroup m_Group;
 	eAIBase TrueLead;
 	int m_lootcheck;
-	int m_Location;
+	int m_Location = 0;
 	string m_GroupName;
 	float m_TimeSinceLastSpawn;
 	bool m_CanSpawn;
 	private bool m_WasGroupDestroyed;
+
+
+	void eAISpatialPatrol() {
+	GetSpatialSettings().PullRef(m_Spatial_Groups);	
+	}
 
 	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false/*, float accuracyMin = -1, float accuracyMax = -1*/)
 	{
@@ -44,7 +49,7 @@ class eAISpatialPatrol : eAIPatrol
 		auto trace = CF_Trace_0("eAISpatialPatrol", "Create");
 		#endif
 
-		eAISpatialPatrol patrol;
+		eAISpatialPatrol patrol;	
 		Class.CastTo(patrol, ((typename)eAISpatialPatrol).Spawn());
 		patrol.m_Position = pos;
 		patrol.m_Waypoints = waypoints;
@@ -65,6 +70,8 @@ class eAISpatialPatrol : eAIPatrol
 		patrol.m_UnlimitedReload = unlimitedReload;
 		patrol.m_Hunted = player;
 		patrol.m_CanSpawn = true;
+		patrol.m_Location = 0;
+		GetSpatialSettings().PullRef(patrol.m_Spatial_Groups);
 		if (patrol.m_Faction == null) patrol.m_Faction = new eAIFactionCivilian();
 		if (patrol.m_Formation == null) patrol.m_Formation = new eAIFormationVee();
 		patrol.Start();
@@ -128,8 +135,7 @@ class eAISpatialPatrol : eAIPatrol
 		if ( m_Loadout == "" )
 			m_Loadout = m_Faction.GetDefaultLoadout();
 
-		ExpansionHumanLoadout.Apply(ai, m_Loadout, false);
-		GetSpatialSettings().PullRef(m_Spatial_Groups);		
+		ExpansionHumanLoadout.Apply(ai, m_Loadout, false);	
 		ai.SetMovementSpeedLimits(m_MovementSpeedLimit, m_MovementThreatSpeedLimit);
 		ai.eAI_SetUnlimitedReload(m_UnlimitedReload);
 		ai.eAI_SetAccuracy(m_AccuracyMin, m_AccuracyMax);
@@ -205,7 +211,6 @@ class eAISpatialPatrol : eAIPatrol
 				name = m_Faction.ClassName().Substring(10, m_Faction.ClassName().Length() - 10);
             GetExpansionSettings().GetLog().PrintLog("[Spatial AI] Spawning " + m_NumberOfAI + " " + name + " bots at " + m_Position);
         }
-
 		m_TimeSinceLastSpawn = 0;
 		m_CanSpawn = false;
 		m_WasGroupDestroyed = false;
@@ -228,7 +233,10 @@ class eAISpatialPatrol : eAIPatrol
 					m_Group.m_BackTracking = true;
 			}
 		}
+
+		//here
 		Spatial_Movement(ai, m_Group);
+
 		for (int i = 1; i < m_NumberOfAI; i++)
 		{
 			ai = SpawnAI(m_Formation.ToWorld(m_Formation.GetPosition(i)));
@@ -282,7 +290,7 @@ class eAISpatialPatrol : eAIPatrol
 				return;
 			}
 
-			int maxPatrols = GetExpansionSettings().GetAI().MaximumDynamicPatrols;
+			int maxPatrols = m_Spatial_Groups.MaxAI;
 			if (maxPatrols > -1 && m_NumberOfSpatialPatrols >= maxPatrols)
 			{
 				return;
@@ -315,7 +323,7 @@ class eAISpatialPatrol : eAIPatrol
 			//if (this) this.Delete();
 			if (!GetCEApi().AvoidPlayer(patrolPos, m_MaximumRadius) && GetCEApi().AvoidPlayer(patrolPos, m_MinimumRadius)){
 			Spawn();	
-			GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false, true);
+			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false, true);
 			} 
 
 		}
@@ -326,71 +334,72 @@ class eAISpatialPatrol : eAIPatrol
 	PlayerBase player = m_Hunted;
 	if (!player || !AiGroup || !ai) return;
     AiGroup.ClearWaypoints();
-    int m_Mode;
-    if (player.CheckZone() == true) {
-      m_Mode = player.Spatial_HuntMode();
-    } else {
-      m_Mode = m_Spatial_Groups.HuntMode;
-    }
+    int m_Mode = m_Spatial_Groups.HuntMode;
+	if (m_Mode == 0) m_Mode = 6;
+    if (player.CheckZone() == true) m_Mode = player.Spatial_HuntMode();
 	if (m_Location == 1) m_Mode = 3;
     switch (m_Mode) {
-    case 1: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-      player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
-      break;
-    }
-    case 2: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-      break;
-    }
-    case 3: {
-      /*
-      just spawn, dont chase unless standard internal contitions met.
-      */
-      break;
-    }
-    case 4: {
-      //mostly irrelevant - generic waypoints do better
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-      break;
-    }
-    case 5: {
-      float c = m_Spatial_Groups.EngageTimer / 2500;
-      for (int i = 0; i < c; i++) {
-        int d = Math.RandomIntInclusive(0, 100);
-        if (d < 16) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
-        if (d > 15 && d < 95) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
-        if (d > 94) ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
-      }
-    }
-    case 6: {
-      ai.GetGroup().AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, 15000, false, ai, player, Vector(0, 0, 0), 15000);
-    }
+		case 1: {
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+		player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
+		break;
+		}
+		case 2: {
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
+		break;
+		}
+		case 3: {
+		/*
+		just spawn, dont chase unless standard internal contitions met.
+		*/
+		break;
+		}
+		case 4: {
+		//mostly irrelevant - generic waypoints do better
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+		break;
+		}
+		case 5: {
+		float c = m_Spatial_Groups.EngageTimer / 2500;
+			for (int i = 0; i < c; i++) {
+				int d = Math.RandomIntInclusive(0, 100);
+				if (d < 16) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
+				if (d > 15 && d < 95) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
+				if (d > 94) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
+			}
+		break;
+		}
+		case 6: {
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
+		GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 15000, false, AiGroup, player, Vector(0, 0, 0), 15000);
+		break;
+		}
     }
   }
 
   //TrailingGroup(ai, player, Vector(0, 0, 0), 15000)
-  void TrailingGroup(eAIBase ai, PlayerBase player, vector pos, int timer) {
-    if (!player || !ai) return;
-    eAIGroup AiGroup = eAIGroup.Cast(ai.GetGroup());
-    if (!AiGroup) AiGroup = eAIGroup.GetGroupByLeader(ai);
+  void TrailingGroup(eAIGroup AiGroup, PlayerBase player, vector pos, int timer) {
+	//Print("Trailing trigger" + this);
+	if (!player || !AiGroup) return;
+
     if (pos == player.GetPosition()) {
-      if (player && ai) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
+    	AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
     }
-    if (vector.Distance(player.GetPosition(), ai.GetPosition()) > 140) {
-      if (player && ai) {
+
+    if (vector.Distance(player.GetPosition(), AiGroup.GetLeader().GetPosition()) > 140) {
         AiGroup.ClearWaypoints();
         AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 80, 100));
-      }
-    }
-    if (player) pos = player.GetPosition();
-    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, ai, player, pos, timer);
+    } else {
+	AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 80, 100));
+	}
+
+    pos = player.GetPosition();
+    GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer);
   }
 
 	override void Debug()

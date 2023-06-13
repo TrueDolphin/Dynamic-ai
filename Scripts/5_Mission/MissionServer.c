@@ -12,7 +12,6 @@ changed over to CreateEx
 modded class MissionServer {
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
-  int Spatial_Spawncount = 0;
   int m_Spatial_cur = 0;
   ref array < Man > Spatial_PlayerList = new array < Man > ;
   ref Spatial_Groups m_Spatial_Groups;
@@ -94,10 +93,6 @@ modded class MissionServer {
       return false;
     }
 
-    if (Spatial_Spawncount > m_Spatial_Groups.MaxAI) {
-      return false;
-    }
-
     return valid;
   }
 
@@ -128,7 +123,6 @@ modded class MissionServer {
         if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
         if (PlayerGroup.Count() > 1) SpawnCount += (PlayerGroup.Count() - 1);
       }
-      Spatial_Spawncount += SpawnCount;
       Spatial_message(player, m_Spatial_Groups.MessageType, SpawnCount, faction, loadout);
       Spatial_Spawn(player, SpawnCount, faction, loadout, name);
     }
@@ -180,10 +174,10 @@ modded class MissionServer {
     maxdistradius = 1200;
     despawnradius = 1200;
     bool UnlimitedReload = false;
-    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, 2, 3, m_Spatial_Groups.Lootable, UnlimitedReload);
+    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, m_Spatial_Groups.Lootable, UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetGroupName(GroupName);
-      dynPatrol.SetSniperProneDistanceThreshold(maxdistradius * 3);
+      dynPatrol.SetSniperProneDistanceThreshold(0.0);
       dynPatrol.SetHunted(player);
     }
   }
@@ -253,13 +247,6 @@ modded class MissionServer {
   void SpatialLoggerPrint(string msg) {
     if (GetExpansionSettings().GetLog().AIGeneral)
       GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
-  }
-
-  //required
-  void Spatial_PatrolCleanup(eAISpatialPatrol patrol, eAIGroup group, int count) {
-    Spatial_Spawncount -= count;
-    if (group) group.ClearAI();
-    if (patrol) patrol.Delete();
   }
 
   #ifdef EXPANSIONMODSPAWNSELECTION
