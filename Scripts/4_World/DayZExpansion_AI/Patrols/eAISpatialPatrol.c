@@ -321,9 +321,8 @@ class eAISpatialPatrol : eAIPatrol
 	if (!player || !AiGroup || !ai) return;
     AiGroup.ClearWaypoints();
     int m_Mode = m_Spatial_Groups.HuntMode;
-	if (m_Mode == 0) m_Mode = 6;
     if (player.CheckZone() == true) m_Mode = player.Spatial_HuntMode();
-	if (m_Location == 1) m_Mode = 3;
+	if (player.Spatial_LocationHunt() != 10) m_Mode = player.Spatial_LocationHunt();
     switch (m_Mode) {
 		case 1: {
 			//agressive
@@ -390,8 +389,9 @@ class eAISpatialPatrol : eAIPatrol
 		} else {
 		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 80, 100));
 		}
-
+		if (!player) return;
 		pos = player.GetPosition();
+
 		GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer);
 	}//TrailingGroup(ai, player, Vector(0, 0, 0), 15000);
 

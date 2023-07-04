@@ -10,23 +10,18 @@ class SpatialSettings {
   int m_cur = 0;
   int m_Spatial_Total = -1;
   bool Spatial_Version = true;
-  bool m_Spatial_InVehicle;
-  bool m_Spatial_IsBleeding;
-  bool m_Spatial_IsRestrained;
-  bool m_Spatial_IsUnconscious;
-  bool m_Spatial_IsInSafeZone;
-  bool m_Spatial_TPSafeZone;
-  bool m_Spatial_InOwnTerritory;
+  bool m_Spatial_InVehicle, m_Spatial_IsBleeding, m_Spatial_IsRestrained, m_Spatial_IsUnconscious, m_Spatial_IsInSafeZone, m_Spatial_TPSafeZone, m_Spatial_InOwnTerritory;
 
   //refs
   ref Spatial_Groups m_Spatial_Groups;
 
-  //init
+ 
   bool Init() {
     Load();
     if (m_Spatial_Total < 0) {
       Print("Spatial AI Config Error - Disabled");
-      loggerPrint("No Spatial Groups valid."); //Sadface box
+      loggerPrint("No Spatial Groups valid.");
+      loggerPrint("At least one valid group Required"); //Sadface box
       return false;
     } else {
       if (Spatial_Version == true) {
@@ -34,15 +29,15 @@ class SpatialSettings {
       }
     }
     return false;
-  }
+  } //init
 
-  //load ref to use location
+  
   void PullRef(out Spatial_Groups Data) {
     if (!m_Spatial_Groups) Load();
     Data = m_Spatial_Groups;
-  }
+  } //load ref to use location
 
-  //load from file/data checks
+
   void Load() {
     if (!FileExist(EXP_AI_SPATIAL_SETTINGS)) {
       if (!FileExist(EXP_SPATIAL_FOLDER))
@@ -55,7 +50,7 @@ class SpatialSettings {
       m_Spatial_Groups = new Spatial_Groups();
       JsonFileLoader < Spatial_Groups > .JsonLoadFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Groups);
     }
-    if (m_Spatial_Groups.Version != 15) { // dont like this. change it.
+    if (m_Spatial_Groups.Version != 16) { // dont like this. change it.
       loggerPrint("Settings File Out of date. Please delete and restart server.");
       Spatial_Version = false;
       return;
@@ -72,8 +67,14 @@ class SpatialSettings {
     }
 
     if (m_Spatial_Groups.Spatial_MinTimer < 300000) { // global minimum time of 5 mins 
+      if (m_Spatial_Groups.Spatial_MinTimer == 0) {
+        loggerPrint("Debug timers set");
+        m_Spatial_Groups.Spatial_MinTimer = 60000;
+        m_Spatial_Groups.Spatial_MaxTimer = 60000;
+      } else {
       loggerPrint("Timer Set too low. Defaulting to 5 minutes");
       m_Spatial_Groups.Spatial_MinTimer = 300000;
+      }
     }
     if (m_Spatial_Groups.Spatial_MaxTimer < m_Spatial_Groups.Spatial_MinTimer) {
       loggerPrint("Max Timer set lower than min timer, setting to the same.");
@@ -127,15 +128,15 @@ class SpatialSettings {
       m_Spatial_Groups.Points_Enabled = 0;
     }
 
-    if (m_Spatial_Groups.Locations_Enabled != 0 && m_Spatial_Groups.Locations_Enabled != 1) { // global minimum time of 5 mins
+    if (m_Spatial_Groups.Locations_Enabled != 0 && m_Spatial_Groups.Locations_Enabled != 1) {
       loggerPrint("Locations_Enabled error, setting to false");
       m_Spatial_Groups.Locations_Enabled = 0;
     }
 
-    if (m_Spatial_Groups.EngageTimer < 300000) { // global minimum time of 5 mins
+    if (m_Spatial_Groups.EngageTimer < 300000) {
       loggerPrint("Minimum engagement too low. setting to 5m");
       m_Spatial_Groups.EngageTimer = 300000;
-    }
+    } // global minimum time of 5 mins
 
     if (m_Spatial_Groups.CleanupTimer < m_Spatial_Groups.EngageTimer) {
       loggerPrint("Cleanup timer under engage timer. setting +1m");
@@ -145,19 +146,6 @@ class SpatialSettings {
     if (m_Spatial_Groups.MessageType < 0 && m_Spatial_Groups.MessageType > 4) {
       loggerPrint("Message type error. disabling.");
       m_Spatial_Groups.MessageType = 0;
-    }
-
-    if (!m_Spatial_Groups.Chance){
-      loggerPrint("chance incorreect. setting to 0.5");
-      m_Spatial_Groups.Chance = 0.5;
-    }
-    if (m_Spatial_Groups.Chance > 1.0){
-      loggerPrint("chance incorreect. setting to 1.0");
-      m_Spatial_Groups.Chance = 1.0;
-    }
-    if (m_Spatial_Groups.Chance < 0){
-      loggerPrint("chance incorreect. setting to 1.0");
-      m_Spatial_Groups.Chance = 1.0;
     }
 
     if (!m_Spatial_Groups.MessageTitle) {
@@ -173,10 +161,6 @@ class SpatialSettings {
     } else if (m_Spatial_Groups.MessageText == " ") {
       loggerPrint("Message text error. setting default.");
       m_Spatial_Groups.MessageText = "AI Spotted in the Area. Be Careful.";
-    }
-    if (m_Spatial_Groups.Lootable < 0 && m_Spatial_Groups.Lootable > 4) {
-      m_Spatial_Groups.Lootable = 0;
-      loggerPrint("lootable check error. setting default to no.");
     }
     if (m_Spatial_Groups.Spatial_InVehicle != true && m_Spatial_Groups.Spatial_InVehicle != false) {
       loggerPrint("ignore vehicle check error - default off");
@@ -246,28 +230,28 @@ class SpatialSettings {
       }
       m_Spatial_Total += 1;
     }
-  }
+  } //load from file/data checks
 
-  //generate default array data
+
   void DefaultSpatialSettings(out Spatial_Groups Data) {
     Data = new Spatial_Groups();
-    Data.Group.Insert(new Spatial_Group(2, 2, 200, "NBCLoadout.json", "Guards", "Guard"));
-    Data.Group.Insert(new Spatial_Group(1, 3, 300, "HumanLoadout.json", "Shamans", "Shaman"));
-    Data.Group.Insert(new Spatial_Group(2, 3, 350, "EastLoadout.json", "Passive", "Passive"));
+    Data.Group.Insert(new Spatial_Group(2, 2, 200, "NBCLoadout.json", "Guards", "Guard", 1, 0.5));
+    Data.Group.Insert(new Spatial_Group(1, 3, 300, "HumanLoadout.json", "Shamans", "Shaman", 1, 0.5));
+    Data.Group.Insert(new Spatial_Group(2, 3, 350, "EastLoadout.json", "Passive", "Passive", 1, 0.5));
 
-    Data.Point.Insert(new Spatial_Point("East", 0, 50, "EastLoadout.json", 0, 4, 6, "East", "0.0 0.0 0.0"));
-    Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", "0.0 0.0 0.0"));
-    Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", "0.0 0.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("East", 0, 50, "EastLoadout.json", 0, 4, 6, "East", 1, 0.5, "0.0 0.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", 1, 0.5, "0.0 0.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", 1, 0.5, "0.0 0.0 0.0"));
 
-    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", "0.0 0.0 0.0", "0.0 0.0 0.0"));
-    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", "0.0 0.0 0.0", "0.0 0.0 0.0"));
-  }
+    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 60000, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 60000, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+  } //generate default array data
 
-  //expansion logging (Spatial AI prefex)
+
   void loggerPrint(string msg) {
     if (GetExpansionSettings().GetLog().AIGeneral)
       GetExpansionSettings().GetLog().PrintLog("[Spatial Settings] " + msg);
-  }
+  } //expansion logging (Spatial AI prefex)
 
   //returns
   int Spatial_Total() {
@@ -310,7 +294,7 @@ class SpatialSettings {
 }
 //json data
 class Spatial_Groups {
-  int Version = 15;
+  int Version = 16;
   int Spatial_MinTimer = 1200000;
   int Spatial_MaxTimer = 1200000;
   int MinDistance = 140;
@@ -318,17 +302,14 @@ class Spatial_Groups {
   int HuntMode = 1;
   int Points_Enabled = 0;
   int Locations_Enabled = 0;
-  int Location_Timer = 300000;
   int EngageTimer = 300000;
   int CleanupTimer = 360000;
   int PlayerChecks = 0;
   int MaxAI = 20;
   int GroupDifficulty = 1;
-  float Chance = 0.5;
   int MessageType = 1;
   string MessageTitle = "Spatial AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";
-  int Lootable = 0;
   ref TStringArray LootWhitelist = {};
   bool Spatial_InVehicle = false;
   bool Spatial_IsBleeding = false;
@@ -348,33 +329,35 @@ class Spatial_Groups {
 }
 
 class Spatial_Group {
-  int Spatial_MinCount;
-  int Spatial_MaxCount;
-  float Spatial_Weight;
-  string Spatial_Loadout;
-  string Spatial_Faction;
-  string Spatial_Name;
-  void Spatial_Group(int a, int b, float c, string d, string e, string f) {
+  int  Spatial_MinCount, Spatial_MaxCount;
+  float  Spatial_Weight;
+  string  Spatial_Loadout, Spatial_Faction, Spatial_Name;
+  int  Spatial_Lootable;
+  float  Spatial_Chance;
+  void Spatial_Group(int a, int b, float c, string d, string e, string f, int g, float h) {
     Spatial_MinCount = a;
     Spatial_MaxCount = b;
     Spatial_Weight = c;
     Spatial_Loadout = d;
     Spatial_Faction = e;
     Spatial_Name = f;
+    Spatial_Lootable = g;
+    Spatial_Chance = h;
   }
 }
 
 class Spatial_Point {
+  string Spatial_Name;
+  bool Spatial_Safe;
   float Spatial_Radius;
   string Spatial_ZoneLoadout;
-  string Spatial_Faction;
-  string Spatial_Name;
+  float Spatial_MinCount, Spatial_MaxCount;
   int Spatial_HuntMode;
-  int Spatial_MinCount;
-  int Spatial_MaxCount;
-  bool Spatial_Safe;
+  string Spatial_Faction;
+  int Spatial_Lootable;
+  float Spatial_Chance;
   vector Spatial_Position;
-  void Spatial_Point(string i, bool a, float b, string c, int d, int e, int h, string f, vector g) {
+  void Spatial_Point(string i, bool a, float b, string c, int d, int e, int h, string f, int j, float k, vector g) {
     Spatial_Name = i;
     Spatial_Safe = a;
     Spatial_Radius = b;
@@ -383,16 +366,23 @@ class Spatial_Point {
     Spatial_MaxCount = e;
     Spatial_HuntMode = h;
     Spatial_Faction = f;
+    Spatial_Lootable = j;
+    Spatial_Chance = k;
     Spatial_Position = g;
   }
 };
 
 class Spatial_Location {
-  float Spatial_TriggerRadius;
-  string Spatial_ZoneLoadout, Spatial_Faction, Spatial_Name;
-  int Spatial_HuntMode, Spatial_MinCount, Spatial_MaxCount;
-  vector Spatial_TriggerPosition, Spatial_SpawnPosition;
-  void Spatial_Location(string i, float b, string c, int d, int e, int h, string f, vector g, vector a) {
+  string Spatial_Name;
+  float  Spatial_TriggerRadius;
+  string  Spatial_ZoneLoadout;
+  float  Spatial_MinCount, Spatial_MaxCount;
+  int  Spatial_HuntMode;
+  string  Spatial_Faction;
+  int  Spatial_Lootable;
+  float  Spatial_Chance, Spatial_Timer;
+  vector  Spatial_TriggerPosition, Spatial_SpawnPosition;
+  void Spatial_Location(string i, float b, string c, int d, int e, int h, string f, int j, float k, float l, vector g, vector a) {
     Spatial_Name = i;
     Spatial_TriggerRadius = b;
     Spatial_ZoneLoadout = c;
@@ -400,6 +390,9 @@ class Spatial_Location {
     Spatial_MaxCount = e;
     Spatial_HuntMode = h;
     Spatial_Faction = f;
+    Spatial_Lootable = j;
+    Spatial_Chance = k;
+    Spatial_Timer = l;
     Spatial_TriggerPosition = g;
     Spatial_SpawnPosition = a;
   }
