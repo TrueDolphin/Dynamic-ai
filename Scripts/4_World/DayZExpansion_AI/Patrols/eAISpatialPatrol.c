@@ -62,7 +62,7 @@ class eAISpatialPatrol : eAIPatrol
 		patrol.m_MovementThreatSpeedLimit = threatspeedLimit;
 		patrol.m_Faction = faction;
 		patrol.m_Formation = formation;
-		patrol.m_CanBeLooted = true;
+		patrol.m_CanBeLooted = CheckMemberLootable(lootcheck);
 		patrol.m_lootcheck = lootcheck;
 		patrol.m_UnlimitedReload = unlimitedReload;
 		patrol.m_Hunted = player;
@@ -138,26 +138,19 @@ class eAISpatialPatrol : eAIPatrol
 		return ai;
 	}
 
-	bool CheckMemberLootable(eAIBase ai, int lootcheck) {
+	bool CheckMemberLootable(eAIBase ai = null, int lootcheck = 0) {
+		if (!ai && lootcheck > 2) lootcheck = 0;
 		switch (lootcheck) {
-			case 0:
 			case 1:
-				//true-false
-				return lootcheck;
-				break;
+				return true;
 			case 2:
-				//ranfom
+				//random
 				int r = Math.RandomIntInclusive(0, 1);
 				return r;
-				break;
 			case 3:
 				//leader only
-				if (ai.GetGroup().GetLeader() == ai) {
-				return true;
-				} else {
-				return false;
-				}
-				break;
+				if (ai.GetGroup().GetLeader() == ai) return true;
+			case 0:
 		}
 		return false;
 	}//CheckMemberLootable(ai, m_lootcheck);
@@ -249,9 +242,8 @@ class eAISpatialPatrol : eAIPatrol
 			m_Group = null;
 		}
 
-		if (!m_WasGroupDestroyed && m_NumberOfSpatialPatrols)
-			m_NumberOfSpatialPatrols--;
-			if (this) this.Delete();
+		if (!m_WasGroupDestroyed && m_NumberOfSpatialPatrols) m_NumberOfSpatialPatrols--;
+		if (this) this.Delete();
 	}//edited
 
 	override void OnUpdate() {
@@ -269,24 +261,15 @@ class eAISpatialPatrol : eAIPatrol
 			m_TimeSinceLastSpawn += eAIPatrol.UPDATE_RATE_IN_SECONDS;
 			//m_CanSpawn = m_RespawnTime > -1 && m_TimeSinceLastSpawn >= m_RespawnTime;
 			//! https://feedback.bistudio.com/T173348
-			if (m_RespawnTime > -1 && m_TimeSinceLastSpawn >= m_RespawnTime)
-				m_CanSpawn = true;
-			else
-				m_CanSpawn = false;
+			m_CanSpawn = false;
+			if (m_RespawnTime > -1 && m_TimeSinceLastSpawn >= m_RespawnTime) m_CanSpawn = true;
 		}
 
 		if (!m_Group)
 		{
-			if (!m_CanSpawn)
-			{
-				return;
-			}
-
+			if (!m_CanSpawn) return;
 			int maxPatrols = m_Spatial_Groups.MaxAI;
-			if (maxPatrols > -1 && m_NumberOfSpatialPatrols >= maxPatrols)
-			{
-				return;
-			}
+			if (maxPatrols > -1 && m_NumberOfSpatialPatrols >= maxPatrols) return;
 		}
 
 		//! CE API is only avaliable after game is loaded
@@ -312,8 +295,8 @@ class eAISpatialPatrol : eAIPatrol
 		}
 		else
 		{
-			//if (this) this.Delete();
-			if (!GetCEApi().AvoidPlayer(patrolPos, m_MaximumRadius) && GetCEApi().AvoidPlayer(patrolPos, m_MinimumRadius)){
+			if (!GetCEApi().AvoidPlayer(patrolPos, m_MaximumRadius) && GetCEApi().AvoidPlayer(patrolPos, m_MinimumRadius))
+			{
 			Spawn();	
 			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false, true);
 			} 
@@ -380,6 +363,7 @@ class eAISpatialPatrol : eAIPatrol
 		if (d > 94) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
 	}//Spatial_PointGen(ai, AiGroup, player);
 
+	 //! https://feedback.bistudio.com/T173348 - readded null checks
 	void TrailingGroup(eAIGroup AiGroup, PlayerBase player, vector pos, int timer) {
 		//Print("Trailing trigger" + this);
 		if (!player || !AiGroup) return;
