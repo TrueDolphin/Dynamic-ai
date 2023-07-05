@@ -383,11 +383,12 @@ class eAISpatialPatrol : eAIPatrol
 	void TrailingGroup(eAIGroup AiGroup, PlayerBase player, vector pos, int timer) {
 		//Print("Trailing trigger" + this);
 		if (!player || !AiGroup) return;
-
 		if (pos == player.GetPosition()) {
 			AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 30, 55));
 		}
-
+		if (!player || !AiGroup) return;
+		EntityAI lead = AiGroup.GetLeader();
+		if (!lead) return;
 		if (vector.Distance(player.GetPosition(), AiGroup.GetLeader().GetPosition()) > 140) {
 			AiGroup.ClearWaypoints();
 			AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 80, 100));
@@ -396,7 +397,7 @@ class eAISpatialPatrol : eAIPatrol
 		}
 		if (!player) return;
 		pos = player.GetPosition();
-
+		if (!player || !AiGroup) return;
 		GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer);
 	}//TrailingGroup(ai, player, Vector(0, 0, 0), 15000);
 
