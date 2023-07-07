@@ -35,12 +35,21 @@ class Location_Trigger: CylinderTrigger
       i_PlayerCount = m_insiders.Count();
         if (dynPatrol) return;
         if (i_PlayerCount < 1) return;
-        if (Spatial_Chance < Math.RandomFloat(0.0, 1.0)) return;
+        int m_Groupid = Math.RandomIntInclusive(0, int.MAX);
+        SpatialDebugPrint("LocationID: " + m_Groupid);
+        float random = Math.RandomFloat(0.0, 1.0);
+        SpatialDebugPrint("Location Chance: " + Spatial_Chance + " | random: " + random);
+        if (Spatial_Chance < random) return;
 
       SpawnCount = Math.RandomIntInclusive(Spatial_MinCount, Spatial_MaxCount);
-      Spatial_Spawn(SpawnCount, Spatial_Faction, Spatial_ZoneLoadout, Spatial_Name, Spatial_Lootable);
-      Spatial_TimerCheck = true;
-      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_timer, Spatial_Timer, false);
+      if (SpawnCount > 0) {
+        Spatial_Spawn(SpawnCount, Spatial_Faction, Spatial_ZoneLoadout, Spatial_Name, Spatial_Lootable);
+        Spatial_TimerCheck = true;
+        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_timer, Spatial_Timer, false);
+      } else {
+        SpatialDebugPrint("Location ai count too low this check");
+      }
+      SpatialDebugPrint("End LocationID: " + m_Groupid);
     }
 
     void Spatial_timer(){
@@ -64,6 +73,7 @@ class Location_Trigger: CylinderTrigger
 
   void Spatial_Spawn(int bod, string fac, string loa, string GroupName, int lootable){
     PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
+    SpatialDebugPrint(playerInsider.GetIdentity().GetName());
     vector startpos = ValidPos();
     TVectorArray waypoints = {
       ValidPos()
@@ -88,4 +98,9 @@ class Location_Trigger: CylinderTrigger
   vector ValidPos(){
     return ExpansionStatic.GetSurfacePosition(Spatial_SpawnPosition);
   }
+
+  void SpatialDebugPrint(string msg) {
+    if (m_Spatial_Groups.Spatial_MinTimer == 60000)
+      GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
+  } //expansion debug print
 }

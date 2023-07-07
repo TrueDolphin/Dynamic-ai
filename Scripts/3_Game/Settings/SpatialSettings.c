@@ -60,15 +60,9 @@ class SpatialSettings {
       Spatial_Version = false;
       return;
     }
-    if (m_Spatial_Groups.PlayerChecks < 0) {
-      loggerPrint("PlayerChecks set under 0, disabling Spatial AI.");
-      Spatial_Version = false;
-      return;
-    }
-
+    
     if (m_Spatial_Groups.Spatial_MinTimer < 300000) { // global minimum time of 5 mins 
       if (m_Spatial_Groups.Spatial_MinTimer == 0) {
-        loggerPrint("Debug timers set");
         m_Spatial_Groups.Spatial_MinTimer = 60000;
         m_Spatial_Groups.Spatial_MaxTimer = 60000;
       } else {

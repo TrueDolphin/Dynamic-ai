@@ -62,7 +62,7 @@ class eAISpatialPatrol : eAIPatrol
 		patrol.m_MovementThreatSpeedLimit = threatspeedLimit;
 		patrol.m_Faction = faction;
 		patrol.m_Formation = formation;
-		patrol.m_CanBeLooted = CheckMemberLootable(lootcheck);
+		patrol.m_CanBeLooted = CheckLootable(lootcheck);
 		patrol.m_lootcheck = lootcheck;
 		patrol.m_UnlimitedReload = unlimitedReload;
 		patrol.m_Hunted = player;
@@ -150,10 +150,27 @@ class eAISpatialPatrol : eAIPatrol
 			case 3:
 				//leader only
 				if (ai.GetGroup().GetLeader() == ai) return true;
+				return false;
 			case 0:
+			return false;
 		}
 		return false;
 	}//CheckMemberLootable(ai, m_lootcheck);
+
+	static bool CheckLootable(int lootcheck = 0) {
+		if (lootcheck > 2) lootcheck = 0;
+		switch (lootcheck) {
+			case 0:
+			case 1:
+				return lootcheck;
+			case 2:
+				//random
+				int r = Math.RandomIntInclusive(0, 1);
+				return r;
+		}
+		return false;
+	}//CheckMemberLootable(ai, m_lootcheck);
+
 
 	bool WasGroupDestroyed() {
 		if (!m_Group)

@@ -2,7 +2,8 @@ class Spatial_Trigger: CylinderTrigger
 {     
     bool Zone_Status;   
     string Zone_Faction, Zone_Loadout, Spatial_Name;
-    int Spatial_MinCount, Spatial_MaxCount, Spatial_HuntMode, Spatial_Lootable, Spatial_Chance;
+    int Spatial_MinCount, Spatial_MaxCount, Spatial_HuntMode, Spatial_Lootable; 
+    float Spatial_Chance;
 
 
     void Spatial_SetData(bool saf, string fac, string lod, int c, int d, int e, string f, int g, float h){

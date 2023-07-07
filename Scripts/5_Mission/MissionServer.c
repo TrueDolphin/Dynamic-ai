@@ -25,6 +25,7 @@ modded class MissionServer {
       GetSpatialSettings().PullRef(m_Spatial_Groups);
       InitSpatialTriggers();
       SpatialLoggerPrint("Spatial AI Enabled");
+      if (m_Spatial_Groups.Spatial_MinTimer == 60000) SpatialLoggerPrint("Spatial Debug Mode on");
       SpatialTimer();
     }
   } //constructor
@@ -43,17 +44,23 @@ modded class MissionServer {
     for (int i = 0; i < Spatial_PlayerList.Count(); i++) {
       PlayerBase player = PlayerBase.Cast(Spatial_PlayerList.GetRandomElement());
       Spatial_PlayerList.RemoveItem(player);
-      PlayerGroup = eAIGroup.Cast(player.GetGroup());
-      if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
-      if (player != player.GetGroup().GetLeader()) continue;
+
+      if (m_Spatial_Groups.PlayerChecks > -1){
+        PlayerGroup = eAIGroup.Cast(player.GetGroup());
+        if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
+        if (player != player.GetGroup().GetLeader()) continue;
+      }
       if (!player || !player.IsAlive() || !player.GetIdentity()) continue;
       #ifdef EXPANSIONMODSPAWNSELECTION
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
       //this is shitty..
       if (CanSpawn(player)) GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
-      if (m_Spatial_Groups.PlayerChecks != 0) {
+      
+      if (m_Spatial_Groups.PlayerChecks > 0){
         if (i == m_Spatial_Groups.PlayerChecks) return;
+      } else if (m_Spatial_Groups.PlayerChecks < 0){
+        if (i == Math.AbsInt(m_Spatial_Groups.PlayerChecks)) return;
       }
     }
   } //standard loop through playerlist pulling randomly and removing that from list.
@@ -91,6 +98,10 @@ modded class MissionServer {
 
   void LocalSpawn(PlayerBase player) {
     if (!player) return;
+
+    int m_Groupid = Math.RandomIntInclusive(0, 5000);
+    SpatialDebugPrint("GroupID: " + m_Groupid);
+
     m_cur = Math.RandomIntInclusive(0, m_Spatial_Groups.Group.Count() - 1);
     int SpawnCount, lootable;
     Spatial_Group group;
@@ -112,7 +123,11 @@ modded class MissionServer {
       lootable = group.Spatial_Lootable;
       chance = group.Spatial_Chance;
     }
-    if (chance < Math.RandomFloat(0.0, 1.0)) return;
+
+    float random = Math.RandomFloat(0.0, 1.0);
+    SpatialDebugPrint("Chance: " + chance + " | random: " + random);
+    if (chance < random) return;
+
     if (SpawnCount > 0) {
       if (m_Spatial_Groups.GroupDifficulty == 1) {
         eAIGroup PlayerGroup;
@@ -122,7 +137,12 @@ modded class MissionServer {
       }
     Spatial_message(player, m_Spatial_Groups.MessageType, SpawnCount, faction, loadout);
     Spatial_Spawn(player, SpawnCount, faction, loadout, name, lootable);
+    } else {
+      SpatialDebugPrint("group/point ai count too low this check");
     }
+
+    SpatialDebugPrint("End GroupID: " + m_Groupid);
+
   } //create and stuff.
 
   Spatial_Group GetWeightedGroup(array < ref Spatial_Group > groups, array < float > weights = NULL) {
@@ -236,6 +256,12 @@ modded class MissionServer {
     if (GetExpansionSettings().GetLog().AIGeneral)
       GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
   } //expansion logging
+
+  void SpatialDebugPrint(string msg) {
+    if (m_Spatial_Groups.Spatial_MinTimer == 60000)
+      GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
+  } //expansion debug print
+
 
   #ifdef EXPANSIONMODSPAWNSELECTION
 
