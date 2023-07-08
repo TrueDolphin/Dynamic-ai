@@ -129,6 +129,7 @@ class eAISpatialPatrol : eAIPatrol
 
 		ExpansionHumanLoadout.Apply(ai, m_Loadout, false);	
 		ai.SetMovementSpeedLimits(m_MovementSpeedLimit, m_MovementThreatSpeedLimit);
+		ai.Expansion_SetCanBeLooted(CheckMemberLootable(ai, m_lootcheck));
 		ai.eAI_SetUnlimitedReload(m_UnlimitedReload);
 		ai.eAI_SetAccuracy(m_AccuracyMin, m_AccuracyMax);
 		ai.eAI_SetThreatDistanceLimit(m_ThreatDistanceLimit);
@@ -240,7 +241,6 @@ class eAISpatialPatrol : eAIPatrol
 		{
 			ai = SpawnAI(m_Formation.ToWorld(m_Formation.GetPosition(i)));
 			ai.SetGroup(m_Group);
-			ai.Expansion_SetCanBeLooted(CheckMemberLootable(ai, m_lootcheck));
 			ai.eAI_SetAccuracy(-1, -1);
 		}
 		m_NumberOfSpatialPatrols++;

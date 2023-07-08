@@ -11,8 +11,9 @@ modded class PlayerBase
     int Spatial_Lootable = 1;
     float Spatial_Chance = 0.5;
     int Spatial_LocationHunt = 10;
+    //bool Spatial_UnlimitedReload = false;
 
-    void Spatial_SetData(string fac, string lod, int c, int d, int e, string f, int g, float h){
+    void Spatial_SetData(string fac, string lod, int c, int d, int e, string f, int g, float h /*bool i*/){
         Zone_Faction = fac;
         Zone_Loadout = lod;
         Spatial_MinCount = c;
@@ -21,6 +22,7 @@ modded class PlayerBase
         Zone_Name = f;
         Spatial_Lootable = g;
         Spatial_Chance = h;
+        //Spatial_UnlimitedReload = i
     }
 
     string Spatial_Faction() {
@@ -50,6 +52,11 @@ modded class PlayerBase
     float Spatial_Chance(){
         return Spatial_Chance;
     }
+    /*
+    bool Spatial_UnlimitedReload(){
+        return Spatial_UnlimitedReload;
+    }
+    */
     void SetSafe(bool a){
         Zone_Safe = a;
     }

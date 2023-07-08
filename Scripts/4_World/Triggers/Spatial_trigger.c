@@ -1,12 +1,13 @@
 class Spatial_Trigger: CylinderTrigger
 {     
-    bool Zone_Status;   
+    bool Zone_Status /*Spatial_UnlimitedReload*/;   
     string Zone_Faction, Zone_Loadout, Spatial_Name;
     int Spatial_MinCount, Spatial_MaxCount, Spatial_HuntMode, Spatial_Lootable; 
     float Spatial_Chance;
+    
 
 
-    void Spatial_SetData(bool saf, string fac, string lod, int c, int d, int e, string f, int g, float h){
+    void Spatial_SetData(bool saf, string fac, string lod, int c, int d, int e, string f, int g, float h /*, bool i*/){
         Zone_Status = saf;
         Zone_Faction = fac;
         Zone_Loadout = lod;
@@ -16,6 +17,7 @@ class Spatial_Trigger: CylinderTrigger
         Spatial_Name = f;
         Spatial_Lootable = g;
         Spatial_Chance = h;
+        //Spatial_UnlimitedReload = i;
     }
 
     override void Enter(TriggerInsider insider)
@@ -26,7 +28,7 @@ class Spatial_Trigger: CylinderTrigger
         if (player) {
             player.SetInZone(true);
             player.SetSafe(Zone_Status);
-            player.Spatial_SetData(Zone_Faction, Zone_Loadout, Spatial_MinCount, Spatial_MaxCount, Spatial_HuntMode, Spatial_Name, Spatial_Lootable, Spatial_Chance);
+            player.Spatial_SetData(Zone_Faction, Zone_Loadout, Spatial_MinCount, Spatial_MaxCount, Spatial_HuntMode, Spatial_Name, Spatial_Lootable, Spatial_Chance /*, Spatial_UnlimitedReload*/);
         }
     }
         

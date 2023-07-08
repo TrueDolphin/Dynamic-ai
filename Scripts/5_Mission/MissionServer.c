@@ -1,6 +1,6 @@
 /*
 name:TrueDolphin
-date:26/6/2023
+date:8/7/2023
 spatial ai spawns
 
 triggers helped a lot, but idk what else to do as far as optimisation goes besides notes.
@@ -114,6 +114,7 @@ modded class MissionServer {
       name = player.Spatial_Name();
       lootable = player.Spatial_Lootable();
       chance = player.Spatial_Chance();
+      //ammo = player.Spatial_UnlimitedReload()
     } else {
       group = GetWeightedGroup(m_Spatial_Groups.Group);
       SpawnCount = Math.RandomIntInclusive(group.Spatial_MinCount, group.Spatial_MaxCount);
@@ -122,6 +123,7 @@ modded class MissionServer {
       name = group.Spatial_Name;
       lootable = group.Spatial_Lootable;
       chance = group.Spatial_Chance;
+      //ammo = group.Spatial_UnlimitedReload
     }
 
     float random = Math.RandomFloat(0.0, 1.0);
@@ -136,7 +138,7 @@ modded class MissionServer {
         if (PlayerGroup.Count() > 1) SpawnCount += (PlayerGroup.Count() - 1);
       }
     Spatial_message(player, m_Spatial_Groups.MessageType, SpawnCount, faction, loadout);
-    Spatial_Spawn(player, SpawnCount, faction, loadout, name, lootable);
+    Spatial_Spawn(player, SpawnCount, faction, loadout, name, lootable /*, ammo*/);
     } else {
       SpatialDebugPrint("group/point ai count too low this check");
     }
@@ -178,7 +180,7 @@ modded class MissionServer {
     return pos;
   } //could be scuffed
 
-  void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName, int Lootable) {
+  void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName, int Lootable /*, bool UnlimitedReload*/ ) {
     vector startpos = ValidPos(player);
     TVectorArray waypoints = { ValidPos(player) };
     string Formation = "RANDOM";
@@ -187,7 +189,7 @@ modded class MissionServer {
     mindistradius = 0;
     maxdistradius = 1200;
     despawnradius = 1200;
-    bool UnlimitedReload = false;
+    bool UnlimitedReload = false; //Remove - prepped
     auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, Lootable, UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetGroupName(GroupName);
@@ -202,7 +204,7 @@ modded class MissionServer {
       foreach(Spatial_Point points: m_Spatial_Groups.Point) {
         Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
         spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
-        spatial_trigger.Spatial_SetData(points.Spatial_Safe, points.Spatial_Faction, points.Spatial_ZoneLoadout, points.Spatial_MinCount, points.Spatial_MaxCount, points.Spatial_HuntMode, points.Spatial_Name, points.Spatial_Lootable, points.Spatial_Chance);
+        spatial_trigger.Spatial_SetData(points.Spatial_Safe, points.Spatial_Faction, points.Spatial_ZoneLoadout, points.Spatial_MinCount, points.Spatial_MaxCount, points.Spatial_HuntMode, points.Spatial_Name, points.Spatial_Lootable, points.Spatial_Chance /*, points.Spatial_UnlimitedReload*/);
         SpatialLoggerPrint("Trigger at location: " + points.Spatial_Position + " - Radius: " + points.Spatial_Radius);
         SpatialLoggerPrint("Safe: " + points.Spatial_Safe + " - Faction: " + points.Spatial_Faction + " - Loadout: " + points.Spatial_ZoneLoadout + " - counts: " + points.Spatial_MinCount + ":" + points.Spatial_MaxCount);
       }
@@ -210,12 +212,12 @@ modded class MissionServer {
       SpatialLoggerPrint("points Disabled");
     }
 
-    if (m_Spatial_Groups.Locations_Enabled == 1) {
+    if (m_Spatial_Groups.Locations_Enabled != 0) {
       SpatialLoggerPrint("Locations Enabled");
       foreach(Spatial_Location location: m_Spatial_Groups.Location) {
         Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
         location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
-        location_trigger.Spatial_SetData(location.Spatial_Name, location.Spatial_TriggerRadius, location.Spatial_ZoneLoadout, location.Spatial_MinCount, location.Spatial_MaxCount, location.Spatial_HuntMode, location.Spatial_Faction, location.Spatial_TriggerPosition, location.Spatial_SpawnPosition, location.Spatial_Lootable, location.Spatial_Timer, location.Spatial_Chance);
+        location_trigger.Spatial_SetData(location.Spatial_Name, location.Spatial_TriggerRadius, location.Spatial_ZoneLoadout, location.Spatial_MinCount, location.Spatial_MaxCount, location.Spatial_HuntMode, location.Spatial_Faction, location.Spatial_TriggerPosition, location.Spatial_SpawnPosition, location.Spatial_Lootable, location.Spatial_Timer, location.Spatial_Chance /*, location.Spatial_UnlimitedReload*/);
         SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
         SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
       }
