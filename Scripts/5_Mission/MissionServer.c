@@ -75,7 +75,6 @@ modded class MissionServer {
 
   bool CanSpawn(PlayerBase player) {
     PlayerIdentity identity = player.GetIdentity();
-    bool valid = true;
 
     #ifdef EXPANSIONMODBASEBUILDING
     if (player.IsInsideOwnTerritory() && !GetSpatialSettings().Spatial_InOwnTerritory()) {
@@ -101,7 +100,7 @@ modded class MissionServer {
       return false;
     }
 
-    return valid;
+    return true;
   } //checks and overrides
 
   void LocalSpawn(PlayerBase player) {
