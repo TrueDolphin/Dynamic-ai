@@ -1,5 +1,11 @@
 modded class PlayerBase
 {
+    /*
+    void PlayerBase(){
+        Spatial_SetBirthday();
+    }
+    */
+
     bool Spatial_InZone = false;
     bool Zone_Safe = false;
     string Zone_Faction = "Shamans";
@@ -11,6 +17,7 @@ modded class PlayerBase
     int Spatial_Lootable = 1;
     float Spatial_Chance = 0.5;
     int Spatial_LocationHunt = 10;
+    //Spatial_Birthday = 0;
     //bool Spatial_UnlimitedReload = false;
 
     void Spatial_SetData(string fac, string lod, int c, int d, int e, string f, int g, float h /*bool i*/){
@@ -72,5 +79,21 @@ modded class PlayerBase
     bool CheckZone(){
         return Spatial_InZone;
     }
+
+
+    /*
+    void Spatial_SetBirthday(){
+        Spatial_Birthday = CF_Date.Now(true).GetTimestamp();
+	
+    }
+
+    bool Spatial_CheckAge(int a){
+        CF_Date date = CF_Date.Now(true).GetTimestamp();
+        int m_math = date - Spatial_Birthday;
+		if (a > m_math) return true;
+        return false;		
+    }   
+    */
+
 
 };

@@ -301,6 +301,7 @@ class Spatial_Groups {
   int PlayerChecks = 0;
   int MaxAI = 20;
   int GroupDifficulty = 1;
+  //int MinimumAge = 0;
   int MessageType = 1;
   string MessageTitle = "Spatial AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";

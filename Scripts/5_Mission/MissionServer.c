@@ -41,21 +41,29 @@ modded class MissionServer {
     eAIGroup PlayerGroup;
     GetGame().GetPlayers(Spatial_PlayerList);
     if (Spatial_PlayerList.Count() == 0) return;
-    for (int i = 0; i < Spatial_PlayerList.Count(); i++) {
+    for (int i = 0; i < Spatial_PlayerList.Count() + 1; i++) {
       PlayerBase player = PlayerBase.Cast(Spatial_PlayerList.GetRandomElement());
       Spatial_PlayerList.RemoveItem(player);
 
+      /*
+      if (m_Spatial_Groups.MinimumAge > 0){
+        if (!player.Spatial_CheckAge(m_Spatial_Groups.MinimumAge)) continue;
+      }
+      */
       if (m_Spatial_Groups.PlayerChecks > -1){
         PlayerGroup = eAIGroup.Cast(player.GetGroup());
         if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
         if (player != player.GetGroup().GetLeader()) continue;
       }
+
       if (!player || !player.IsAlive() || !player.GetIdentity()) continue;
+
       #ifdef EXPANSIONMODSPAWNSELECTION
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
+
       //this is shitty..
-      if (CanSpawn(player)) GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.LocalSpawn, Math.RandomIntInclusive(500, 2000), false, player);
+      if (CanSpawn(player)) LocalSpawn(player);
       
       if (m_Spatial_Groups.PlayerChecks > 0){
         if (i == m_Spatial_Groups.PlayerChecks) return;
