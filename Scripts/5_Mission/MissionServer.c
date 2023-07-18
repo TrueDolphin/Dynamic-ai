@@ -1,6 +1,6 @@
 /*
 name:TrueDolphin
-date:8/7/2023
+date:18/7/2023
 spatial ai spawns
 
 triggers helped a lot, but idk what else to do as far as optimisation goes besides notes.
@@ -13,6 +13,7 @@ modded class MissionServer {
   int m_Spatial_cur = 0;
   ref array < Man > Spatial_PlayerList = new array < Man > ;
   ref Spatial_Groups m_Spatial_Groups;
+  ref Spatial_Players m_Spatial_Players;
 
   #ifdef EXPANSIONMODSPAWNSELECTION
     private ExpansionRespawnHandlerModule m_RespawnModule;
@@ -23,6 +24,7 @@ modded class MissionServer {
 
     if (GetSpatialSettings().Init() == true) {
       GetSpatialSettings().PullRef(m_Spatial_Groups);
+      SpatialPlayerSettings().PullRef(m_Spatial_Players); 
       InitSpatialTriggers();
       SpatialLoggerPrint("Spatial AI Enabled");
       if (m_Spatial_Groups.Spatial_MinTimer == 60000) SpatialLoggerPrint("Spatial Debug Mode on");
@@ -45,11 +47,7 @@ modded class MissionServer {
       PlayerBase player = PlayerBase.Cast(Spatial_PlayerList.GetRandomElement());
       Spatial_PlayerList.RemoveItem(player);
 
-      /*
-      if (m_Spatial_Groups.MinimumAge > 0){
-        if (!player.Spatial_CheckAge(m_Spatial_Groups.MinimumAge)) continue;
-      }
-      */
+
       if (m_Spatial_Groups.PlayerChecks > -1){
         PlayerGroup = eAIGroup.Cast(player.GetGroup());
         if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
@@ -62,7 +60,10 @@ modded class MissionServer {
       if (InRespawnMenu(player.GetIdentity())) continue;
       #endif
 
-      //this is shitty..
+      if (m_Spatial_Groups.MinimumAge > 0){
+        if (!player.Spatial_CheckAge(m_Spatial_Groups.MinimumAge)) continue;
+      }
+
       if (CanSpawn(player)) LocalSpawn(player);
       
       if (m_Spatial_Groups.PlayerChecks > 0){
@@ -110,7 +111,7 @@ modded class MissionServer {
     SpatialDebugPrint("GroupID: " + m_Groupid);
 
     m_cur = Math.RandomIntInclusive(0, m_Spatial_Groups.Group.Count() - 1);
-    int SpawnCount, lootable;
+    int SpawnCount, lootable, ammo;
     Spatial_Group group;
     string faction, loadout, name;
     float chance;
@@ -121,7 +122,7 @@ modded class MissionServer {
       name = player.Spatial_Name();
       lootable = player.Spatial_Lootable();
       chance = player.Spatial_Chance();
-      //ammo = player.Spatial_UnlimitedReload()
+      ammo = player.Spatial_UnlimitedReload();
     } else {
       group = GetWeightedGroup(m_Spatial_Groups.Group);
       SpawnCount = Math.RandomIntInclusive(group.Spatial_MinCount, group.Spatial_MaxCount);
@@ -130,7 +131,7 @@ modded class MissionServer {
       name = group.Spatial_Name;
       lootable = group.Spatial_Lootable;
       chance = group.Spatial_Chance;
-      //ammo = group.Spatial_UnlimitedReload
+      ammo = group.Spatial_UnlimitedReload;
     }
 
     float random = Math.RandomFloat(0.0, 1.0);
@@ -145,7 +146,7 @@ modded class MissionServer {
         if (PlayerGroup.Count() > 1) SpawnCount += (PlayerGroup.Count() - 1);
       }
     Spatial_message(player, m_Spatial_Groups.MessageType, SpawnCount, faction, loadout);
-    Spatial_Spawn(player, SpawnCount, faction, loadout, name, lootable /*, ammo*/);
+    Spatial_Spawn(player, SpawnCount, faction, loadout, name, lootable, ammo);
     } else {
       SpatialDebugPrint("group/point ai count too low this check");
     }
@@ -187,7 +188,7 @@ modded class MissionServer {
     return pos;
   } //could be scuffed
 
-  void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName, int Lootable /*, bool UnlimitedReload*/ ) {
+  void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName, int Lootable, bool UnlimitedReload) {
     vector startpos = ValidPos(player);
     TVectorArray waypoints = { ValidPos(player) };
     string Formation = "RANDOM";
@@ -196,14 +197,13 @@ modded class MissionServer {
     mindistradius = 0;
     maxdistradius = 1200;
     despawnradius = 1200;
-    bool UnlimitedReload = false; //Remove - prepped
     auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, Lootable, UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetGroupName(GroupName);
       dynPatrol.SetSniperProneDistanceThreshold(0.0);
       dynPatrol.SetHunted(player);
     }
-  } //Spatial_Spawn(player, SpawnCount, faction, loadout)
+  } //Spatial_Spawn(player, SpawnCount, faction, loadout, unlimitedreload)
 
   void InitSpatialTriggers() {
     if (m_Spatial_Groups.Points_Enabled == 1 || m_Spatial_Groups.Points_Enabled == 2) {
@@ -211,7 +211,7 @@ modded class MissionServer {
       foreach(Spatial_Point points: m_Spatial_Groups.Point) {
         Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
         spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
-        spatial_trigger.Spatial_SetData(points.Spatial_Safe, points.Spatial_Faction, points.Spatial_ZoneLoadout, points.Spatial_MinCount, points.Spatial_MaxCount, points.Spatial_HuntMode, points.Spatial_Name, points.Spatial_Lootable, points.Spatial_Chance /*, points.Spatial_UnlimitedReload*/);
+        spatial_trigger.Spatial_SetData(points.Spatial_Safe, points.Spatial_Faction, points.Spatial_ZoneLoadout, points.Spatial_MinCount, points.Spatial_MaxCount, points.Spatial_HuntMode, points.Spatial_Name, points.Spatial_Lootable, points.Spatial_Chance, points.Spatial_UnlimitedReload);
         SpatialLoggerPrint("Trigger at location: " + points.Spatial_Position + " - Radius: " + points.Spatial_Radius);
         SpatialLoggerPrint("Safe: " + points.Spatial_Safe + " - Faction: " + points.Spatial_Faction + " - Loadout: " + points.Spatial_ZoneLoadout + " - counts: " + points.Spatial_MinCount + ":" + points.Spatial_MaxCount);
       }
@@ -224,7 +224,7 @@ modded class MissionServer {
       foreach(Spatial_Location location: m_Spatial_Groups.Location) {
         Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
         location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
-        location_trigger.Spatial_SetData(location.Spatial_Name, location.Spatial_TriggerRadius, location.Spatial_ZoneLoadout, location.Spatial_MinCount, location.Spatial_MaxCount, location.Spatial_HuntMode, location.Spatial_Faction, location.Spatial_TriggerPosition, location.Spatial_SpawnPosition, location.Spatial_Lootable, location.Spatial_Timer, location.Spatial_Chance /*, location.Spatial_UnlimitedReload*/);
+        location_trigger.Spatial_SetData(location.Spatial_Name, location.Spatial_TriggerRadius, location.Spatial_ZoneLoadout, location.Spatial_MinCount, location.Spatial_MaxCount, location.Spatial_HuntMode, location.Spatial_Faction, location.Spatial_TriggerPosition, location.Spatial_SpawnPosition, location.Spatial_Lootable, location.Spatial_Timer, location.Spatial_Chance, location.Spatial_UnlimitedReload);
         SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
         SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
       }
@@ -248,6 +248,9 @@ modded class MissionServer {
       NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, string.Format("%1 %2", SpawnCount, m_Spatial_Groups.MessageText), "set:dayz_gui image:tutorials");
       SpatialLoggerPrint(message);
     } else if (msg_no == 4) {
+      NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, m_Spatial_Groups.MessageText, "set:dayz_gui image:tutorials");
+      SpatialLoggerPrint(message);
+    } else if (msg_no == 5 && player.HasGPSReceiver()) {
       NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, m_Spatial_Groups.MessageText, "set:dayz_gui image:tutorials");
       SpatialLoggerPrint(message);
     }

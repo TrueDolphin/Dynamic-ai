@@ -9,13 +9,13 @@ class Location_Trigger: CylinderTrigger
 
     ref Spatial_Groups m_Spatial_Groups;
     eAISpatialPatrol dynPatrol;
-    bool Spatial_TimerCheck /*Spatial_UnlimitedReload*/;
+    bool Spatial_TimerCheck, Spatial_UnlimitedReload;
 
     void Location_Trigger(){
       GetSpatialSettings().PullRef(m_Spatial_Groups);   
     }
 
-    void Spatial_SetData(string a, float b, string c, int d, int e, int f, string g, vector h, vector i, int j, float k, float l /*, bool m*/){
+    void Spatial_SetData(string a, float b, string c, int d, int e, int f, string g, vector h, vector i, int j, float k, float l, bool m){
       Spatial_Name = a;
       Spatial_TriggerRadius = b;
       Spatial_ZoneLoadout = c;
@@ -28,7 +28,7 @@ class Location_Trigger: CylinderTrigger
       Spatial_Lootable = j;
       Spatial_Timer = k;
       Spatial_Chance = l;
-      //Spatial_UnlimitedReload = m;
+      Spatial_UnlimitedReload = m;
     }
 
     void SpawnCheck(){
@@ -87,7 +87,7 @@ class Location_Trigger: CylinderTrigger
     despawnradius = 1200;
     bool UnlimitedReload = false;
     playerInsider.SetLocationHunt(Spatial_HuntMode);
-    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, lootable, /*Spatial_*/UnlimitedReload);
+    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, lootable, Spatial_UnlimitedReload);
     playerInsider.SetLocationHunt(10);
     if (dynPatrol) {
       dynPatrol.SetGroupName(GroupName);
