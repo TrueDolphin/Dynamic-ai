@@ -1,10 +1,9 @@
 /*
 name:TrueDolphin
-date:18/7/2023
+date:19/7/2023
 spatial ai spawns
 
-triggers helped a lot, but idk what else to do as far as optimisation goes besides notes.
-stripped a lot of useless stuff out when moved settings back to 3_Game.
+renaming functions, checking stuff.
 
 */
 modded class MissionServer {
@@ -18,7 +17,6 @@ modded class MissionServer {
   #ifdef EXPANSIONMODSPAWNSELECTION
     private ExpansionRespawnHandlerModule m_RespawnModule;
   #endif
-
 
   void MissionServer() {
 
@@ -64,7 +62,7 @@ modded class MissionServer {
         if (!player.Spatial_CheckAge(m_Spatial_Groups.MinimumAge)) continue;
       }
 
-      if (CanSpawn(player)) LocalSpawn(player);
+      if (Spatial_CanSpawn(player)) Spatial_LocalSpawn(player);
       
       if (m_Spatial_Groups.PlayerChecks > 0){
         if (i == m_Spatial_Groups.PlayerChecks) return;
@@ -74,7 +72,7 @@ modded class MissionServer {
     }
   } //standard loop through playerlist pulling randomly and removing that from list.
 
-  bool CanSpawn(PlayerBase player) {
+  bool Spatial_CanSpawn(PlayerBase player) {
     PlayerIdentity identity = player.GetIdentity();
 
     #ifdef EXPANSIONMODBASEBUILDING
@@ -93,18 +91,18 @@ modded class MissionServer {
     }
     #endif
 
-    if (m_Spatial_Groups.Points_Enabled != 0 && player.CheckSafe() == true) {
+    if (m_Spatial_Groups.Points_Enabled != 0 && player.Spatial_CheckSafe() == true) {
       return false;
     }
 
-    if (m_Spatial_Groups.Points_Enabled == 2 && !player.CheckZone()) {
+    if (m_Spatial_Groups.Points_Enabled == 2 && !player.Spatial_CheckZone()) {
       return false;
     }
 
     return true;
   } //checks and overrides
 
-  void LocalSpawn(PlayerBase player) {
+  void Spatial_LocalSpawn(PlayerBase player) {
     if (!player) return;
 
     int m_Groupid = Math.RandomIntInclusive(0, 5000);
@@ -115,7 +113,7 @@ modded class MissionServer {
     Spatial_Group group;
     string faction, loadout, name;
     float chance;
-    if (player.CheckZone() == true) {
+    if (player.Spatial_CheckZone() == true) {
       SpawnCount = Math.RandomIntInclusive(player.Spatial_MinCount, player.Spatial_MaxCount);
       faction = player.Spatial_Faction();
       loadout = player.Spatial_Loadout();
@@ -124,7 +122,7 @@ modded class MissionServer {
       chance = player.Spatial_Chance();
       ammo = player.Spatial_UnlimitedReload();
     } else {
-      group = GetWeightedGroup(m_Spatial_Groups.Group);
+      group = Spatial_GetWeightedGroup(m_Spatial_Groups.Group);
       SpawnCount = Math.RandomIntInclusive(group.Spatial_MinCount, group.Spatial_MaxCount);
       faction = group.Spatial_Faction;
       loadout = group.Spatial_Loadout;
@@ -155,7 +153,7 @@ modded class MissionServer {
 
   } //create and stuff.
 
-  Spatial_Group GetWeightedGroup(array < ref Spatial_Group > groups, array < float > weights = NULL) {
+  Spatial_Group Spatial_GetWeightedGroup(array < ref Spatial_Group > groups, array < float > weights = NULL) {
     array < float > weights_T = weights;
     if (weights_T == NULL) {
       weights_T = new array < float > ;
@@ -171,7 +169,7 @@ modded class MissionServer {
     return groups.GetRandomElement();
   } //expansion lightweight weighted group calcs
 
-  vector ValidPos(PlayerBase player) {
+  vector Spatial_ValidPos(PlayerBase player) {
     vector pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
     float x, z;
     x = pos[0];
@@ -189,8 +187,8 @@ modded class MissionServer {
   } //could be scuffed
 
   void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName, int Lootable, bool UnlimitedReload) {
-    vector startpos = ValidPos(player);
-    TVectorArray waypoints = { ValidPos(player) };
+    vector startpos = Spatial_ValidPos(player);
+    TVectorArray waypoints = { Spatial_ValidPos(player) };
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
     int mindistradius, maxdistradius, despawnradius;
@@ -239,10 +237,10 @@ modded class MissionServer {
     if (msg_no == 0) {
       SpatialLoggerPrint(message);
     } else if (msg_no == 1) {
-      WarningMessage(player, string.Format("%1 %2", SpawnCount, m_Spatial_Groups.MessageText));
+      Spatial_WarningMessage(player, string.Format("%1 %2", SpawnCount, m_Spatial_Groups.MessageText));
       SpatialLoggerPrint(message);
     } else if (msg_no == 2) {
-      WarningMessage(player, m_Spatial_Groups.MessageText);
+      Spatial_WarningMessage(player, m_Spatial_Groups.MessageText);
       SpatialLoggerPrint(message);
     } else if (msg_no == 3) {
       NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, string.Format("%1 %2", SpawnCount, m_Spatial_Groups.MessageText), "set:dayz_gui image:tutorials");
@@ -250,13 +248,13 @@ modded class MissionServer {
     } else if (msg_no == 4) {
       NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, m_Spatial_Groups.MessageText, "set:dayz_gui image:tutorials");
       SpatialLoggerPrint(message);
-    } else if (msg_no == 5 && player.HasGPSReceiver()) {
+    } else if (msg_no == 5 && player.Spatial_HasGPSReceiver()) {
       NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, m_Spatial_Groups.MessageText, "set:dayz_gui image:tutorials");
       SpatialLoggerPrint(message);
     }
   } //chat message or vanilla notification
 
-  void WarningMessage(PlayerBase player, string message) {
+  void Spatial_WarningMessage(PlayerBase player, string message) {
     if ((player) && (message != "")) {
       Param1 < string > Msgparam;
       Msgparam = new Param1 < string > (message);
@@ -265,7 +263,6 @@ modded class MissionServer {
   } // Ingame chat message
 
   void SpatialLoggerPrint(string msg) {
-    if (GetExpansionSettings().GetLog().AIGeneral)
       GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
   } //expansion logging
 
@@ -273,7 +270,6 @@ modded class MissionServer {
     if (m_Spatial_Groups.Spatial_MinTimer == 60000)
       GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
   } //expansion debug print
-
 
   #ifdef EXPANSIONMODSPAWNSELECTION
 

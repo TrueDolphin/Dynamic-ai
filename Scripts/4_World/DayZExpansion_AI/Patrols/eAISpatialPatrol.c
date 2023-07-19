@@ -1,4 +1,7 @@
-
+/*
+19/7/2023
+spatial patrol
+*/
 class eAISpatialPatrol : eAIPatrol
 {
 	private static int m_NumberOfSpatialPatrols;
@@ -326,7 +329,7 @@ class eAISpatialPatrol : eAIPatrol
 		if (!player || !AiGroup || !ai) return;
 		AiGroup.ClearWaypoints();
 		int m_Mode = m_Spatial_Groups.HuntMode;
-		if (player.CheckZone() == true) m_Mode = player.Spatial_HuntMode();
+		if (player.Spatial_CheckZone() == true) m_Mode = player.Spatial_HuntMode();
 		if (player.Spatial_LocationHunt() != 10) m_Mode = player.Spatial_LocationHunt();
 		switch (m_Mode) {
 			case 1: {
