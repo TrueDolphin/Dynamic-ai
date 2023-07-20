@@ -1,6 +1,6 @@
 /*
 name:TrueDolphin
-date:19/7/2023
+date:20/7/2023
 spatial ai spawns
 
 renaming functions, checking stuff.
@@ -19,7 +19,7 @@ modded class MissionServer {
   #endif
 
   void MissionServer() {
-
+    SpatialLoggerPrint("Spatial AI Date: 20/7/2023");
     if (GetSpatialSettings().Init() == true) {
       GetSpatialSettings().PullRef(m_Spatial_Groups);
       SpatialPlayerSettings().PullRef(m_Spatial_Players); 
@@ -143,7 +143,6 @@ modded class MissionServer {
         if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
         if (PlayerGroup.Count() > 1) SpawnCount += (PlayerGroup.Count() - 1);
       }
-    Spatial_message(player, m_Spatial_Groups.MessageType, SpawnCount, faction, loadout);
     Spatial_Spawn(player, SpawnCount, faction, loadout, name, lootable, ammo);
     } else {
       SpatialDebugPrint("group/point ai count too low this check");
@@ -169,26 +168,28 @@ modded class MissionServer {
     return groups.GetRandomElement();
   } //expansion lightweight weighted group calcs
 
-  vector Spatial_ValidPos(PlayerBase player) {
-    vector pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
-    float x, z;
-    x = pos[0];
-    z = pos[2];
+  bool Spatial_ValidPos(PlayerBase player, out vector pos) {
+    pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
     for (int i = 0; i < 50; i++) {
-      if (GetGame().SurfaceIsSea(x, z) || GetGame().SurfaceIsPond(x, z)) {
+      if (GetGame().SurfaceIsSea(pos[0], pos[2]) || GetGame().SurfaceIsPond(pos[0], pos[2])) {
         pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
-        x = pos[0];
-        z = pos[2];
-      } else {
-          i = 50;
-      }
+      } else i = 50;
     }
-    return pos;
-  } //could be scuffed
+    if (GetGame().SurfaceIsSea(pos[0], pos[2]) || GetGame().SurfaceIsPond(pos[0], pos[2])) return false;
+    return true;
+  } //fixed
 
   void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName, int Lootable, bool UnlimitedReload) {
-    vector startpos = Spatial_ValidPos(player);
-    TVectorArray waypoints = { Spatial_ValidPos(player) };
+    vector startpos, waypointpos;
+    if (!Spatial_ValidPos(player, startpos)){
+      SpatialLoggerPrint("Valid spawnpos not found. not spawning.");
+      return;
+    }
+    if (!Spatial_ValidPos(player, waypointpos)){
+      SpatialLoggerPrint("Valid waypointpos not found. using startpos.");
+      waypointpos = startpos;
+    }
+    TVectorArray waypoints = { waypointpos };
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
     int mindistradius, maxdistradius, despawnradius;
@@ -201,6 +202,7 @@ modded class MissionServer {
       dynPatrol.SetSniperProneDistanceThreshold(0.0);
       dynPatrol.SetHunted(player);
     }
+    Spatial_message(player, m_Spatial_Groups.MessageType, bod, fac, loa);
   } //Spatial_Spawn(player, SpawnCount, faction, loadout, unlimitedreload)
 
   void InitSpatialTriggers() {
