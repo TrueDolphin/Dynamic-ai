@@ -1,6 +1,6 @@
 /*
 name:TrueDolphin
-date:20/7/2023
+date:21/7/2023
 spatial ai spawns
 
 renaming functions, checking stuff.
@@ -16,10 +16,18 @@ modded class MissionServer {
 
   #ifdef EXPANSIONMODSPAWNSELECTION
     private ExpansionRespawnHandlerModule m_RespawnModule;
+    
+    bool InRespawnMenu(PlayerIdentity identity) {
+      CF_Modules < ExpansionRespawnHandlerModule > .Get(m_RespawnModule);
+      if (m_RespawnModule && m_RespawnModule.IsPlayerInSpawnSelect(identity)) {
+        return true;
+      }
+      return false;
+    } //LM's code altered to a bool in class
   #endif
 
   void MissionServer() {
-    SpatialLoggerPrint("Spatial AI Date: 20/7/2023");
+    SpatialLoggerPrint("Spatial AI Date: 21/7/2023");
     if (GetSpatialSettings().Init() == true) {
       GetSpatialSettings().PullRef(m_Spatial_Groups);
       SpatialPlayerSettings().PullRef(m_Spatial_Players); 
@@ -31,78 +39,94 @@ modded class MissionServer {
   } //constructor
 
   void SpatialTimer() {
+    EXPrint("Spatial::Stack - Start");
     Spatial_Check();
+    EXPrint("Spatial::Stack - End");
     int m_cor = Math.RandomIntInclusive(m_Spatial_Groups.Spatial_MinTimer, m_Spatial_Groups.Spatial_MaxTimer);
     SpatialLoggerPrint("Next valid check in: " + m_cor + "ms");
     GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.SpatialTimer, m_cor, false);
-  } //timer call for varied check loops
+  } //timer call for varied check loops #refactored by LieutenantMaster
 
   void Spatial_Check() {
-    eAIGroup PlayerGroup;
-    GetGame().GetPlayers(Spatial_PlayerList);
-    if (Spatial_PlayerList.Count() == 0) return;
-    for (int i = 0; i < Spatial_PlayerList.Count() + 1; i++) {
-      PlayerBase player = PlayerBase.Cast(Spatial_PlayerList.GetRandomElement());
-      Spatial_PlayerList.RemoveItem(player);
+    EXPrint("Spatial::Check - Start");
+      // If there are no players in the list, return early.
+      if (m_Players.Count() == 0) return;
 
+      int playerChecks = m_Spatial_Groups.PlayerChecks;
+      bool checkOnlyLeader = playerChecks >= 0;
+      bool hasLimitedChecks = playerChecks != 0;
 
-      if (m_Spatial_Groups.PlayerChecks > -1){
-        PlayerGroup = eAIGroup.Cast(player.GetGroup());
-        if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
-        if (player != player.GetGroup().GetLeader()) continue;
-      }
+      // Make sure playerChecks is positive, even if it was initially negative.
+      playerChecks = Math.AbsInt(playerChecks);
 
-      if (!player || !player.IsAlive() || !player.GetIdentity()) continue;
+      int minAge = m_Spatial_Groups.MinimumAge;
+      bool checkMinAge = minAge > 0;
+      Spatial_PlayerList = m_Players;
+      for (int i = 0; i < Spatial_PlayerList.Count() + 1; i++)
+      {
+        PlayerBase player = PlayerBase.Cast(Spatial_PlayerList.GetRandomElement());
+        Spatial_PlayerList.RemoveItem(player);
+        if (!player || !player.IsAlive() || !player.GetIdentity())
+          continue;
+        if (checkOnlyLeader)
+        {
+          eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
+          if (!PlayerGroup || player != player.GetGroup().GetLeader())
+            continue;
+        }
 
       #ifdef EXPANSIONMODSPAWNSELECTION
-      if (InRespawnMenu(player.GetIdentity())) continue;
+          // If the player is in the respawn menu, skip to the next iteration.
+          if (InRespawnMenu(player.GetIdentity()))
+              continue;
       #endif
 
-      if (m_Spatial_Groups.MinimumAge > 0){
-        if (!player.Spatial_CheckAge(m_Spatial_Groups.MinimumAge)) continue;
-      }
+          if (checkMinAge && !player.Spatial_CheckAge(minAge))
+            continue;
 
-      if (Spatial_CanSpawn(player)) Spatial_LocalSpawn(player);
-      
-      if (m_Spatial_Groups.PlayerChecks > 0){
-        if (i == m_Spatial_Groups.PlayerChecks) return;
-      } else if (m_Spatial_Groups.PlayerChecks < 0){
-        if (i == Math.AbsInt(m_Spatial_Groups.PlayerChecks)) return;
+          if (Spatial_CanSpawn(player))
+            Spatial_LocalSpawn(player);
+
+          if (!hasLimitedChecks)
+            continue;
+          if (i == playerChecks) return;
       }
-    }
-  } //standard loop through playerlist pulling randomly and removing that from list.
+    EXPrint("Spatial::Check - End");
+  } // Standard loop through the player list, selecting random players and removing them from the list. #refactored by LieutenantMaster
 
   bool Spatial_CanSpawn(PlayerBase player) {
-    PlayerIdentity identity = player.GetIdentity();
-
+    EXPrint("Spatial::CanSpawn - Start");
+    if (player.IsBleeding() && !GetSpatialSettings().Spatial_IsBleeding())
+      return false;
+    if (player.IsInVehicle() && !GetSpatialSettings().Spatial_InVehicle())
+      return false;
+    if (player.IsUnconscious() && !GetSpatialSettings().Spatial_IsUnconscious())
+      return false;
+    if (player.IsRestrained() && !GetSpatialSettings().Spatial_IsRestrained())
+      return false;
     #ifdef EXPANSIONMODBASEBUILDING
-    if (player.IsInsideOwnTerritory() && !GetSpatialSettings().Spatial_InOwnTerritory()) {
-      return false;
-    }
+      // Check if player is inside their own territory and its override
+      if (player.IsInsideOwnTerritory() && !GetSpatialSettings().Spatial_InOwnTerritory())
+        return false;
     #endif
-    //main overrides checks
-    if (player.IsInVehicle() && !GetSpatialSettings().Spatial_InVehicle() || player.Expansion_IsInSafeZone() && !GetSpatialSettings().Spatial_IsInSafeZone() || player.IsBleeding() && !GetSpatialSettings().Spatial_IsBleeding() || player.IsRestrained() && !GetSpatialSettings().Spatial_IsRestrained() || player.IsUnconscious() && !GetSpatialSettings().Spatial_IsUnconscious()) {
+    if (player.Expansion_IsInSafeZone() && !GetSpatialSettings().Spatial_IsInSafeZone())
       return false;
-    }
 
     #ifdef SZDEBUG
-    if (player.GetSafeZoneStatus() == SZ_IN_SAFEZONE && !GetSpatialSettings().Spatial_TPSafeZone()) {
-      return false;
-    }
+      // Check for specific safe zone debug status and its override
+      if (player.GetSafeZoneStatus() == SZ_IN_SAFEZONE && !GetSpatialSettings().Spatial_TPSafeZone())
+        return false;
     #endif
-
-    if (m_Spatial_Groups.Points_Enabled != 0 && player.Spatial_CheckSafe() == true) {
+    if (m_Spatial_Groups.Points_Enabled == 2 && !player.Spatial_CheckZone())
       return false;
-    }
-
-    if (m_Spatial_Groups.Points_Enabled == 2 && !player.Spatial_CheckZone()) {
+    if (m_Spatial_Groups.Points_Enabled != 0 && player.Spatial_CheckSafe())
       return false;
-    }
-
     return true;
+    EXPrint("Spatial::CanSpawn - End");
   } //checks and overrides
 
   void Spatial_LocalSpawn(PlayerBase player) {
+    EXPrint("Spatial::LocalSpawn - Start");
     if (!player) return;
 
     int m_Groupid = Math.RandomIntInclusive(0, 5000);
@@ -149,7 +173,7 @@ modded class MissionServer {
     }
 
     SpatialDebugPrint("End GroupID: " + m_Groupid);
-
+    EXPrint("Spatial::LocalSpawn - End");
   } //create and stuff.
 
   Spatial_Group Spatial_GetWeightedGroup(array < ref Spatial_Group > groups, array < float > weights = NULL) {
@@ -180,6 +204,7 @@ modded class MissionServer {
   } //fixed
 
   void Spatial_Spawn(PlayerBase player, int bod, string fac, string loa, string GroupName, int Lootable, bool UnlimitedReload) {
+    EXPrint("Spatial::Spawn - Start");
     vector startpos, waypointpos;
     if (!Spatial_ValidPos(player, startpos)){
       SpatialLoggerPrint("Valid spawnpos not found. not spawning.");
@@ -203,9 +228,11 @@ modded class MissionServer {
       dynPatrol.SetHunted(player);
     }
     Spatial_message(player, m_Spatial_Groups.MessageType, bod, fac, loa);
+    EXPrint("Spatial::Spawn - End");
   } //Spatial_Spawn(player, SpawnCount, faction, loadout, unlimitedreload)
 
   void InitSpatialTriggers() {
+        EXPrint("Spatial::Triggers - Start");
     if (m_Spatial_Groups.Points_Enabled == 1 || m_Spatial_Groups.Points_Enabled == 2) {
       SpatialLoggerPrint("points Enabled");
       foreach(Spatial_Point points: m_Spatial_Groups.Point) {
@@ -231,6 +258,7 @@ modded class MissionServer {
     } else {
       SpatialLoggerPrint("Locations Disabled");
     }
+        EXPrint("Spatial::Triggers - End");
   } //trigger zone initialisation
 
   void Spatial_message(PlayerBase player, int msg_no, int SpawnCount, string faction, string loadout) {
@@ -272,16 +300,4 @@ modded class MissionServer {
     if (m_Spatial_Groups.Spatial_MinTimer == 60000)
       GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
   } //expansion debug print
-
-  #ifdef EXPANSIONMODSPAWNSELECTION
-
-    bool InRespawnMenu(PlayerIdentity identity) {
-      CF_Modules < ExpansionRespawnHandlerModule > .Get(m_RespawnModule);
-      if (m_RespawnModule && m_RespawnModule.IsPlayerInSpawnSelect(identity)) {
-        return true;
-      }
-      return false;
-    } //LM's code altered to a bool in class
-  #endif
-
 };
