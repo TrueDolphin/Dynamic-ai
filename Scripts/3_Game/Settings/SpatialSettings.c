@@ -229,16 +229,16 @@ class SpatialSettings {
 
   void DefaultSpatialSettings(out Spatial_Groups Data) {
     Data = new Spatial_Groups();
-    Data.Group.Insert(new Spatial_Group(2, 2, 200, "NBCLoadout.json", "Guards", "Guard", 1, 0.5, false));
-    Data.Group.Insert(new Spatial_Group(1, 3, 300, "HumanLoadout.json", "Shamans", "Shaman", 1, 0.5, true));
-    Data.Group.Insert(new Spatial_Group(2, 3, 350, "EastLoadout.json", "Passive", "Passive", 1, 0.5, true));
+    Data.Group.Insert(new Spatial_Group(2, 2, 200, "NBCLoadout.json", "Guards", "Guard", 1, 0.5, 0.25, 0.66, false));
+    Data.Group.Insert(new Spatial_Group(1, 3, 300, "HumanLoadout.json", "Shamans", "Shaman", 1, 0.5, 0.25, 0.66, true));
+    Data.Group.Insert(new Spatial_Group(2, 3, 350, "EastLoadout.json", "Passive", "Passive", 1, 0.5, 0.25, 0.66, true));
 
-    Data.Point.Insert(new Spatial_Point("East", 0, 50, "EastLoadout.json", 0, 4, 6, "East", 1, 0.5, false, "0.0 0.0 0.0"));
-    Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", 1, 0.5, false, "0.0 0.0 0.0"));
-    Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", true, 1, 0.5, "0.0 0.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("East", 0, 50, "EastLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, false, "0.0 0.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", 1, 0.5, 0.25, 0.66, false, "0.0 0.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", 1, 0.5, 0.25, 0.66, false, "0.0 0.0 0.0"));
 
-    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
-    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
   } //generate default array data
 
 
@@ -328,9 +328,9 @@ class Spatial_Group {
   float  Spatial_Weight;
   string  Spatial_Loadout, Spatial_Faction, Spatial_Name;
   int  Spatial_Lootable;
-  float  Spatial_Chance;
+  float  Spatial_Chance, Spatial_MinAccuracy, Spatial_MaxAccuracy;
    bool Spatial_UnlimitedReload;
-  void Spatial_Group(int a, int b, float c, string d, string e, string f, int g, float h, bool i) {
+  void Spatial_Group(int a, int b, float c, string d, string e, string f, int g, float h, float i, float j, bool k) {
     Spatial_MinCount = a;
     Spatial_MaxCount = b;
     Spatial_Weight = c;
@@ -339,7 +339,9 @@ class Spatial_Group {
     Spatial_Name = f;
     Spatial_Lootable = g;
     Spatial_Chance = h;
-    Spatial_UnlimitedReload = i;
+    Spatial_MinAccuracy = i;
+    Spatial_MaxAccuracy = j;
+    Spatial_UnlimitedReload = k;
   }
 }
 
@@ -352,10 +354,10 @@ class Spatial_Point {
   int Spatial_HuntMode;
   string Spatial_Faction;
   int Spatial_Lootable;
-  float Spatial_Chance;
+  float Spatial_Chance, Spatial_MinAccuracy, Spatial_MaxAccuracy;
   bool Spatial_UnlimitedReload;
   vector Spatial_Position;
-  void Spatial_Point(string i, bool a, float b, string c, int d, int e, int h, string f, int j, float k, bool l, vector g) {
+  void Spatial_Point(string i, bool a, float b, string c, int d, int e, int h, string f, int j, float k, float m, float n, bool l, vector g) {
     Spatial_Name = i;
     Spatial_Safe = a;
     Spatial_Radius = b;
@@ -366,6 +368,8 @@ class Spatial_Point {
     Spatial_Faction = f;
     Spatial_Lootable = j;
     Spatial_Chance = k;
+    Spatial_MinAccuracy = m;
+    Spatial_MaxAccuracy = n;
     Spatial_UnlimitedReload = l;
     Spatial_Position = g;
   }
@@ -379,10 +383,10 @@ class Spatial_Location {
   int  Spatial_HuntMode;
   string  Spatial_Faction;
   int  Spatial_Lootable;
-  float  Spatial_Chance, Spatial_Timer;
+  float  Spatial_Chance, Spatial_MinAccuracy, Spatial_MaxAccuracy, Spatial_Timer;
   bool Spatial_UnlimitedReload;
   vector  Spatial_TriggerPosition, Spatial_SpawnPosition;
-  void Spatial_Location(string i, float b, string c, int d, int e, int h, string f, int j, float k, float l, bool m, vector g, vector a ) {
+  void Spatial_Location(string i, float b, string c, int d, int e, int h, string f, int j, float k, float n, float o, float l, bool m, vector g, vector a ) {
     Spatial_Name = i;
     Spatial_TriggerRadius = b;
     Spatial_ZoneLoadout = c;
@@ -392,6 +396,8 @@ class Spatial_Location {
     Spatial_Faction = f;
     Spatial_Lootable = j;
     Spatial_Chance = k;
+    Spatial_MinAccuracy = n;
+    Spatial_MaxAccuracy = o;
     Spatial_Timer = l;
     Spatial_UnlimitedReload = m;
     Spatial_TriggerPosition = g;

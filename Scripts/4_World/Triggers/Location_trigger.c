@@ -1,35 +1,20 @@
 class Location_Trigger: CylinderTrigger
 {       
 
-    float Spatial_TriggerRadius, Spatial_Chance;
-    float Spatial_Timer = 60000;
-    string Spatial_Name, Spatial_ZoneLoadout, Spatial_Faction;
-    int Spatial_MinCount, Spatial_MaxCount, Spatial_HuntMode, SpawnCount, Spatial_Lootable, i_PlayerCount;
-    vector Spatial_TriggerPosition, Spatial_SpawnPosition;
-
+    int i_PlayerCount;
+    vector Spatial_SpawnPosition;
+    Spatial_Location location;
     ref Spatial_Groups m_Spatial_Groups;
     eAISpatialPatrol dynPatrol;
-    bool Spatial_TimerCheck, Spatial_UnlimitedReload;
+    bool Spatial_TimerCheck;
 
     void Location_Trigger(){
       GetSpatialSettings().PullRef(m_Spatial_Groups);   
     }
 
-    void Spatial_SetData(string a, float b, string c, int d, int e, int f, string g, vector h, vector i, int j, float k, float l, bool m){
-      Spatial_Name = a;
-      Spatial_TriggerRadius = b;
-      Spatial_ZoneLoadout = c;
-      Spatial_MinCount = d;
-      Spatial_MaxCount = e;
-      Spatial_HuntMode = f;
-      Spatial_Faction = g;
-      Spatial_TriggerPosition = h;
-      Spatial_SpawnPosition = i;
-      Spatial_Lootable = j;
-      Spatial_Timer = k;
-      Spatial_Chance = l;
-      Spatial_UnlimitedReload = m;
-    }
+    void Spatial_SetData(Spatial_Location Location){
+      location = Location;
+    } //changed to class instead of individuals
 
     void SpawnCheck(){
       if (Spatial_TimerCheck) return;
@@ -39,14 +24,14 @@ class Location_Trigger: CylinderTrigger
         int m_Groupid = Math.RandomIntInclusive(0, int.MAX);
         SpatialDebugPrint("LocationID: " + m_Groupid);
         float random = Math.RandomFloat(0.0, 1.0);
-        SpatialDebugPrint("Location Chance: " + Spatial_Chance + " | random: " + random);
-        if (Spatial_Chance < random) return;
+        SpatialDebugPrint("Location Chance: " + location.Spatial_Chance + " | random: " + random);
+        if (location.Spatial_Chance < random) return;
 
-      SpawnCount = Math.RandomIntInclusive(Spatial_MinCount, Spatial_MaxCount);
+      int SpawnCount = Math.RandomIntInclusive(location.Spatial_MinCount, location.Spatial_MaxCount);
       if (SpawnCount > 0) {
-        Spatial_Spawn(SpawnCount, Spatial_Faction, Spatial_ZoneLoadout, Spatial_Name, Spatial_Lootable);
+        Spatial_Spawn(SpawnCount, location);
         Spatial_TimerCheck = true;
-        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_timer, Spatial_Timer, false);
+        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_timer, location.Spatial_Timer, false);
       } else {
         SpatialDebugPrint("Location ai count too low this check");
       }
@@ -71,8 +56,7 @@ class Location_Trigger: CylinderTrigger
       return PlayerBase.Cast(object) != null;
     }
 
-
-  void Spatial_Spawn(int bod, string fac, string loa, string GroupName, int lootable){
+  void Spatial_Spawn(int count, Spatial_Location Location){
     if (!m_insiders.Count() == 0) return;
     PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
     if (!playerInsider) return;
@@ -85,20 +69,20 @@ class Location_Trigger: CylinderTrigger
     mindistradius = 0;
     maxdistradius = 1000;
     despawnradius = 1200;
-    bool UnlimitedReload = false;
-    playerInsider.Spatial_SetLocationHunt(Spatial_HuntMode);
-    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, loa, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(fac), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, lootable, Spatial_UnlimitedReload);
+    playerInsider.Spatial_SetLocationHunt(Location.Spatial_HuntMode);
+    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
     playerInsider.Spatial_SetLocationHunt(10);
     if (dynPatrol) {
-      dynPatrol.SetGroupName(GroupName);
+      dynPatrol.SetAccuracy(Location.Spatial_MinAccuracy, Location.Spatial_MaxAccuracy);
+      dynPatrol.SetGroupName(Location.Spatial_Name);
       dynPatrol.SetSniperProneDistanceThreshold(0.0);
       dynPatrol.SetLocation();
     }
   } //Spatial_Spawn(player, SpawnCount, faction, loadout, groupname, lootable)
 
   vector ValidPos(){
-    if (m_Spatial_Groups.Locations_Enabled == 2) return Spatial_SpawnPosition;
-    return ExpansionStatic.GetSurfacePosition(Spatial_SpawnPosition);
+    if (m_Spatial_Groups.Locations_Enabled == 2) return location.Spatial_SpawnPosition;
+    return ExpansionStatic.GetSurfacePosition(location.Spatial_SpawnPosition);
   }
 
   void SpatialDebugPrint(string msg) {

@@ -27,8 +27,7 @@ class SpatialAI {
       SpatialPlayerSettings().PullRef(m_Spatial_Players); 
       InitSpatialTriggers();
     }
-  }
-
+  } //constructor
 
   void Spatial_Check(array<Man> m_Players) {
     SpatialDebugPrint("Spatial::Check - Start");
@@ -75,7 +74,7 @@ class SpatialAI {
           if (i == playerChecks) return;
       }
     SpatialDebugPrint("Spatial::Check - End");
-  } // Standard loop through the player list, selecting random players and removing them from the list. #refactored by LieutenantMaster
+  } //Standard loop through the player list, selecting random players and removing them from the list. #refactored by LieutenantMaster
 
   bool Spatial_CanSpawn(PlayerBase player) {
     SpatialDebugPrint("Spatial::CanSpawn - Start");
@@ -121,13 +120,12 @@ class SpatialAI {
     string faction, loadout, name;
     float chance;
     if (player.Spatial_CheckZone()) {
-      group = new Spatial_Group(player.Spatial_MinCount, player.Spatial_MaxCount, 50, player.Spatial_Loadout(), player.Spatial_Faction(), player.Spatial_Name(), player.Spatial_Lootable(), player.Spatial_Chance(), player.Spatial_UnlimitedReload());
-      SpawnCount = Math.RandomIntInclusive(player.Spatial_MinCount, player.Spatial_MaxCount);
+      group = player.GetSpatialGroup();
     } else {
       group = Spatial_GetWeightedGroup(m_Spatial_Groups.Group);
-      SpawnCount = Math.RandomIntInclusive(group.Spatial_MinCount, group.Spatial_MaxCount);
-    }
 
+    }
+    SpawnCount = Math.RandomIntInclusive(group.Spatial_MinCount, group.Spatial_MaxCount);
     float random = Math.RandomFloat(0.0, 1.0);
     SpatialDebugPrint("Chance: " + group.Spatial_Chance + " | random: " + random);
     if (group.Spatial_Chance < random) return;
@@ -174,7 +172,7 @@ class SpatialAI {
     if (GetGame().SurfaceIsSea(pos[0], pos[2]) || GetGame().SurfaceIsPond(pos[0], pos[2])) return false;
     return true;
   } //fixed
-    //(PlayerBase player, int bod, string fac, string loa, string GroupName, int Lootable, bool UnlimitedReload) 
+
   void Spatial_Spawn(PlayerBase player, int bod, Spatial_Group Group) {
     SpatialDebugPrint("Spatial::Spawn - Start");
     vector startpos, waypointpos;
@@ -196,6 +194,7 @@ class SpatialAI {
     auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Group.Spatial_Loadout, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Group.Spatial_Faction), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, Group.Spatial_Lootable, Group.Spatial_UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetGroupName(Group.Spatial_Name);
+      dynPatrol.SetAccuracy(Group.Spatial_MinAccuracy, Group.Spatial_MaxAccuracy);
       dynPatrol.SetSniperProneDistanceThreshold(0.0);
       dynPatrol.SetHunted(player);
     }
@@ -210,7 +209,7 @@ class SpatialAI {
       foreach(Spatial_Point points: m_Spatial_Groups.Point) {
         Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
         spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
-        spatial_trigger.Spatial_SetData(points.Spatial_Safe, points.Spatial_Faction, points.Spatial_ZoneLoadout, points.Spatial_MinCount, points.Spatial_MaxCount, points.Spatial_HuntMode, points.Spatial_Name, points.Spatial_Lootable, points.Spatial_Chance, points.Spatial_UnlimitedReload);
+        spatial_trigger.SetSpatialPoint(points);
         SpatialLoggerPrint("Trigger at location: " + points.Spatial_Position + " - Radius: " + points.Spatial_Radius);
         SpatialLoggerPrint("Safe: " + points.Spatial_Safe + " - Faction: " + points.Spatial_Faction + " - Loadout: " + points.Spatial_ZoneLoadout + " - counts: " + points.Spatial_MinCount + ":" + points.Spatial_MaxCount);
       }
@@ -223,7 +222,7 @@ class SpatialAI {
       foreach(Spatial_Location location: m_Spatial_Groups.Location) {
         Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
         location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
-        location_trigger.Spatial_SetData(location.Spatial_Name, location.Spatial_TriggerRadius, location.Spatial_ZoneLoadout, location.Spatial_MinCount, location.Spatial_MaxCount, location.Spatial_HuntMode, location.Spatial_Faction, location.Spatial_TriggerPosition, location.Spatial_SpawnPosition, location.Spatial_Lootable, location.Spatial_Timer, location.Spatial_Chance, location.Spatial_UnlimitedReload);
+        location_trigger.Spatial_SetData(location);
         SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
         SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
       }
@@ -262,7 +261,7 @@ class SpatialAI {
       Msgparam = new Param1 < string > (message);
       GetGame().RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
     }
-  } // Ingame chat message
+  } //Ingame chat message
 
   void SpatialLoggerPrint(string msg) {
       GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);

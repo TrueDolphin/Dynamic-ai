@@ -2,19 +2,12 @@ modded class PlayerBase
 {
     bool Spatial_InZone = false;
     bool m_Zone_Safe = false;
-    string m_Zone_Faction = "Shamans";
-    string m_Zone_Loadout = "HumanLoadout.json";
-    string m_Zone_Name = "Survivor";
-    int Spatial_MaxCount = 4;
-    int Spatial_MinCount = 0;
-    int Spatial_HuntMode = 3;
-    int Spatial_Lootable = 1;
-    float Spatial_Chance = 0.5;
     int Spatial_LocationHunt = 10;
     int m_Spatial_Birthday;
     bool Spatial_UnlimitedReload = false;
     ref Spatial_Groups m_Spatial_Groups;
     ref Spatial_Players m_Spatial_Players;
+    Spatial_Point m_spatial_point;
 
     void PlayerBase(){
         if (GetGame().IsServer()) {
@@ -37,47 +30,19 @@ modded class PlayerBase
 		super.EEKilled(killer);
 	} //set file birthday to 0
 
-    void Spatial_SetData(string fac, string lod, int c, int d, int e, string f, int g, float h, bool i){
-        m_Zone_Faction = fac;
-        m_Zone_Loadout = lod;
-        Spatial_MinCount = c;
-        Spatial_MaxCount = d;
-        Spatial_HuntMode = e;
-        m_Zone_Name = f;
-        Spatial_Lootable = g;
-        Spatial_Chance = h;
-        Spatial_UnlimitedReload = i;
-    }
+    void SetSpatialPoint(Spatial_Point point){
+        m_spatial_point = point;
+    } //changed to class instead of individuals
 
-    string Spatial_Faction() {
-        return m_Zone_Faction;
-    }
-    string Spatial_Loadout() {
-        return m_Zone_Loadout;
-    }
-    string Spatial_Name() {
-        return m_Zone_Name;
+    Spatial_Group GetSpatialGroup() {
+      Spatial_Group group = new Spatial_Group(m_spatial_point.Spatial_MinCount, m_spatial_point.Spatial_MaxCount, 100, m_spatial_point.Spatial_ZoneLoadout, m_spatial_point.Spatial_Faction, m_spatial_point.Spatial_Name, m_spatial_point.Spatial_Lootable, m_spatial_point.Spatial_Chance, m_spatial_point.Spatial_MinAccuracy, m_spatial_point.Spatial_MaxAccuracy, m_spatial_point.Spatial_UnlimitedReload);
+        return group;
     }
     void Spatial_SetInZone(bool in){
         Spatial_InZone = in;
     }
-    int Spatial_MinCount(){
-        return Spatial_MinCount;
-    }
-    int Spatial_MaxCount(){
-        return Spatial_MaxCount;
-    }
     int Spatial_HuntMode(){
-        return Spatial_HuntMode;
-    }
-    int Spatial_Lootable(){
-        return Spatial_Lootable;
-    }
-    float Spatial_Chance(){
-        return Spatial_Chance;
-    }
-    bool Spatial_UnlimitedReload(){
-        return Spatial_UnlimitedReload;
+        return m_spatial_point.Spatial_HuntMode;
     }
     void Spatial_SetSafe(bool a){
         m_Zone_Safe = a;
