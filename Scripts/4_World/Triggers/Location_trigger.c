@@ -65,6 +65,8 @@ class Location_Trigger: CylinderTrigger
     TVectorArray waypoints = { ValidPos() };
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
+    if (Location.Spatial_HuntMode == 3) 
+      behaviour = typename.StringToEnum(eAIWaypointBehavior, "HALT");
     int mindistradius, maxdistradius, despawnradius;
     mindistradius = 0;
     maxdistradius = 1000;

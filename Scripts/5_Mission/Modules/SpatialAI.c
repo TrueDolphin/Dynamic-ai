@@ -21,7 +21,7 @@ class SpatialAI {
   #endif
 
   void SpatialAI(){
-    SpatialLoggerPrint("Spatial AI Date: 7/8/2023");
+    SpatialLoggerPrint("Spatial AI Date: 10/8/2023 R1");
     if (GetSpatialSettings().Init() == true) {
       GetSpatialSettings().PullRef(m_Spatial_Groups);
       SpatialPlayerSettings().PullRef(m_Spatial_Players); 
@@ -187,6 +187,10 @@ class SpatialAI {
     TVectorArray waypoints = { waypointpos };
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
+    if (player.Spatial_CheckZone()) {
+      if (player.Spatial_HuntMode() == 3)
+        behaviour = typename.StringToEnum(eAIWaypointBehavior, "HALT");
+    }
     int mindistradius, maxdistradius, despawnradius;
     mindistradius = 0;
     maxdistradius = 1200;
