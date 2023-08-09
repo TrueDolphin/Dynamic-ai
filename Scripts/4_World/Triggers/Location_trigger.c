@@ -17,15 +17,15 @@ class Location_Trigger: CylinderTrigger
     } //changed to class instead of individuals
 
     void SpawnCheck(){
+      if (dynPatrol) return;
       if (Spatial_TimerCheck) return;
       i_PlayerCount = m_insiders.Count();
-        if (dynPatrol) return;
-        if (i_PlayerCount < 1) return;
-        int m_Groupid = Math.RandomIntInclusive(0, int.MAX);
-        SpatialDebugPrint("LocationID: " + m_Groupid);
-        float random = Math.RandomFloat(0.0, 1.0);
-        SpatialDebugPrint("Location Chance: " + location.Spatial_Chance + " | random: " + random);
-        if (location.Spatial_Chance < random) return;
+      if (i_PlayerCount == 0) return;
+      int m_Groupid = Math.RandomIntInclusive(0, int.MAX);
+      SpatialDebugPrint("LocationID: " + m_Groupid);
+      float random = Math.RandomFloat(0.0, 1.0);
+      SpatialDebugPrint("Location Chance: " + location.Spatial_Chance + " | random: " + random);
+      if (location.Spatial_Chance < random) return;
 
       int SpawnCount = Math.RandomIntInclusive(location.Spatial_MinCount, location.Spatial_MaxCount);
       if (SpawnCount > 0) {
@@ -57,7 +57,7 @@ class Location_Trigger: CylinderTrigger
     }
 
   void Spatial_Spawn(int count, Spatial_Location Location){
-    if (!m_insiders.Count() == 0) return;
+    if (m_insiders.Count() == 0) return;
     PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
     if (!playerInsider) return;
     SpatialDebugPrint(playerInsider.GetIdentity().GetName());
