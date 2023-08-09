@@ -7,7 +7,7 @@ Moved a bunch to its own class.
 
 */
 modded class MissionServer {
-  ref const SpatialAI Spatialai = new SpatialAI();
+  const ref SpatialAI Spatialai = new SpatialAI();
   ref Spatial_Groups m_Spatial_Groups;
 
   void MissionServer() {

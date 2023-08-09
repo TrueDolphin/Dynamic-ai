@@ -350,7 +350,7 @@ class Spatial_Point {
   bool Spatial_Safe;
   float Spatial_Radius;
   string Spatial_ZoneLoadout;
-  float Spatial_MinCount, Spatial_MaxCount;
+  int Spatial_MinCount, Spatial_MaxCount;
   int Spatial_HuntMode;
   string Spatial_Faction;
   int Spatial_Lootable;
@@ -379,7 +379,7 @@ class Spatial_Location {
   string Spatial_Name;
   float  Spatial_TriggerRadius;
   string  Spatial_ZoneLoadout;
-  float  Spatial_MinCount, Spatial_MaxCount;
+  int Spatial_MinCount, Spatial_MaxCount;
   int  Spatial_HuntMode;
   string  Spatial_Faction;
   int  Spatial_Lootable;
