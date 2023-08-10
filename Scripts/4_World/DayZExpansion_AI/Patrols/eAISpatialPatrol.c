@@ -20,7 +20,7 @@ class eAISpatialPatrol : eAIPatrol
 	string m_Loadout;
 	ref eAIFaction m_Faction;
 	ref eAIFormation m_Formation;
-	ref Spatial_Groups m_Spatial_Groups;
+	ref eAIGroup m_Group;
 	bool m_CanBeLooted;
 	bool m_UnlimitedReload;
 	float m_SniperProneDistanceThreshold;
@@ -28,16 +28,18 @@ class eAISpatialPatrol : eAIPatrol
 	float m_AccuracyMax;
 	float m_ThreatDistanceLimit;
 	float m_DamageMultiplier;
-	PlayerBase m_Hunted;
 
-	ref eAIGroup m_Group;
-	eAIBase TrueLead;
-	int m_lootcheck;
-	int m_Location = 0;
 	string m_GroupName;
 	float m_TimeSinceLastSpawn;
 	bool m_CanSpawn;
 	private bool m_WasGroupDestroyed;
+
+	//additionals
+	ref Spatial_Groups m_Spatial_Groups;
+	PlayerBase m_Hunted;
+	eAIBase TrueLead;
+	int m_lootcheck;
+	int m_Location = 0;
 
 
 	void eAISpatialPatrol() {
@@ -174,7 +176,6 @@ class eAISpatialPatrol : eAIPatrol
 		}
 		return false;
 	}//CheckMemberLootable(ai, m_lootcheck);
-
 
 	bool WasGroupDestroyed() {
 		if (!m_Group)

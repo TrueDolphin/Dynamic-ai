@@ -1,65 +1,67 @@
 class Location_Trigger: CylinderTrigger
 {       
 
-    int i_PlayerCount;
-    vector Spatial_SpawnPosition;
-    Spatial_Location location;
-    ref Spatial_Groups m_Spatial_Groups;
-    eAISpatialPatrol dynPatrol;
-    bool Spatial_TimerCheck;
+  int i_PlayerCount;
+  vector Spatial_SpawnPosition;
+  Spatial_Location location;
+  ref Spatial_Groups m_Spatial_Groups;
+  eAISpatialPatrol dynPatrol;
+  bool Spatial_TimerCheck;
 
-    void Location_Trigger(){
-      GetSpatialSettings().PullRef(m_Spatial_Groups);   
-    }
+  void Location_Trigger(){
+    GetSpatialSettings().PullRef(m_Spatial_Groups);   
+  }
 
-    void Spatial_SetData(Spatial_Location Location){
-      location = Location;
-    } //changed to class instead of individuals
+  void Spatial_SetData(Spatial_Location Location){
+    location = Location;
+  } //changed to class instead of individuals
 
-    void SpawnCheck(){
-      if (dynPatrol) return;
-      if (Spatial_TimerCheck) return;
-      i_PlayerCount = m_insiders.Count();
-      if (i_PlayerCount == 0) return;
-      int m_Groupid = Math.RandomIntInclusive(0, int.MAX);
-      SpatialDebugPrint("LocationID: " + m_Groupid);
-      float random = Math.RandomFloat(0.0, 1.0);
-      SpatialDebugPrint("Location Chance: " + location.Spatial_Chance + " | random: " + random);
-      if (location.Spatial_Chance < random) return;
+  void SpawnCheck(){
+    if (dynPatrol) return;
+    if (Spatial_TimerCheck) return;
+    i_PlayerCount = m_insiders.Count();
+    if (i_PlayerCount == 0) return;
+    int m_Groupid = Math.RandomIntInclusive(0, int.MAX);
+    SpatialDebugPrint("LocationID: " + m_Groupid);
+    float random = Math.RandomFloat(0.0, 1.0);
+    SpatialDebugPrint("Location Chance: " + location.Spatial_Chance + " | random: " + random);
+    if (location.Spatial_Chance < random) return;
 
-      int SpawnCount = Math.RandomIntInclusive(location.Spatial_MinCount, location.Spatial_MaxCount);
-      if (SpawnCount > 0) {
-        Spatial_Spawn(SpawnCount, location);
-        Spatial_TimerCheck = true;
-        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_timer, location.Spatial_Timer, false);
-      } else {
-        SpatialDebugPrint("Location ai count too low this check");
-      }
-      SpatialDebugPrint("End LocationID: " + m_Groupid);
+    int SpawnCount = Math.RandomIntInclusive(location.Spatial_MinCount, location.Spatial_MaxCount);
+    if (SpawnCount > 0) {
+      Spatial_Spawn(SpawnCount, location);
+      Spatial_TimerCheck = true;
+      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_timer, location.Spatial_Timer, false);
+    } else {
+      SpatialDebugPrint("Location ai count too low this check");
     }
+    SpatialDebugPrint("End LocationID: " + m_Groupid);
+  }
 
-    void Spatial_timer(){
-      Spatial_TimerCheck = false;
-    }
+  void Spatial_timer(){
+    Spatial_TimerCheck = false;
+  }
 
-    override void Enter(TriggerInsider insider){
-      super.Enter(insider);
-      SpawnCheck();
-    }
-        
-    override void Leave(TriggerInsider insider){
-      super.Leave(insider);
-    }
-    
-    override protected bool CanAddObjectAsInsider(Object object){
-		  if (!super.CanAddObjectAsInsider(object)) return false;
-      return PlayerBase.Cast(object) != null;
-    }
+  override void Enter(TriggerInsider insider){
+    super.Enter(insider);
+    SpawnCheck();
+  }
+      
+  override void Leave(TriggerInsider insider){
+    super.Leave(insider);
+  }
+  
+  override protected bool CanAddObjectAsInsider(Object object){
+    if (!super.CanAddObjectAsInsider(object)) return false;
+    bool ai = eAIBase.Cast(object) != null;
+    if (ai) return false;
+    return PlayerBase.Cast(object) != null;
+  }
 
   void Spatial_Spawn(int count, Spatial_Location Location){
     if (m_insiders.Count() == 0) return;
     PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
-    if (!playerInsider) return;
+    if (!playerInsider || playerInsider.IsAI()) return;
     SpatialDebugPrint(playerInsider.GetIdentity().GetName());
     vector startpos = ValidPos();
     TVectorArray waypoints = { ValidPos() };

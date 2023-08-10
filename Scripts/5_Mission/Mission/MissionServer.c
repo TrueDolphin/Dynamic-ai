@@ -11,11 +11,13 @@ modded class MissionServer {
   ref Spatial_Groups m_Spatial_Groups;
 
   void MissionServer() {
-    if (GetSpatialSettings().Init() == true) {
-      GetSpatialSettings().PullRef(m_Spatial_Groups);
-      Spatialai.SpatialLoggerPrint("Spatial AI Enabled");
-      if (m_Spatial_Groups.Spatial_MinTimer == 60000) Spatialai.SpatialLoggerPrint("Spatial Debug Mode on");
-      SpatialTimer();
+    if (!m_Spatial_Groups) {
+      if (GetSpatialSettings().Init() == true) {
+        GetSpatialSettings().PullRef(m_Spatial_Groups);
+        Spatialai.SpatialLoggerPrint("Spatial AI Enabled");
+        if (m_Spatial_Groups.Spatial_MinTimer == 60000) Spatialai.SpatialLoggerPrint("Spatial Debug Mode on");
+        SpatialTimer();
+      }
     }
   } //constructor
 
