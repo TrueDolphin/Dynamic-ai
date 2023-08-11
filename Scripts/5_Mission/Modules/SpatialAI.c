@@ -3,7 +3,7 @@
     const int SZ_IN_SAFEZONE = 0x0001;
     int m_cur = 0;
     int m_Spatial_cur = 0;
-    ref array < Man > Spatial_PlayerList = new array < Man > ;
+    ref array < Man > Spatial_PlayerList;
     ref Spatial_Groups m_Spatial_Groups;
     ref Spatial_Players m_Spatial_Players;
 
@@ -29,46 +29,57 @@
     void Spatial_Check(array<Man> m_Players) {
       SpatialDebugPrint("Spatial::Check - Start");
         // If there are no players in the list, return early.
-        if (m_Players.Count() == 0) return;
+        if (m_Players.Count() == 0){
+        SpatialDebugPrint("Spatial::Check - no players");
+        return;
+        }
 
         int playerChecks = m_Spatial_Groups.PlayerChecks;
         bool checkOnlyLeader = playerChecks >= 0;
-        bool hasLimitedChecks = playerChecks != 0;
 
         // Make sure playerChecks is positive, even if it was initially negative.
         playerChecks = Math.AbsInt(playerChecks);
-
+        int playercount = m_Players.Count() + 1;
         int minAge = m_Spatial_Groups.MinimumAge;
         bool checkMinAge = minAge > 0;
-        Spatial_PlayerList = m_Players;
-        for (int i = 0; i < m_Players.Count(); i++)
+
+        for (int i = 0; i < playercount; i++) 
         {
-          PlayerBase player = PlayerBase.Cast(Spatial_PlayerList.GetRandomElement());
-          Spatial_PlayerList.RemoveItem(player);
-          if (!player || !player.IsAlive() || !player.GetIdentity())
+          SpatialDebugPrint("Spatial::Check - loop :" + i + " out of " + playercount);
+          PlayerBase player = PlayerBase.Cast(m_Players.GetRandomElement());
+          if (!player || !player.IsAlive() || !player.GetIdentity()) {
+            SpatialDebugPrint("Spatial::Check - invalid player");
             continue;
-          if (checkOnlyLeader)
-          {
+          }
+          m_Players.RemoveItem(player);
+          if (checkOnlyLeader) {
             eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
-            if (!PlayerGroup || player != player.GetGroup().GetLeader())
-              continue;
+            if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
+            if (player != player.GetGroup().GetLeader()) {
+            SpatialDebugPrint("Spatial::Check - player not leader of group");
+            continue;
+            }
           }
 
-        #ifdef EXPANSIONMODSPAWNSELECTION
-            // If the player is in the respawn menu, skip to the next iteration.
-            if (InRespawnMenu(player.GetIdentity()))
-                continue;
-        #endif
+          #ifdef EXPANSIONMODSPAWNSELECTION
+              // If the player is in the respawn menu, skip to the next iteration.
+              if (InRespawnMenu(player.GetIdentity())){
+                  SpatialDebugPrint("Spatial::Check - player in respawn");
+                  continue;
+              }
+          #endif
 
-            if (checkMinAge && !player.Spatial_CheckAge(minAge))
+            if (checkMinAge) {
+              if (!player.Spatial_CheckAge(minAge)){
+              SpatialDebugPrint("Spatial::Check - user not old enough");
               continue;
-
+              }
+            } 
             if (Spatial_CanSpawn(player))
               Spatial_LocalSpawn(player);
 
-            if (!hasLimitedChecks)
-              continue;
-            if (i == playerChecks) return;
+            if (playerChecks != 0)
+              if (i == playerChecks) return;
         }
       SpatialDebugPrint("Spatial::Check - End");
     } //Standard loop through the player list, selecting random players and removing them from the list. #refactored by LieutenantMaster
