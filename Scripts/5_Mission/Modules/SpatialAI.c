@@ -272,7 +272,7 @@
     } //expansion logging
 
     void SpatialDebugPrint(string msg) {
-      if (m_Spatial_Groups.Spatial_MinTimer == 60000)
+      if (GetSpatialSettings().Spatial_Debug())
         GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
     } //expansion debug print
   }

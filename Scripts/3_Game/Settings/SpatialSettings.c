@@ -9,6 +9,7 @@ class SpatialSettings {
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   int m_Spatial_Total = -1;
+  bool m_Debug = false;
   bool Spatial_Version = true;
   bool m_Spatial_InVehicle, m_Spatial_IsBleeding, m_Spatial_IsRestrained, m_Spatial_IsUnconscious, m_Spatial_IsInSafeZone, m_Spatial_TPSafeZone, m_Spatial_InOwnTerritory;
 
@@ -24,7 +25,7 @@ class SpatialSettings {
       loggerPrint("At least one valid group Required"); //Sadface box
       return false;
     } else {
-      if (Spatial_Version == true) {
+      if (Spatial_Version) {
         return Spatial_Version;
       }
     }
@@ -61,12 +62,12 @@ class SpatialSettings {
       return;
     }
 
-    if (m_Spatial_Groups.Spatial_MinTimer < 300000) { // global minimum time of 5 mins 
-      if (m_Spatial_Groups.Spatial_MinTimer == 0) {
-        m_Spatial_Groups.Spatial_MinTimer = 60000;
-        m_Spatial_Groups.Spatial_MaxTimer = 60000;
+    if (m_Spatial_Groups.Spatial_MinTimer < 300000) { // global minimum time of 5 mins, 1m for debug 
+      if (m_Spatial_Groups.Spatial_MinTimer < -59999) {
+        m_Debug = 1;
+        m_Spatial_Groups.Spatial_MinTimer = Math.AbsFloat(m_Spatial_Groups.Spatial_MinTimer);
       } else {
-      loggerPrint("Timer Set too low. Defaulting to 5 minutes");
+      loggerPrint("Timer Set either under 5m standard or under 1m debug - set to 5m");
       m_Spatial_Groups.Spatial_MinTimer = 300000;
       }
     }
@@ -250,6 +251,10 @@ class SpatialSettings {
   //returns
   int Spatial_Total() {
     return m_Spatial_Total;
+  }
+
+  bool Spatial_Debug() {
+    return m_Debug;
   }
 
   bool Spatial_InVehicle() {

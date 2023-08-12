@@ -89,8 +89,8 @@ class Location_Trigger: CylinderTrigger
     return ExpansionStatic.GetSurfacePosition(location.Spatial_SpawnPosition);
   }
 
-  void SpatialDebugPrint(string msg) {
-    if (m_Spatial_Groups.Spatial_MinTimer == 60000)
-      GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
-  } //expansion debug print
+    void SpatialDebugPrint(string msg) {
+      if (GetSpatialSettings().Spatial_Debug())
+        GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
+    } //expansion debug print
 }
