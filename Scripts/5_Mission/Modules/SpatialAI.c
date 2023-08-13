@@ -129,6 +129,11 @@
       if (player.Spatial_CheckZone()) group = player.GetSpatialGroup();
       else group = Spatial_GetWeightedGroup(m_Spatial_Groups.Group);
 
+      if (!group){
+        SpatialDebugPrint("Spatial::LocalSpawn - Error - No Group.");
+        return;
+      }
+
       SpawnCount = Math.RandomIntInclusive(group.Spatial_MinCount, group.Spatial_MaxCount);
       float random = Math.RandomFloat(0.0, 1.0);
       SpatialDebugPrint("Chance: " + group.Spatial_Chance + " | random: " + random);
@@ -273,6 +278,8 @@
 
     void SpatialDebugPrint(string msg) {
       if (GetSpatialSettings().Spatial_Debug())
-        GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
+        GetExpansionSettings().GetLog().PrintLog(string.Format("%1 %2", "[Spatial Debug] ", msg));
     } //expansion debug print
   }
+
+  
