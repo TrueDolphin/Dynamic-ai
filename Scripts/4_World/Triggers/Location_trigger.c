@@ -89,8 +89,14 @@ class Location_Trigger: CylinderTrigger
     return ExpansionStatic.GetSurfacePosition(location.Spatial_SpawnPosition);
   }
 
-    void SpatialDebugPrint(string msg) {
-      if (GetSpatialSettings().Spatial_Debug())
-        GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
-    } //expansion debug print
+  bool ValidSpawn(){
+			if (!GetCEApi().AvoidPlayer(location.Spatial_SpawnPosition, 5))
+        return true;
+		 return false;
+    }
+
+  void SpatialDebugPrint(string msg) {
+    if (GetSpatialSettings().Spatial_Debug())
+      GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
+  } //expansion debug print
 }
