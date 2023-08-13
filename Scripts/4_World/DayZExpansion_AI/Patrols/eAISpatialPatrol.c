@@ -37,7 +37,6 @@ class eAISpatialPatrol : eAIPatrol
 	//additionals
 	ref Spatial_Groups m_Spatial_Groups;
 	PlayerBase m_Hunted;
-	eAIBase TrueLead;
 	int m_lootcheck;
 	int m_Location = 0;
 
@@ -103,7 +102,7 @@ class eAISpatialPatrol : eAIPatrol
 
 	void SetHunted(PlayerBase p){
 		m_Hunted = p;
-	}//eAISpatialPatrol::SetHunted(player);
+	}//for movement checks
 
 	void SetSniperProneDistanceThreshold(float distance) {
 		m_SniperProneDistanceThreshold = distance;
@@ -115,7 +114,7 @@ class eAISpatialPatrol : eAIPatrol
 
 	void SetLocation(){
 		m_Location = 1;
-	}//Setlocation();
+	}//for location checks
 
 	private eAIBase SpawnAI(vector pos) {
 		#ifdef EAI_TRACE
@@ -142,10 +141,9 @@ class eAISpatialPatrol : eAIPatrol
 		ai.eAI_SetSniperProneDistanceThreshold(m_SniperProneDistanceThreshold);
 
 		return ai;
-	}
+	}//edited
 
 	bool CheckMemberLootable(eAIBase ai = null, int lootcheck = 0) {
-		if (!ai && lootcheck > 2) lootcheck = 0;
 		switch (lootcheck) {
 			case 1:
 				return true;
@@ -157,8 +155,6 @@ class eAISpatialPatrol : eAIPatrol
 				//leader only
 				if (ai.GetGroup().GetLeader() == ai) return true;
 				return false;
-			case 0:
-			return false;
 		}
 		return false;
 	}//CheckMemberLootable(ai, m_lootcheck);
@@ -175,7 +171,7 @@ class eAISpatialPatrol : eAIPatrol
 				return r;
 		}
 		return false;
-	}//CheckMemberLootable(ai, m_lootcheck);
+	}//CheckLootable(m_lootcheck);
 
 	bool WasGroupDestroyed() {
 		if (!m_Group)
@@ -220,7 +216,6 @@ class eAISpatialPatrol : eAIPatrol
 		m_WasGroupDestroyed = false;
 
 		eAIBase ai = SpawnAI(m_Position);
-		TrueLead = ai;
 		m_Group = ai.GetGroup();
 		m_Group.SetFaction(m_Faction);
 		m_Group.SetFormation(m_Formation);
