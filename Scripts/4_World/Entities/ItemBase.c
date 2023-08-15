@@ -4,8 +4,7 @@ altered for whitelist. LM rewrote my over-the-top if checks to this.
 
 modded class ItemBase
 {	
-    override void Expansion_SetLootable(bool pState)
-    {
+    override void Expansion_SetLootable(bool pState) {
 
         if (GetSpatialSettings().Spatial_WhiteList() != NULL) {        
             foreach (string pName : GetSpatialSettings().Spatial_WhiteList()){
@@ -14,5 +13,5 @@ modded class ItemBase
             }
         }
         super.Expansion_SetLootable(pState);
-    }
+        }
 }

@@ -7,14 +7,18 @@ class Location_Trigger: CylinderTrigger
   ref Spatial_Groups m_Spatial_Groups;
   eAISpatialPatrol dynPatrol;
   bool Spatial_TimerCheck;
-
+  Spatial_Notification notification;
+  
   void Location_Trigger(){
     GetSpatialSettings().PullRef(m_Spatial_Groups);   
-  }
+    }
 
   void Spatial_SetData(Spatial_Location Location){
     location = Location;
   } //changed to class instead of individuals
+  void SetNotification(Spatial_Notification a){
+    notification = a;
+    }
 
   void SpawnCheck(){
     if (dynPatrol) return;
@@ -36,27 +40,27 @@ class Location_Trigger: CylinderTrigger
       SpatialDebugPrint("Location ai count too low this check");
     }
     SpatialDebugPrint("End LocationID: " + m_Groupid);
-  }
+    }
 
   void Spatial_timer(){
     Spatial_TimerCheck = false;
-  }
+    }
 
   override void Enter(TriggerInsider insider){
     super.Enter(insider);
     SpawnCheck();
-  }
+    }
       
   override void Leave(TriggerInsider insider){
     super.Leave(insider);
-  }
+    }
   
   override protected bool CanAddObjectAsInsider(Object object){
     if (!super.CanAddObjectAsInsider(object)) return false;
     bool ai = eAIBase.Cast(object) != null;
     if (ai) return false;
     return PlayerBase.Cast(object) != null;
-  }
+    }
 
   void Spatial_Spawn(int count, Spatial_Location Location){
     if (m_insiders.Count() == 0) return;
@@ -82,21 +86,61 @@ class Location_Trigger: CylinderTrigger
       dynPatrol.SetSniperProneDistanceThreshold(0.0);
       dynPatrol.SetLocation();
     }
-  } //Spatial_Spawn(player, SpawnCount, faction, loadout, groupname, lootable)
+    Spatial_message(playerInsider, count);
+    }
 
+
+  void Spatial_message(PlayerBase player, int SpawnCount) {
+      if (!player) return;
+      string title, text, faction, loadout;
+      int msg_no = notification.MessageType;
+      title = notification.MessageTitle;
+      text = notification.MessageText.GetRandomElement();
+      faction = location.Spatial_Faction;
+      loadout = location.Spatial_ZoneLoadout;
+      
+      string message = string.Format("Player: %1 Number: %2, Faction name: %3, Loadout: %4", player.GetIdentity().GetName(), SpawnCount, faction, loadout);
+      if (msg_no == 0) {
+        SpatialLoggerPrint(message);
+      } else if (msg_no == 1) {
+        Spatial_WarningMessage(player, string.Format("%1 %2", SpawnCount, text));
+        SpatialLoggerPrint(message);
+      } else if (msg_no == 2) {
+        Spatial_WarningMessage(player, text);
+        SpatialLoggerPrint(message);
+      } else if (msg_no == 3) {
+        NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, string.Format("%1 %2", SpawnCount, text), "set:dayz_gui image:tutorials");
+        SpatialLoggerPrint(message);
+      } else if (msg_no == 4) {
+        NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
+        SpatialLoggerPrint(message);
+      } else if (msg_no == 5 && player.Spatial_HasGPSReceiver()) {
+        NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
+        SpatialLoggerPrint(message);
+      }
+  } //chat message or vanilla notification
   vector ValidPos(){
     if (m_Spatial_Groups.Locations_Enabled == 2) return location.Spatial_SpawnPosition;
     return ExpansionStatic.GetSurfacePosition(location.Spatial_SpawnPosition);
-  }
+    }
 
   bool ValidSpawn(){
 			if (!GetCEApi().AvoidPlayer(location.Spatial_SpawnPosition, 5))
         return true;
 		 return false;
     }
-
+  void Spatial_WarningMessage(PlayerBase player, string message) {
+    if ((player) && (message != "")) {
+      Param1 < string > Msgparam;
+      Msgparam = new Param1 < string > (message);
+      GetGame().RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
+    }
+  } //Ingame chat message
   void SpatialDebugPrint(string msg) {
     if (GetSpatialSettings().Spatial_Debug())
       GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
   } //expansion debug print
+  void SpatialLoggerPrint(string msg) {
+    GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
+  } //expansion logging
 }

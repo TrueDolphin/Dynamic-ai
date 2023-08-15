@@ -16,7 +16,6 @@ class SpatialSettings {
   //refs
   ref Spatial_Groups m_Spatial_Groups;
 
- 
   bool Init() {
     Load();
     if (m_Spatial_Total < 0) {
@@ -31,14 +30,10 @@ class SpatialSettings {
     }
     return false;
   } //init
-
-  
   void PullRef(out Spatial_Groups Data) {
     if (!m_Spatial_Groups) Load();
     Data = m_Spatial_Groups;
   } //load ref to use location
-
-
   void Load() {
     if (!FileExist(EXP_AI_SPATIAL_SETTINGS)) {
       if (!FileExist(EXP_SPATIAL_FOLDER))
@@ -226,8 +221,6 @@ class SpatialSettings {
       m_Spatial_Total += 1;
     }
   } //load from file/data checks
-
-
   void DefaultSpatialSettings(out Spatial_Groups Data) {
     Data = new Spatial_Groups();
     Data.Group.Insert(new Spatial_Group(2, 2, 200, "NBCLoadout.json", "Guards", "Guard", 1, 0.5, 0.25, 0.66, false));
@@ -241,8 +234,6 @@ class SpatialSettings {
     Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
     Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
   } //generate default array data
-
-
   void loggerPrint(string msg) {
     if (GetExpansionSettings().GetLog().AIGeneral)
       GetExpansionSettings().GetLog().PrintLog("[Spatial Settings] " + msg);
@@ -251,46 +242,46 @@ class SpatialSettings {
   //returns
   int Spatial_Total() {
     return m_Spatial_Total;
-  }
+    }
 
   bool Spatial_Debug() {
     return m_Debug;
-  }
+    }
 
   bool Spatial_InVehicle() {
     return m_Spatial_InVehicle;
-  }
+    }
 
   bool Spatial_IsBleeding() {
     return m_Spatial_IsBleeding;
-  }
+    }
 
   bool Spatial_IsRestrained() {
     return m_Spatial_IsRestrained;
-  }
+    }
 
   bool Spatial_IsUnconscious() {
     return m_Spatial_IsUnconscious;
-  }
+    }
 
   bool Spatial_IsInSafeZone() {
     return m_Spatial_IsInSafeZone;
-  }
+    }
 
   bool Spatial_TPSafeZone() {
     return m_Spatial_TPSafeZone;
-  }
+    }
 
   bool Spatial_InOwnTerritory() {
     return m_Spatial_InOwnTerritory;
-  }
+    }
 
   TStringArray Spatial_WhiteList() {
     if (!m_Spatial_Groups) Load();
     return m_Spatial_Groups.LootWhitelist;
-  }
+    }
 
-}
+};
 //json data
 class Spatial_Groups {
   int Version = 17;
@@ -325,8 +316,8 @@ class Spatial_Groups {
     Group = new array < ref Spatial_Group > ;
     Point = new array < ref Spatial_Point > ;
     Location = new array < ref Spatial_Location > ;
-  }
-}
+    }
+  };
 
 class Spatial_Group {
   int  Spatial_MinCount, Spatial_MaxCount;
@@ -347,8 +338,8 @@ class Spatial_Group {
     Spatial_MinAccuracy = i;
     Spatial_MaxAccuracy = j;
     Spatial_UnlimitedReload = k;
-  }
-}
+    }
+  };
 
 class Spatial_Point {
   string Spatial_Name;
@@ -378,7 +369,7 @@ class Spatial_Point {
     Spatial_UnlimitedReload = l;
     Spatial_Position = g;
   }
-};
+  };
 
 class Spatial_Location {
   string Spatial_Name;
@@ -408,15 +399,14 @@ class Spatial_Location {
     Spatial_TriggerPosition = g;
     Spatial_SpawnPosition = a;
   }
-};
+  };
 
-//expansion-external data access
+
 static ref SpatialSettings g_SpatialSettings;
-
 static SpatialSettings GetSpatialSettings() {
   if (g_SpatialSettings == NULL) {
     g_SpatialSettings = new SpatialSettings();
     g_SpatialSettings.Load();
   }
   return g_SpatialSettings;
-}
+  }

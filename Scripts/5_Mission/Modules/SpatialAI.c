@@ -6,6 +6,7 @@
     ref array < Man > Spatial_PlayerList;
     ref Spatial_Groups m_Spatial_Groups;
     ref Spatial_Players m_Spatial_Players;
+    ref Spatial_Notifications m_Spatial_Notifications;
 
     #ifdef EXPANSIONMODSPAWNSELECTION
       private ExpansionRespawnHandlerModule m_RespawnModule;
@@ -20,10 +21,10 @@
     #endif
 
     void SpatialAI(){
-      SpatialLoggerPrint("Spatial AI Date: 10/8/2023 R1");
+      SpatialLoggerPrint("Spatial AI Date: 15/8/2023 R2");
       GetSpatialSettings().PullRef(m_Spatial_Groups);
-      SpatialPlayerSettings().PullRef(m_Spatial_Players); 
-      InitSpatialTriggers();
+      SpatialPlayerSettings().PullRef(m_Spatial_Players);
+      Spatial_NotificationSettings().PullRef(m_Spatial_Notifications);
     } //constructor
 
     void Spatial_Check(array<Man> m_Players) {
@@ -211,7 +212,13 @@
         dynPatrol.SetSniperProneDistanceThreshold(0.0);
         dynPatrol.SetHunted(player);
       }
-      Spatial_message(player, m_Spatial_Groups.MessageType, bod, Group.Spatial_Faction, Group.Spatial_Loadout);
+
+      if (player.Spatial_CheckZone())
+        Spatial_message(player, bod, Group, player.Spatial_notification());
+      else {
+        Spatial_Notification notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+        Spatial_message(player, bod, Group, notification);
+      }
       SpatialDebugPrint("Spatial::Spawn - End");
     } //Spatial_Spawn(player, SpawnCount, group)
 
@@ -223,6 +230,7 @@
           Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
           spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
           spatial_trigger.SetSpatialPoint(points);
+          SetNotificationPoint(spatial_trigger, points);
           SpatialLoggerPrint("Trigger at point: " + points.Spatial_Position + " - Radius: " + points.Spatial_Radius);
           SpatialLoggerPrint("Safe: " + points.Spatial_Safe + " - Faction: " + points.Spatial_Faction + " - Loadout: " + points.Spatial_ZoneLoadout + " - counts: " + points.Spatial_MinCount + ":" + points.Spatial_MaxCount);
         }
@@ -234,6 +242,7 @@
           Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
           location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
           location_trigger.Spatial_SetData(location);
+          SetNotificationLocation(location_trigger, location);
           SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
           SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
         }
@@ -241,25 +250,58 @@
       SpatialDebugPrint("Spatial::Triggers - End");
     } //trigger zone initialisation
 
-    void Spatial_message(PlayerBase player, int msg_no, int SpawnCount, string faction, string loadout) {
+    void SetNotificationPoint(Spatial_Trigger trigger, Spatial_Point point){
+      bool found = false;
+        foreach(Spatial_Notification notification: m_Spatial_Notifications.notification) {
+          if (notification.Spatial_Name == point.Spatial_Name) {
+            trigger.SetNotification(notification);
+            found = true;
+          }
+        }
+      if (!found){
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+      }
+      }
+
+    void SetNotificationLocation(Location_Trigger trigger, Spatial_Location location){
+      bool found = false;
+        foreach(Spatial_Notification notification: m_Spatial_Notifications.notification) {
+          if (notification.Spatial_Name == location.Spatial_Name) {
+            trigger.SetNotification(notification);
+            found = true;
+          }
+        }
+      if (!found){
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+      }
+      }
+
+    void Spatial_message(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification) {
       if (!player) return;
+      string title, text, faction, loadout;
+      int msg_no = notification.MessageType;
+      title = notification.MessageTitle;
+      text = notification.MessageText.GetRandomElement();
+      faction = group.Spatial_Faction;
+      loadout = group.Spatial_Loadout;
+      
       string message = string.Format("Player: %1 Number: %2, Faction name: %3, Loadout: %4", player.GetIdentity().GetName(), SpawnCount, faction, loadout);
       if (msg_no == 0) {
         SpatialLoggerPrint(message);
       } else if (msg_no == 1) {
-        Spatial_WarningMessage(player, string.Format("%1 %2", SpawnCount, m_Spatial_Groups.MessageText));
+        Spatial_WarningMessage(player, string.Format("%1 %2", SpawnCount, text));
         SpatialLoggerPrint(message);
       } else if (msg_no == 2) {
-        Spatial_WarningMessage(player, m_Spatial_Groups.MessageText);
+        Spatial_WarningMessage(player, text);
         SpatialLoggerPrint(message);
       } else if (msg_no == 3) {
-        NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, string.Format("%1 %2", SpawnCount, m_Spatial_Groups.MessageText), "set:dayz_gui image:tutorials");
+        NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, string.Format("%1 %2", SpawnCount, text), "set:dayz_gui image:tutorials");
         SpatialLoggerPrint(message);
       } else if (msg_no == 4) {
-        NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, m_Spatial_Groups.MessageText, "set:dayz_gui image:tutorials");
+        NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
         SpatialLoggerPrint(message);
       } else if (msg_no == 5 && player.Spatial_HasGPSReceiver()) {
-        NotificationSystem.SendNotificationToPlayerExtended(player, 5, m_Spatial_Groups.MessageTitle, m_Spatial_Groups.MessageText, "set:dayz_gui image:tutorials");
+        NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
         SpatialLoggerPrint(message);
       }
     } //chat message or vanilla notification

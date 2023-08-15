@@ -17,7 +17,7 @@ class SpatialPatrol : Managed
 
 		int index = m_AllPatrols.Find(patrol);
 		m_AllPatrols.Remove(index);
-	}
+		}
 
     private void SpatialPatrol(array<vector> polygonVertices){
         #ifdef EAI_TRACE
@@ -25,7 +25,7 @@ class SpatialPatrol : Managed
 		#endif
         m_PolygonVertices = polygonVertices;
         m_AllPatrols.Insert(this);
-    }
+    	}
 
 	private void ~SpatialPatrol(){
 		#ifdef EAI_TRACE
@@ -39,7 +39,7 @@ class SpatialPatrol : Managed
 		if (idx != -1) m_AllPatrols.RemoveOrdered(idx);
 
 		Stop();
-	}
+		}
 	
 	static void DebugAll(){
 		Print("DebugAll");
@@ -48,16 +48,16 @@ class SpatialPatrol : Managed
 		{
 			patrol.Debug();
 		}
-	}
+		}
 	
 	static void DeleteAll(){
 		m_AllPatrols.Clear();
-	}
+		}
 	
 	void Debug(){
 		Print(Type());
 		Print(m_Timer);
-	}
+		}
 
 	void Delete(){
 		#ifdef EAI_TRACE
@@ -66,7 +66,7 @@ class SpatialPatrol : Managed
 
 		m_IsBeingDestroyed = true;
 		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Call(DeletePatrol, this);
-	}
+		}
 
 	bool IsBeingDestroyed(){
 		#ifdef EAI_TRACE
@@ -74,7 +74,7 @@ class SpatialPatrol : Managed
 		#endif
 
 		return m_IsBeingDestroyed;
-	}
+		}
 
 	void Start(){
 		#ifdef EAI_TRACE
@@ -83,7 +83,7 @@ class SpatialPatrol : Managed
 
 		//DelayedStart();
 		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.DelayedStart, Math.RandomInt(1, 1000), false);
-	}
+		}
 
 	private void DelayedStart(){
 		#ifdef EAI_TRACE
@@ -94,7 +94,7 @@ class SpatialPatrol : Managed
 
 		if (!m_Timer) m_Timer = new Timer(CALL_CATEGORY_GAMEPLAY);
 		m_Timer.Run(UPDATE_RATE_IN_SECONDS, this, "OnUpdate", null, true);
-	}
+		}
 
 	void Stop(){
 		#ifdef EAI_TRACE
@@ -102,9 +102,9 @@ class SpatialPatrol : Managed
 		#endif
 
 		if (m_Timer && m_Timer.IsRunning()) m_Timer.Stop();
-	}
+		}
 
-    void Check(vector position){
+    bool Check(vector position){
         int windingNumber = 0;
 
         int n = m_PolygonVertices.Count();
@@ -129,12 +129,12 @@ class SpatialPatrol : Managed
             }
         }
 
-        s_InsideBuffer[m_Type] = windingNumber != 0;
-    }
+        return windingNumber != 0;
+    	}
 
     private float isLeft(vector v1, vector v2, vector p){
         return (v2[0] - v1[0]) * (p[2] - v1[2]) - (p[0] - v1[0]) * (v2[2] - v1[2]);
-    }
+    	}
 
 	void OnUpdate(){}
 };

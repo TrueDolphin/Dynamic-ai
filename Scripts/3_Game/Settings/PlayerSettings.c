@@ -1,5 +1,5 @@
 class SpatialPlayerSettings {
-  //declares
+  //Const
   private const static string EXP_SPATIAL_FOLDER = "$profile:ExpansionMod\\AI\\Spatial\\";
   private const static string EXP_AI_SPATIAL_SETTINGS = EXP_SPATIAL_FOLDER + "SpatialPlayerSettings.json";
 
@@ -10,7 +10,7 @@ class SpatialPlayerSettings {
   void PullRef(out Spatial_Players Data) {
     if (!m_Spatial_Players) Load();
     Data = m_Spatial_Players;
-  }
+    }
 
   //load from file/data checks
   void Load() {
@@ -25,20 +25,20 @@ class SpatialPlayerSettings {
       m_Spatial_Players = new Spatial_Players();
       JsonFileLoader < Spatial_Players > .JsonLoadFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Players);
     }
-  }
+    }
 
   void Save() {
     if (m_Spatial_Players) {
       if (!FileExist(EXP_SPATIAL_FOLDER)) MakeDirectory(EXP_SPATIAL_FOLDER);
       JsonFileLoader < Spatial_Players > .JsonSaveFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Players);
     }
-  }
+    }
 
   void New_Player(string UID, int date) {
     if (!m_Spatial_Players) Load();
     m_Spatial_Players.Group.Insert(new Spatial_Player(UID, date));
     Save();
-  }
+    }
 
   void Update_Player(string UID, int date){
     bool found = false;
@@ -55,7 +55,7 @@ class SpatialPlayerSettings {
       Save();
     }
 
-  }
+    }
 
   int Check_Player(string UID){
     if (!m_Spatial_Players) Load();
@@ -65,7 +65,7 @@ class SpatialPlayerSettings {
       }
     }
     return 0;
-  }
+    }
 
 
   //generate default array data
@@ -77,11 +77,11 @@ class SpatialPlayerSettings {
     Data.Group.Insert(new Spatial_Player("76562158225858683", 0));
     Data.Group.Insert(new Spatial_Player("76561198019858686", 0));
 
-  }
+    }
 
   void loggerPrint(string msg) {
       GetExpansionSettings().GetLog().PrintLog("[Spatial Player Settings] " + msg);
-  }
+    }
 }
 
 //json data
@@ -92,7 +92,7 @@ class Spatial_Players {
   void Spatial_Players() {
     Group = new array < ref Spatial_Player > ;
   }
-}
+  }
 
 class Spatial_Player {
   string UID;
@@ -102,14 +102,11 @@ class Spatial_Player {
     UID = bod;
     Player_Birthday = date;
   }
-}
-
-
-
+  }
+  
 static ref SpatialPlayerSettings g_SpatialPlayerSettings;
-
 static SpatialPlayerSettings GetSpatialPlayerSettings() {
     g_SpatialPlayerSettings = new SpatialPlayerSettings();
     g_SpatialPlayerSettings.Load();
   return g_SpatialPlayerSettings;
-}
+  }

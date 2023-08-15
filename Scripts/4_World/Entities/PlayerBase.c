@@ -8,6 +8,7 @@ modded class PlayerBase
     ref Spatial_Groups m_Spatial_Groups;
     ref Spatial_Players m_Spatial_Players;
     Spatial_Point m_spatial_point;
+    Spatial_Notification spatial_notification;
 
     void PlayerBase(){
         if (GetGame().IsServer()) {
@@ -37,28 +38,38 @@ modded class PlayerBase
     Spatial_Group GetSpatialGroup() {
       Spatial_Group group = new Spatial_Group(m_spatial_point.Spatial_MinCount, m_spatial_point.Spatial_MaxCount, 100, m_spatial_point.Spatial_ZoneLoadout, m_spatial_point.Spatial_Faction, m_spatial_point.Spatial_Name, m_spatial_point.Spatial_Lootable, m_spatial_point.Spatial_Chance, m_spatial_point.Spatial_MinAccuracy, m_spatial_point.Spatial_MaxAccuracy, m_spatial_point.Spatial_UnlimitedReload);
         return group;
-    }
+        }
     void Spatial_SetInZone(bool in){
         Spatial_InZone = in;
-    }
-    int Spatial_HuntMode(){
-        return m_spatial_point.Spatial_HuntMode;
-    }
+        }
+
     void Spatial_SetSafe(bool a){
         m_Zone_Safe = a;
-    }
+        }
     void Spatial_SetLocationHunt(int a){
         Spatial_LocationHunt = a;
-    }
+        }
+
+    void Spatial_SetNotification(Spatial_Notification a){
+        spatial_notification = a;
+        }
+
+    Spatial_Notification Spatial_notification(){
+        return spatial_notification;
+        }
+    
+    int Spatial_HuntMode(){
+        return m_spatial_point.Spatial_HuntMode;
+        }
     int Spatial_LocationHunt(){
         return Spatial_LocationHunt;
-    }
+        }
     bool Spatial_CheckSafe(){
         return m_Zone_Safe;
-    }
+        }
     bool Spatial_CheckZone(){
         return Spatial_InZone;
-    }
+        }
 
     bool Spatial_HasGPSReceiver(){
         if (GetMapNavigationBehaviour()) return (GetMapNavigationBehaviour().GetNavigationType() & EMapNavigationType.GPS | EMapNavigationType.ALL == 0);
@@ -123,5 +134,4 @@ modded class PlayerBase
         if (m_Spatial_Groups.Spatial_MinTimer == 60000)
             GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
     } //expansion debug print
-
 };

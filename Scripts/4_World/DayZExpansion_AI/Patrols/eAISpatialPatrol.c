@@ -44,7 +44,6 @@ class eAISpatialPatrol : eAIPatrol
 	void eAISpatialPatrol() {
 		GetSpatialSettings().PullRef(m_Spatial_Groups);	
 	}//Spatial settings reference
-
 	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false) {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0("eAISpatialPatrol", "Create");
@@ -77,44 +76,43 @@ class eAISpatialPatrol : eAIPatrol
 		if (patrol.m_Formation == null) patrol.m_Formation = new eAIFormationVee();
 		patrol.Start();
 		return patrol;
-	}//edited
+		}//edited
 
 	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false) {
 		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, despawnTime, faction, null, player, minR, maxR, maxR * 1.1, speedLimit, threatspeedLimit, lootcheck, unlimitedReload);
-	}//edited
+		}//edited
 
 	void SetAccuracy(float accuracyMin, float accuracyMax) {
 		m_AccuracyMin = accuracyMin;
 		m_AccuracyMax = accuracyMax;
-	}
+		}
 
 	void SetThreatDistanceLimit(float distance) {
 		m_ThreatDistanceLimit = distance;
-	}
+		}
 
 	void SetDamageMultiplier(float multiplier) {
 		m_DamageMultiplier = multiplier;
-	}
+		}
 
 	void SetGroupName(string name) {
 		m_GroupName = name;
-	}
+		}
 
 	void SetHunted(PlayerBase p){
 		m_Hunted = p;
 	}//for movement checks
-
 	void SetSniperProneDistanceThreshold(float distance) {
 		m_SniperProneDistanceThreshold = distance;
-	}
+		}
 
 	eAIGroup GetGroup(){
 		return m_Group;
-	}//null
+		}//null
 
 	void SetLocation(){
 		m_Location = 1;
-	}//for location checks
+		}//for location checks
 
 	private eAIBase SpawnAI(vector pos) {
 		#ifdef EAI_TRACE
@@ -141,7 +139,7 @@ class eAISpatialPatrol : eAIPatrol
 		ai.eAI_SetSniperProneDistanceThreshold(m_SniperProneDistanceThreshold);
 
 		return ai;
-	}//edited
+		}//edited
 
 	bool CheckMemberLootable(eAIBase ai = null, int lootcheck = 0) {
 		switch (lootcheck) {
@@ -158,7 +156,6 @@ class eAISpatialPatrol : eAIPatrol
 		}
 		return false;
 	}//CheckMemberLootable(ai, m_lootcheck);
-
 	static bool CheckLootable(int lootcheck = 0) {
 		if (lootcheck > 2) lootcheck = 0;
 		switch (lootcheck) {
@@ -172,7 +169,6 @@ class eAISpatialPatrol : eAIPatrol
 		}
 		return false;
 	}//CheckLootable(m_lootcheck);
-
 	bool WasGroupDestroyed() {
 		if (!m_Group)
 			return false;
@@ -195,7 +191,7 @@ class eAISpatialPatrol : eAIPatrol
 			m_NumberOfSpatialPatrols--;
 
 		return true;
-	}
+		}
 
 	void Spawn() {
 		#ifdef EAI_TRACE
@@ -243,7 +239,7 @@ class eAISpatialPatrol : eAIPatrol
 			ai.eAI_SetAccuracy(-1, -1);
 		}
 		m_NumberOfSpatialPatrols++;
-	}//edited
+		}//edited
 
 	void Despawn(bool deferDespawnUntilLoosingAggro = false) {
 		#ifdef EAI_TRACE
@@ -260,7 +256,7 @@ class eAISpatialPatrol : eAIPatrol
 
 		if (!m_WasGroupDestroyed && m_NumberOfSpatialPatrols) m_NumberOfSpatialPatrols--;
 		if (this) this.Delete();
-	}//edited
+		}//edited
 
 	override void OnUpdate() {
 		#ifdef EAI_TRACE
@@ -318,7 +314,7 @@ class eAISpatialPatrol : eAIPatrol
 			} 
 
 		}
-	}//edited
+		}//edited
 
     void Spatial_Movement(eAIBase ai, eAIGroup AiGroup) {
 		PlayerBase player = m_Hunted;
@@ -331,6 +327,8 @@ class eAISpatialPatrol : eAIPatrol
 			case 1: 
 			//agressive
 				player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
+				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
+				break;
 			case 2: 
 			//less agressive
 				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
@@ -360,14 +358,12 @@ class eAISpatialPatrol : eAIPatrol
 			break;
     	}
 	}//Spatial_Movement(ai, group);
-
 	void Spatial_PointGen(eAIBase ai, eAIGroup AiGroup, PlayerBase player) {
 		int d = Math.RandomIntInclusive(0, 100);
 		if (d < 16) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 120));
 		if (d > 15 && d < 95) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 80, 200));
 		if (d > 94) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
 	}//Spatial_PointGen(ai, AiGroup, player);
-
 	 //! https://feedback.bistudio.com/T173348 - readded null checks
 	void TrailingGroup(eAIGroup AiGroup, PlayerBase player, vector pos, int timer) {
 		//Print("Trailing trigger" + this);
@@ -388,7 +384,6 @@ class eAISpatialPatrol : eAIPatrol
 		if (!player || !AiGroup) return;
 		GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer);
 	}//TrailingGroup(ai, player, Vector(0, 0, 0), 15000);
-
 	override void Debug() {
 		///super.Debug();
 		Print("=======Dynamic Debug========");
@@ -397,5 +392,5 @@ class eAISpatialPatrol : eAIPatrol
 		Print(m_NumberOfAI);
 		Print(WasGroupDestroyed());
 		Print("=======Dynamic Debug========");
-	}//edited
+		}//edited
 };
