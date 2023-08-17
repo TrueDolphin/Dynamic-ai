@@ -318,6 +318,8 @@ class eAISpatialPatrol : eAIPatrol
 
     void Spatial_Movement(eAIBase ai, eAIGroup AiGroup) {
 		PlayerBase player = m_Hunted;
+		int i;
+		float c = m_Spatial_Groups.EngageTimer / 2500;
 		if (!player || !AiGroup || !ai) return;
 		AiGroup.ClearWaypoints();
 		int m_Mode = m_Spatial_Groups.HuntMode;
@@ -325,34 +327,27 @@ class eAISpatialPatrol : eAIPatrol
 		if (player.Spatial_LocationHunt() != 10) m_Mode = player.Spatial_LocationHunt();
 		switch (m_Mode) {
 			case 1: 
-			//agressive
+				//actively hunts player
 				player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
 				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
 				break;
 			case 2: 
-			//less agressive
+				//last known location
 				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
 			break;
 			case 3: 
-			//halt
+				//halt
 			break;
 			case 4: 
-			//mostly irrelevant - generic waypoints do better
-			//this needs to be changed. not happy with it at all.
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 70, 80));
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+				//stay around spawnpos
+				for (i = 0; i < c; i++) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(m_Position, 70, 80));
 			break;
 			case 5: 
-				//better than 4
-				float c = m_Spatial_Groups.EngageTimer / 2500;
-				for (int i = 0; i < c; i++) Spatial_PointGen(ai, AiGroup, player);
+				//mix of 4 and 6 sorta
+				for (i = 0; i < c; i++) Spatial_PointGen(ai, AiGroup, player);
 			break;
 			case 6: 
-				//unique i guess.
+				//follows player
 				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
 				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 15000, false, AiGroup, player, Vector(0, 0, 0), 15000);
 			break;

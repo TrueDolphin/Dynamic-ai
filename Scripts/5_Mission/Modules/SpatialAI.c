@@ -21,7 +21,7 @@
     #endif
 
     void SpatialAI(){
-      SpatialLoggerPrint("Spatial AI Date: 15/8/2023 R2");
+      SpatialLoggerPrint("Spatial AI Date: 15/8/2023 R3");
       GetSpatialSettings().PullRef(m_Spatial_Groups);
       SpatialPlayerSettings().PullRef(m_Spatial_Players);
       Spatial_NotificationSettings().PullRef(m_Spatial_Notifications);
@@ -44,7 +44,7 @@
         int minAge = m_Spatial_Groups.MinimumAge;
         bool checkMinAge = minAge > 0;
 
-        for (int i = 0; i < playercount; i++) 
+        for (int i = 0; i < playercount; ++i) 
         {
           SpatialDebugPrint("Spatial::Check - loop :" + i + " out of " + playercount);
           PlayerBase player = PlayerBase.Cast(m_Players.GetRandomElement());
@@ -52,14 +52,26 @@
             SpatialDebugPrint("Spatial::Check - invalid player");
             continue;
           }
+
           m_Players.RemoveItem(player);
-          if (checkOnlyLeader) {
-            eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
-            if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
-            if (player != player.GetGroup().GetLeader()) {
-            SpatialDebugPrint("Spatial::Check - player not leader of group");
-            continue;
-            }
+
+          if (checkOnlyLeader)
+          {
+              eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
+              // If the player is not in an ai group or isnt leader, skip to the next iteration.
+              if (!PlayerGroup || player != player.GetGroup().GetLeader()){
+                  SpatialDebugPrint("Spatial::Check - player not leader of group");
+                  continue;
+              } 
+
+              #ifdef EXPANSIONMODGROUPS
+                ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
+                // If the player is not in a party or isnt leader, skip to the next iteration.
+                if (!party || player.GetIdentity().GetId() != party.GetOwnerUID()){
+                    SpatialDebugPrint("Spatial::Check - player not leader of party");
+                    continue;
+                }
+              #endif
           }
 
           #ifdef EXPANSIONMODSPAWNSELECTION
@@ -70,17 +82,17 @@
               }
           #endif
 
-            if (checkMinAge) {
-              if (!player.Spatial_CheckAge(minAge)){
-              SpatialDebugPrint("Spatial::Check - user not old enough");
-              continue;
-              }
-            } 
-            if (Spatial_CanSpawn(player))
-              Spatial_LocalSpawn(player);
+          if (checkMinAge) {
+            if (!player.Spatial_CheckAge(minAge)){
+            SpatialDebugPrint("Spatial::Check - user not old enough");
+            continue;
+            }
+          } 
+          if (Spatial_CanSpawn(player))
+            Spatial_LocalSpawn(player);
 
-            if (playerChecks != 0)
-              if (i == playerChecks) return;
+          if (playerChecks != 0)
+            if (i == playerChecks) return;
         }
       SpatialDebugPrint("Spatial::Check - End");
     } //Standard loop through the player list, selecting random players and removing them from the list. #refactored by LieutenantMaster
@@ -143,15 +155,22 @@
 
       if (SpawnCount > 0) {
         if (m_Spatial_Groups.GroupDifficulty == 1) {
-          eAIGroup PlayerGroup;
-          PlayerGroup = eAIGroup.Cast(player.GetGroup());
+          int groupcount = 0;
+          int partycount = 0;
+          int totalcount;
+          #ifdef EXPANSIONMODGROUPS
+            ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
+            array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
+            partycount = PartyMembers.Count();
+          #endif
+          totalcount = Math.Max(groupcount, partycount);
+          eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
           if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
-          if (PlayerGroup.Count() > 1) SpawnCount += (PlayerGroup.Count() - 1);
+          if (totalcount > 1) SpawnCount += (totalcount - 1);
         }
       Spatial_Spawn(player, SpawnCount, group);
       } else SpatialDebugPrint("group/point ai count too low this check");
       
-
       SpatialDebugPrint("End GroupID: " + m_Groupid);
       SpatialDebugPrint("Spatial::LocalSpawn - End");
     } //create and stuff.
