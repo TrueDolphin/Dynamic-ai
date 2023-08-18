@@ -21,7 +21,7 @@
     #endif
 
     void SpatialAI(){
-      SpatialLoggerPrint("Spatial AI Date: 15/8/2023 R3");
+      SpatialLoggerPrint("Spatial AI Date: 15/8/2023 R4");
       GetSpatialSettings().PullRef(m_Spatial_Groups);
       SpatialPlayerSettings().PullRef(m_Spatial_Players);
       Spatial_NotificationSettings().PullRef(m_Spatial_Notifications);
@@ -264,6 +264,10 @@
           SetNotificationLocation(location_trigger, location);
           SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
           SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
+          Notification_Trigger notification_trigger = Notification_Trigger.Cast(GetGame().CreateObjectEx("Notification_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
+          notification_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius * 1.5, location.Spatial_TriggerRadius);
+          SpatialLoggerPrint("Notification covering location at: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius * 1.5);
+          location_trigger.SetNotifTrigger(notification_trigger);
         }
       } else SpatialLoggerPrint("Locations Disabled");
       SpatialDebugPrint("Spatial::Triggers - End");

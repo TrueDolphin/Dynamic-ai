@@ -8,7 +8,8 @@ class Location_Trigger: CylinderTrigger
   eAISpatialPatrol dynPatrol;
   bool Spatial_TimerCheck;
   Spatial_Notification notification;
-  
+  Notification_Trigger notif_trigger;
+  array<ref TriggerInsider> notif;
   void Location_Trigger(){
     GetSpatialSettings().PullRef(m_Spatial_Groups);   
     }
@@ -19,7 +20,9 @@ class Location_Trigger: CylinderTrigger
   void SetNotification(Spatial_Notification a){
     notification = a;
     }
-
+  void SetNotifTrigger(Notification_Trigger a){
+    notif_trigger = a;
+    }
   void SpawnCheck(){
     if (dynPatrol) return;
     if (Spatial_TimerCheck) return;
@@ -86,7 +89,12 @@ class Location_Trigger: CylinderTrigger
       dynPatrol.SetSniperProneDistanceThreshold(0.0);
       dynPatrol.SetLocation();
     }
-    Spatial_message(playerInsider, count);
+    notif = notif_trigger.GetInsiders();
+    int notifcount = notif.Count();
+    for (int i = 0; i < notifcount; i++){
+      PlayerBase Insider = PlayerBase.Cast(notif.Get(i).GetObject());
+      if (Insider) Spatial_message(Insider, count);
+      }
     }
 
 
