@@ -14,14 +14,12 @@ class Location_Trigger: CylinderTrigger
     GetSpatialSettings().PullRef(m_Spatial_Groups);   
     }
 
-  void Spatial_SetData(Spatial_Location Location){
+  void Spatial_SetData(Spatial_Location Location, Notification_Trigger b){
     location = Location;
+    notif_trigger = b;
   } //changed to class instead of individuals
   void SetNotification(Spatial_Notification a){
     notification = a;
-    }
-  void SetNotifTrigger(Notification_Trigger a){
-    notif_trigger = a;
     }
   void SpawnCheck(){
     if (dynPatrol) return;
@@ -90,13 +88,11 @@ class Location_Trigger: CylinderTrigger
       dynPatrol.SetLocation();
     }
     notif = notif_trigger.GetInsiders();
-    int notifcount = notif.Count();
-    for (int i = 0; i < notifcount; i++){
-      PlayerBase Insider = PlayerBase.Cast(notif.Get(i).GetObject());
-      if (Insider) Spatial_message(Insider, count);
-      }
+    foreach(TriggerInsider insider : notif) {
+      PlayerBase player = PlayerBase.Cast(insider.GetObject());
+      if (player) Spatial_message(player, count);
     }
-
+  }
 
   void Spatial_message(PlayerBase player, int SpawnCount) {
       if (!player) return;
