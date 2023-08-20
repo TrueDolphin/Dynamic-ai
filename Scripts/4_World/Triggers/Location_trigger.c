@@ -1,15 +1,21 @@
+  //change this whole system to avoidplayer
+
+  
 class Location_Trigger: CylinderTrigger
 {       
 
   int i_PlayerCount;
-  vector Spatial_SpawnPosition;
-  Spatial_Location location;
-  ref Spatial_Groups m_Spatial_Groups;
-  eAISpatialPatrol dynPatrol;
   bool Spatial_TimerCheck;
+  vector Spatial_SpawnPosition;
+
+  eAISpatialPatrol dynPatrol;
+  Spatial_Location location;
   Spatial_Notification notification;
   Notification_Trigger notif_trigger;
+
+  ref Spatial_Groups m_Spatial_Groups;
   array<ref TriggerInsider> notif;
+
   void Location_Trigger(){
     GetSpatialSettings().PullRef(m_Spatial_Groups);   
     }
@@ -22,10 +28,8 @@ class Location_Trigger: CylinderTrigger
     notification = a;
     }
   void SpawnCheck(){
-    if (dynPatrol) return;
-    if (Spatial_TimerCheck) return;
-    i_PlayerCount = m_insiders.Count();
-    if (i_PlayerCount == 0) return;
+    if (dynPatrol || Spatial_TimerCheck || m_insiders.Count() == 0) return;
+
     int m_Groupid = Math.RandomIntInclusive(0, int.MAX);
     SpatialDebugPrint("LocationID: " + m_Groupid);
     float random = Math.RandomFloat(0.0, 1.0);
@@ -36,7 +40,7 @@ class Location_Trigger: CylinderTrigger
     if (SpawnCount > 0) {
       Spatial_Spawn(SpawnCount, location);
       Spatial_TimerCheck = true;
-      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_timer, location.Spatial_Timer, false);
+      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, location.Spatial_Timer, false);
     } else {
       SpatialDebugPrint("Location ai count too low this check");
     }
@@ -92,7 +96,7 @@ class Location_Trigger: CylinderTrigger
       PlayerBase player = PlayerBase.Cast(insider.GetObject());
       if (player) Spatial_message(player, count);
     }
-  }
+   }
 
   void Spatial_message(PlayerBase player, int SpawnCount) {
       if (!player) return;
@@ -131,7 +135,7 @@ class Location_Trigger: CylinderTrigger
   bool ValidSpawn(){
 			if (!GetCEApi().AvoidPlayer(location.Spatial_SpawnPosition, 5))
         return true;
-		 return false;
+		  return false;
     }
   void Spatial_WarningMessage(PlayerBase player, string message) {
     if ((player) && (message != "")) {

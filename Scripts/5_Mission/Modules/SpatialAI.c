@@ -44,6 +44,7 @@ class SpatialAI {
       int playercount = m_Players.Count() + 1;
       int minAge = m_Spatial_Groups.MinimumAge;
       bool checkMinAge = minAge > 0;
+      bool LoopLimit = playerChecks != 0;
 
       for (int i = 0; i < playercount; ++i) 
       {
@@ -92,7 +93,7 @@ class SpatialAI {
         if (Spatial_CanSpawn(player))
           Spatial_LocalSpawn(player);
 
-        if (playerChecks != 0)
+        if (LoopLimit)
           if (i == playerChecks) return;
       }
     SpatialDebugPrint("Spatial::Check - End");
@@ -339,5 +340,3 @@ class SpatialAI {
       GetExpansionSettings().GetLog().PrintLog(string.Format("%1 %2", "[Spatial Debug] ", msg));
    } //expansion debug print
 }
-
-  
