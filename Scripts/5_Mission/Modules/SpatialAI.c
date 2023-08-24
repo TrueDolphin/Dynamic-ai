@@ -59,13 +59,6 @@ class SpatialAI {
 
         if (checkOnlyLeader)
         {
-            eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
-            // If the player is not in an ai group or isnt leader, skip to the next iteration.
-            if (!PlayerGroup || player != player.GetGroup().GetLeader()){
-                SpatialDebugPrint("Spatial::Check - player not leader of group");
-                continue;
-            } 
-
             #ifdef EXPANSIONMODGROUPS
               ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
               // If the player is not in a party or isnt leader, skip to the next iteration.
@@ -73,6 +66,13 @@ class SpatialAI {
                   SpatialDebugPrint("Spatial::Check - player not leader of party");
                   continue;
               }
+            #else
+            eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
+            // If the player is not in an ai group or isnt leader, skip to the next iteration.
+            if (!PlayerGroup || player != player.GetGroup().GetLeader()){
+                SpatialDebugPrint("Spatial::Check - player not leader of group");
+                continue;
+            } 
             #endif
         }
 

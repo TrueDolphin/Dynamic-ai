@@ -224,8 +224,7 @@ class eAISpatialPatrol : eAIPatrol
 			if (m_Waypoints[idx] == m_Position)
 			{
 				m_Group.m_CurrentWaypointIndex = idx;
-				if (Math.RandomIntInclusive(0, 1))
-					m_Group.m_BackTracking = true;
+				//if (Math.RandomIntInclusive(0, 1)) m_Group.m_BackTracking = true;
 			}
 		}
 
@@ -326,8 +325,8 @@ class eAISpatialPatrol : eAIPatrol
 		switch (m_Mode) {
 			case 1: 
 				//actively hunts player
-				player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
 				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
+				player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
 				break;
 			case 2: 
 				//last known location
