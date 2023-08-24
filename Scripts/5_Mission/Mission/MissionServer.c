@@ -28,6 +28,6 @@ modded class MissionServer {
     Spatialai.SpatialDebugPrint("Spatial::Stack - End");
     int m_cor = Math.RandomIntInclusive(m_Spatial_Groups.Spatial_MinTimer, m_Spatial_Groups.Spatial_MaxTimer);
     Spatialai.SpatialLoggerPrint("Next valid check in: " + m_cor + "ms");
-    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.SpatialTimer, m_cor, false);
+    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SpatialTimer, m_cor, false);
   } //timer call for varied check loops #refactored by LieutenantMaster
 };

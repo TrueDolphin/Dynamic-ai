@@ -21,7 +21,7 @@ class SpatialAI {
   #endif
 
   void SpatialAI(){
-    SpatialLoggerPrint("Spatial AI Date: 15/8/2023 R4");
+    SpatialLoggerPrint("Spatial AI Date: 23/8/2023 R5");
   } //constructor - Unexpectedly, runs on external decon
   void Spatial_Init(){
     GetSpatialSettings().PullRef(m_Spatial_Groups);
@@ -178,7 +178,7 @@ class SpatialAI {
     array < float > weights_T = weights;
     if (weights_T == NULL) {
       weights_T = new array < float > ;
-      for (int i = 0; i < groups.Count(); i++) {
+      for (int i = -1; i < groups.Count(); ++i) {
         weights_T.Insert(groups[i].Spatial_Weight);
       }
     }
@@ -191,7 +191,7 @@ class SpatialAI {
   } //expansion lightweight weighted group calcs
   bool Spatial_ValidPos(PlayerBase player, out vector pos) {
     pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
-    for (int i = 0; i < 50; i++) {
+    for (int i = -1; i < 50; ++i) {
       if (GetGame().SurfaceIsSea(pos[0], pos[2]) || GetGame().SurfaceIsPond(pos[0], pos[2])) {
         pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
       } else i = 50;
@@ -257,11 +257,11 @@ class SpatialAI {
         Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
         Notification_Trigger notification_trigger = Notification_Trigger.Cast(GetGame().CreateObjectEx("Notification_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
         location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
-        notification_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius * 1.5, location.Spatial_TriggerRadius);
+        notification_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius * 2, location.Spatial_TriggerRadius);
         SetNotificationLocation(location_trigger, location);
         location_trigger.Spatial_SetData(location, notification_trigger);
         SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
-        SpatialLoggerPrint("Notification covering location at: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius * 1.5);
+        SpatialLoggerPrint("Notification covering location at: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius * 2);
         SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
       }
     } else SpatialLoggerPrint("Locations Disabled");
@@ -337,6 +337,6 @@ class SpatialAI {
 
   void SpatialDebugPrint(string msg) {
     if (GetSpatialSettings().Spatial_Debug())
-      GetExpansionSettings().GetLog().PrintLog(string.Format("%1 %2", "[Spatial Debug] ", msg));
+      GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
    } //expansion debug print
 }

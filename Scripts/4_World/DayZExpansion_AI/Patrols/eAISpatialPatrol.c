@@ -176,7 +176,7 @@ class eAISpatialPatrol : eAIPatrol
 		if (m_WasGroupDestroyed)
 			return true;
 
-		for (int i = 0; i < m_Group.Count(); i++)
+		for (int i = -1; i < m_Group.Count(); ++i)
 		{
 			DayZPlayerImplement member = m_Group.GetMember(i);
 			if (member && member.IsInherited(PlayerBase) && member.IsAlive())
@@ -218,7 +218,7 @@ class eAISpatialPatrol : eAIPatrol
 		m_Group.SetWaypointBehaviour(m_WaypointBehaviour);
 		m_Group.SetName(m_GroupName);
 
-		for (int idx = 0; idx < m_Waypoints.Count(); idx++)
+		for (int idx = -1; idx < m_Waypoints.Count(); ++idx)
 		{
 			m_Group.AddWaypoint(m_Waypoints[idx]);
 			if (m_Waypoints[idx] == m_Position)
@@ -232,7 +232,7 @@ class eAISpatialPatrol : eAIPatrol
 		//here
 		Spatial_Movement(ai, m_Group);
 
-		for (int i = 1; i < m_NumberOfAI; i++)
+		for (int i = -1; i < m_NumberOfAI; ++i)
 		{
 			ai = SpawnAI(m_Formation.ToWorld(m_Formation.GetPosition(i)));
 			ai.SetGroup(m_Group);
@@ -285,8 +285,7 @@ class eAISpatialPatrol : eAIPatrol
 		}
 
 		//! CE API is only avaliable after game is loaded
-		if (!GetCEApi())
-			return;
+		if (!GetCEApi()) return;
 
 		vector patrolPos = m_Position;
 		DayZPlayerImplement leader = null;
@@ -312,14 +311,13 @@ class eAISpatialPatrol : eAIPatrol
 			Spawn();	
 			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false, true);
 			} 
-
 		}
 		}//edited
 
     void Spatial_Movement(eAIBase ai, eAIGroup AiGroup) {
 		PlayerBase player = m_Hunted;
 		int i;
-		float c = m_Spatial_Groups.EngageTimer / 2500;
+		float c = (m_Spatial_Groups.EngageTimer / 2500) + 1;
 		if (!player || !AiGroup || !ai) return;
 		AiGroup.ClearWaypoints();
 		int m_Mode = m_Spatial_Groups.HuntMode;
@@ -340,16 +338,16 @@ class eAISpatialPatrol : eAIPatrol
 			break;
 			case 4: 
 				//stay around spawnpos
-				for (i = 0; i < c; i++) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(m_Position, 70, 80));
+				for (i = 0; i < c; ++i) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(m_Position, 70, 80));
 			break;
 			case 5: 
 				//mix of 4 and 6 sorta
-				for (i = 0; i < c; i++) Spatial_PointGen(ai, AiGroup, player);
+				for (i = 0; i < c; ++i) Spatial_PointGen(ai, AiGroup, player);
 			break;
 			case 6: 
 				//follows player
 				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 15000, false, AiGroup, player, Vector(0, 0, 0), 15000);
+				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 15000, false, AiGroup, player);
 			break;
     	}
 	}//Spatial_Movement(ai, group);
@@ -360,7 +358,7 @@ class eAISpatialPatrol : eAIPatrol
 		if (d > 94) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
 	}//Spatial_PointGen(ai, AiGroup, player);
 	 //! https://feedback.bistudio.com/T173348 - readded null checks
-	void TrailingGroup(eAIGroup AiGroup, PlayerBase player, vector pos, int timer) {
+	void TrailingGroup(eAIGroup AiGroup, PlayerBase player, vector pos = "0 0 0", int timer = 10000) {
 		//Print("Trailing trigger" + this);
 		if (!player || !AiGroup) return;
 		if (pos == player.GetPosition()) 
@@ -377,8 +375,8 @@ class eAISpatialPatrol : eAIPatrol
 		if (!player) return;
 		pos = player.GetPosition();
 		if (!player || !AiGroup) return;
-		GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer);
-	}//TrailingGroup(ai, player, Vector(0, 0, 0), 15000);
+		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, AiGroup, player, pos);
+	}//TrailingGroup(ai, player);
 	override void Debug() {
 		///super.Debug();
 		Print("=======Dynamic Debug========");
