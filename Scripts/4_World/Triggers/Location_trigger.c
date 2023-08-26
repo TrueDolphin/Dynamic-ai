@@ -133,9 +133,7 @@ class Location_Trigger: CylinderTrigger
     }
 
   bool ValidSpawn(){
-			if (!GetCEApi().AvoidPlayer(location.Spatial_SpawnPosition, 5))
-        return true;
-		  return false;
+			return !GetCEApi().AvoidPlayer(location.Spatial_SpawnPosition, 5);
     }
   void Spatial_WarningMessage(PlayerBase player, string message) {
     if ((player) && (message != "")) {

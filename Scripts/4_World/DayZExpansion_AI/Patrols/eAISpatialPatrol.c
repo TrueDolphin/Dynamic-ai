@@ -176,7 +176,7 @@ class eAISpatialPatrol : eAIPatrol
 		if (m_WasGroupDestroyed)
 			return true;
 
-		for (int i = -1; i < m_Group.Count(); ++i)
+		for (int i = 0; i < m_Group.Count(); ++i)
 		{
 			DayZPlayerImplement member = m_Group.GetMember(i);
 			if (member && member.IsInherited(PlayerBase) && member.IsAlive())
@@ -218,7 +218,7 @@ class eAISpatialPatrol : eAIPatrol
 		m_Group.SetWaypointBehaviour(m_WaypointBehaviour);
 		m_Group.SetName(m_GroupName);
 
-		for (int idx = -1; idx < m_Waypoints.Count(); ++idx)
+		for (int idx = 0; idx < m_Waypoints.Count(); ++idx)
 		{
 			m_Group.AddWaypoint(m_Waypoints[idx]);
 			if (m_Waypoints[idx] == m_Position)
@@ -231,7 +231,7 @@ class eAISpatialPatrol : eAIPatrol
 		//here
 		Spatial_Movement(ai, m_Group);
 
-		for (int i = -1; i < m_NumberOfAI; ++i)
+		for (int i = 0; i < m_NumberOfAI; ++i)
 		{
 			ai = SpawnAI(m_Formation.ToWorld(m_Formation.GetPosition(i)));
 			ai.SetGroup(m_Group);
@@ -337,7 +337,7 @@ class eAISpatialPatrol : eAIPatrol
 			break;
 			case 4: 
 				//stay around spawnpos
-				for (i = 0; i < c; ++i) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(m_Position, 70, 80));
+				for (i = 0; i < c; ++i) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
 			break;
 			case 5: 
 				//mix of 4 and 6 sorta

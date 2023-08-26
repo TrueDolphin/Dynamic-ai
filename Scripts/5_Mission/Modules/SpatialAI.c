@@ -2,7 +2,6 @@ class SpatialAI {
 
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
-  int m_Spatial_cur = 0;
   ref array < Man > Spatial_PlayerList;
   ref Spatial_Groups m_Spatial_Groups;
   ref Spatial_Players m_Spatial_Players;
@@ -21,7 +20,7 @@ class SpatialAI {
   #endif
 
   void SpatialAI(){
-    SpatialLoggerPrint("Spatial AI Date: 23/8/2023 R5");
+    SpatialLoggerPrint("Spatial AI Date: 27/8/2023 R7");
   } //constructor - Unexpectedly, runs on external decon
   void Spatial_Init(){
     GetSpatialSettings().PullRef(m_Spatial_Groups);
@@ -41,7 +40,7 @@ class SpatialAI {
 
       // Make sure playerChecks is positive, even if it was initially negative.
       playerChecks = Math.AbsInt(playerChecks);
-      int playercount = m_Players.Count() + 1;
+      int playercount = m_Players.Count();
       int minAge = m_Spatial_Groups.MinimumAge;
       bool checkMinAge = minAge > 0;
       bool LoopLimit = playerChecks != 0;
@@ -157,16 +156,15 @@ class SpatialAI {
       if (m_Spatial_Groups.GroupDifficulty == 1) {
         int groupcount = 0;
         int partycount = 0;
-        int totalcount;
         #ifdef EXPANSIONMODGROUPS
           ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
           array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
           partycount = PartyMembers.Count();
         #endif
-        totalcount = Math.Max(groupcount, partycount);
+        int totalcount = Math.Max(groupcount, partycount);
         eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
         if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
-        if (totalcount > 1) SpawnCount += (totalcount - 1);
+        if (totalcount > 1) SpawnCount += (--totalcount);
       }
     Spatial_Spawn(player, SpawnCount, group);
     } else SpatialDebugPrint("group/point ai count too low this check");
@@ -178,7 +176,7 @@ class SpatialAI {
     array < float > weights_T = weights;
     if (weights_T == NULL) {
       weights_T = new array < float > ;
-      for (int i = -1; i < groups.Count(); ++i) {
+      for (int i = 0; i < groups.Count(); ++i) {
         weights_T.Insert(groups[i].Spatial_Weight);
       }
     }
@@ -191,7 +189,7 @@ class SpatialAI {
   } //expansion lightweight weighted group calcs
   bool Spatial_ValidPos(PlayerBase player, out vector pos) {
     pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
-    for (int i = -1; i < 50; ++i) {
+    for (int i = 0; i < 50; ++i) {
       if (GetGame().SurfaceIsSea(pos[0], pos[2]) || GetGame().SurfaceIsPond(pos[0], pos[2])) {
         pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
       } else i = 50;
