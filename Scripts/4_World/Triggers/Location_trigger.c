@@ -92,10 +92,11 @@ class Location_Trigger: CylinderTrigger
       dynPatrol.SetLocation();
     }
     notif = notif_trigger.GetInsiders();
-    foreach(TriggerInsider insider : notif) {
-      PlayerBase player = PlayerBase.Cast(insider.GetObject());
-      if (player) Spatial_message(player, count);
+    for (int i = 0; i < notif.Count(); ++i) {
+    PlayerBase player = PlayerBase.Cast(notif[i].GetObject());
+    if (player) Spatial_message(player, count);
     }
+
    }
 
   void Spatial_message(PlayerBase player, int SpawnCount) {

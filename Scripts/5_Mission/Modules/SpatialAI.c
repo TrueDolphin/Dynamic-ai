@@ -236,10 +236,12 @@ class SpatialAI {
     SpatialDebugPrint("Spatial::Spawn - End");
   } //Spatial_Spawn(player, SpawnCount, group)
   void InitSpatialTriggers() {
-        SpatialDebugPrint("Spatial::Triggers - Start");
+    SpatialDebugPrint("Spatial::Triggers - Start");
+    int i = 0;
     if (m_Spatial_Groups.Points_Enabled == 1 || m_Spatial_Groups.Points_Enabled == 2) {
       SpatialLoggerPrint("points Enabled");
-      foreach(Spatial_Point points: m_Spatial_Groups.Point) {
+      for (i = 0; i < m_Spatial_Groups.Point.Count(); ++i) {
+        Spatial_Point points = m_Spatial_Groups.Point[i];
         Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
         spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
         spatial_trigger.SetSpatialPoint(points);
@@ -251,25 +253,26 @@ class SpatialAI {
     
     if (m_Spatial_Groups.Locations_Enabled != 0) {
       SpatialLoggerPrint("Locations Enabled");
-      foreach(Spatial_Location location: m_Spatial_Groups.Location) {
-        Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
-        Notification_Trigger notification_trigger = Notification_Trigger.Cast(GetGame().CreateObjectEx("Notification_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
-        location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
-        notification_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius * 2, location.Spatial_TriggerRadius);
-        SetNotificationLocation(location_trigger, location);
-        location_trigger.Spatial_SetData(location, notification_trigger);
-        SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
-        SpatialLoggerPrint("Notification covering location at: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius * 2);
-        SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
+      for (i = 0; i < m_Spatial_Groups.Location.Count(); ++i) {
+          Spatial_Location location = m_Spatial_Groups.Location[i];
+          Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
+          Notification_Trigger notification_trigger = Notification_Trigger.Cast(GetGame().CreateObjectEx("Notification_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
+          location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
+          notification_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius * 2, location.Spatial_TriggerRadius);
+          SetNotificationLocation(location_trigger, location);
+          location_trigger.Spatial_SetData(location, notification_trigger);
+          SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
+          SpatialLoggerPrint("Notification covering location at: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius * 2);
+          SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
       }
     } else SpatialLoggerPrint("Locations Disabled");
-    SpatialDebugPrint("Spatial::Triggers - End");
+  SpatialDebugPrint("Spatial::Triggers - End");
   } //trigger zone initialisation
   void SetNotificationPoint(Spatial_Trigger trigger, Spatial_Point point){
     bool found = false;
-      foreach(Spatial_Notification notification: m_Spatial_Notifications.notification) {
-        if (notification.Spatial_Name == point.Spatial_Name) {
-          trigger.SetNotification(notification);
+    for (int i = 0; i < m_Spatial_Notifications.notification.Count(); ++i) {
+        if (m_Spatial_Notifications.notification[i].Spatial_Name == point.Spatial_Name) {
+          trigger.SetNotification(m_Spatial_Notifications.notification[i]);
           found = true;
         }
       }
@@ -280,9 +283,9 @@ class SpatialAI {
 
   void SetNotificationLocation(Location_Trigger trigger, Spatial_Location location){
     bool found = false;
-      foreach(Spatial_Notification notification: m_Spatial_Notifications.notification) {
-        if (notification.Spatial_Name == location.Spatial_Name) {
-          trigger.SetNotification(notification);
+    for (int i = 0; i < m_Spatial_Notifications.notification.Count(); ++i) {
+        if (m_Spatial_Notifications.notification[i].Spatial_Name == location.Spatial_Name) {
+          trigger.SetNotification(m_Spatial_Notifications.notification[i]);
           found = true;
         }
       }
