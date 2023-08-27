@@ -1,11 +1,11 @@
 class SpatialAI {
 
+  const string DateVersion = "Spatial AI Date: 27/8/2023 R7"
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
-  ref array < Man > Spatial_PlayerList;
-  ref Spatial_Groups m_Spatial_Groups;
-  ref Spatial_Players m_Spatial_Players;
-  ref Spatial_Notifications m_Spatial_Notifications;
+  ref Spatial_Groups m_Spatial_Groups; // main config
+  ref Spatial_Players m_Spatial_Players; // birthday config
+  ref Spatial_Notifications m_Spatial_Notifications; // location/point notification system
 
   #ifdef EXPANSIONMODSPAWNSELECTION
     private ExpansionRespawnHandlerModule m_RespawnModule;
@@ -20,7 +20,7 @@ class SpatialAI {
   #endif
 
   void SpatialAI(){
-    SpatialLoggerPrint("Spatial AI Date: 27/8/2023 R7");
+    SpatialLoggerPrint(DateVersion);
   } //constructor - Unexpectedly, runs on external decon
   void Spatial_Init(){
     GetSpatialSettings().PullRef(m_Spatial_Groups);
@@ -126,7 +126,7 @@ class SpatialAI {
       return false;
     SpatialDebugPrint("Spatial::CanSpawn - End");
     return true;
-  } //checks and overrides
+  } //checks and overrides - #refactored by LieutenantMaster
   void Spatial_LocalSpawn(PlayerBase player) {
     SpatialDebugPrint("Spatial::LocalSpawn - Start");
     if (!player) return;
