@@ -52,11 +52,19 @@ class Location_Trigger: CylinderTrigger
     }
 
   override void Enter(TriggerInsider insider){
+    PlayerBase player = PlayerBase.Cast(insider.GetObject());
+    if (player){
+      player.Spatial_InLocation(true, location.Spatial_HuntMode);
+    } 
     super.Enter(insider);
     SpawnCheck();
     }
       
   override void Leave(TriggerInsider insider){
+    PlayerBase player = PlayerBase.Cast(insider.GetObject());
+    if (player) {
+      player.Spatial_InLocation(false, 0);
+    }
     super.Leave(insider);
     }
   
@@ -82,9 +90,7 @@ class Location_Trigger: CylinderTrigger
     mindistradius = 0;
     maxdistradius = 1000;
     despawnradius = 1200;
-    playerInsider.Spatial_SetLocationHunt(Location.Spatial_HuntMode);
-    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
-    playerInsider.Spatial_SetLocationHunt(10);
+    dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, Location.Spatial_HuntMode, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetAccuracy(Location.Spatial_MinAccuracy, Location.Spatial_MaxAccuracy);
       dynPatrol.SetGroupName(Location.Spatial_Name);
@@ -96,7 +102,6 @@ class Location_Trigger: CylinderTrigger
     PlayerBase player = PlayerBase.Cast(notif[i].GetObject());
     if (player) Spatial_message(player, count);
     }
-
    }
 
   void Spatial_message(PlayerBase player, int SpawnCount) {

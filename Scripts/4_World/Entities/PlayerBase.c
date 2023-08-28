@@ -2,8 +2,9 @@ modded class PlayerBase
 {
     bool Spatial_InZone = false;
     bool m_Zone_Safe = false;
-    int Spatial_LocationHunt = 10;
+    int Spatial_LocationHunt = 0;
     int m_Spatial_Birthday;
+    bool Spatial_InLocation = false;
     bool Spatial_UnlimitedReload = false;
     ref Spatial_Groups m_Spatial_Groups;
     ref Spatial_Players m_Spatial_Players;
@@ -42,14 +43,13 @@ modded class PlayerBase
     void Spatial_SetInZone(bool in){
         Spatial_InZone = in;
         }
-
     void Spatial_SetSafe(bool a){
         m_Zone_Safe = a;
         }
-    void Spatial_SetLocationHunt(int a){
-        Spatial_LocationHunt = a;
-        }
-
+    void Spatial_InLocation(bool a, int b){
+        Spatial_InLocation = a;
+        Spatial_LocationHunt = b;
+    }
     void Spatial_SetNotification(Spatial_Notification a){
         spatial_notification = a;
         }
@@ -61,15 +61,18 @@ modded class PlayerBase
     int Spatial_HuntMode(){
         return m_spatial_point.Spatial_HuntMode;
         }
-    int Spatial_LocationHunt(){
+    int Spatial_LocationHunt() {
         return Spatial_LocationHunt;
-        }
+    }
     bool Spatial_CheckSafe(){
         return m_Zone_Safe;
         }
     bool Spatial_CheckZone(){
         return Spatial_InZone;
         }
+    bool Spatial_IsInLocation(){
+        return Spatial_InLocation;
+    }
 
     bool Spatial_HasGPSReceiver(){
         if (GetMapNavigationBehaviour()) return (GetMapNavigationBehaviour().GetNavigationType() & EMapNavigationType.GPS | EMapNavigationType.ALL == 0);

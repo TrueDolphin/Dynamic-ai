@@ -39,12 +39,12 @@ class eAISpatialPatrol : eAIPatrol
 	PlayerBase m_Hunted;
 	int m_lootcheck;
 	int m_Location = 0;
-
+	int m_Huntmode;
 
 	void eAISpatialPatrol() {
 		GetSpatialSettings().PullRef(m_Spatial_Groups);	
 	}//Spatial settings reference
-	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false) {
+	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false) {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0("eAISpatialPatrol", "Create");
 		#endif
@@ -61,8 +61,8 @@ class eAISpatialPatrol : eAIPatrol
 		patrol.m_MinimumRadius = minR;
 		patrol.m_MaximumRadius = maxR;
 		patrol.m_DespawnRadius = despawnR;
-		patrol.m_MovementSpeedLimit = speedLimit;
-		patrol.m_MovementThreatSpeedLimit = threatspeedLimit;
+		patrol.m_MovementSpeedLimit = 2.0;
+		patrol.m_MovementThreatSpeedLimit = 3.0;
 		patrol.m_Faction = faction;
 		patrol.m_Formation = formation;
 		patrol.m_CanBeLooted = CheckLootable(lootcheck);
@@ -71,6 +71,7 @@ class eAISpatialPatrol : eAIPatrol
 		patrol.m_Hunted = player;
 		patrol.m_CanSpawn = true;
 		patrol.m_Location = 0;
+		patrol.m_Huntmode = HuntMode;
 		GetSpatialSettings().PullRef(patrol.m_Spatial_Groups);
 		if (patrol.m_Faction == null) patrol.m_Faction = new eAIFactionCivilian();
 		if (patrol.m_Formation == null) patrol.m_Formation = new eAIFormationVee();
@@ -78,8 +79,8 @@ class eAISpatialPatrol : eAIPatrol
 		return patrol;
 		}//edited
 
-	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float speedLimit = 3.0, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false) {
-		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, despawnTime, faction, null, player, minR, maxR, maxR * 1.1, speedLimit, threatspeedLimit, lootcheck, unlimitedReload);
+	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false) {
+		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, despawnTime, faction, null, player, minR, maxR, maxR * 1.1, HuntMode, threatspeedLimit, lootcheck, unlimitedReload);
 		}//edited
 
 	void SetAccuracy(float accuracyMin, float accuracyMax) {
@@ -228,8 +229,7 @@ class eAISpatialPatrol : eAIPatrol
 			}
 		}
 
-		//here
-		Spatial_Movement(ai, m_Group);
+		Spatial_Movement(m_Huntmode);
 
 		for (int i = 0; i < m_NumberOfAI; ++i)
 		{
@@ -237,7 +237,7 @@ class eAISpatialPatrol : eAIPatrol
 			ai.SetGroup(m_Group);
 			ai.eAI_SetAccuracy(-1, -1);
 		}
-		m_NumberOfSpatialPatrols++;
+		++m_NumberOfSpatialPatrols;
 		}//edited
 
 	void Despawn(bool deferDespawnUntilLoosingAggro = false) {
@@ -313,40 +313,39 @@ class eAISpatialPatrol : eAIPatrol
 		}
 		}//edited
 
-    void Spatial_Movement(eAIBase ai, eAIGroup AiGroup) {
+    void Spatial_Movement(int m_Mode) {
+		eAIBase ai = eAIBase.Cast(m_Group.GetLeader());
 		PlayerBase player = m_Hunted;
+		if (!player || !m_Group || !ai) return;
+		if (!m_Mode) m_Mode = m_Spatial_Groups.HuntMode;
 		int i;
 		float c = (m_Spatial_Groups.EngageTimer / 2500) + 1;
-		if (!player || !AiGroup || !ai) return;
-		AiGroup.ClearWaypoints();
-		int m_Mode = m_Spatial_Groups.HuntMode;
-		if (player.Spatial_CheckZone() == true) m_Mode = player.Spatial_HuntMode();
-		if (player.Spatial_LocationHunt() != 10) m_Mode = player.Spatial_LocationHunt();
+		m_Group.ClearWaypoints();
 		switch (m_Mode) {
 			case 1: 
 				//actively hunts player
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
+				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
 				player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
 				break;
 			case 2: 
 				//last known location
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
+				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
 			break;
 			case 3: 
 				//halt
 			break;
 			case 4: 
 				//stay around spawnpos
-				for (i = 0; i < c; ++i) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+				for (i = 0; i < c; ++i) m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
 			break;
 			case 5: 
 				//mix of 4 and 6 sorta
-				for (i = 0; i < c; ++i) Spatial_PointGen(ai, AiGroup, player);
+				for (i = 0; i < c; ++i) Spatial_PointGen(ai, m_Group, player);
 			break;
 			case 6: 
 				//follows player
-				AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 15000, false, AiGroup, player);
+				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
+				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 15000, false, m_Group, player);
 			break;
     	}
 	}//Spatial_Movement(ai, group);

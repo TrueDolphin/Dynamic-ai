@@ -1,6 +1,6 @@
 class SpatialAI {
 
-  const string DateVersion = "Spatial AI Date: 27/8/2023 R7"
+  const string DateVersion = "Spatial AI Date: 27/8/2023 R7";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -45,9 +45,9 @@ class SpatialAI {
       bool checkMinAge = minAge > 0;
       bool LoopLimit = playerChecks != 0;
 
-      for (int i = 0; i < playercount; ++i) 
+      for (int i = 1; i <= playercount; ++i) 
       {
-        SpatialDebugPrint("Spatial::Check - loop :" + i + " out of " + playercount);
+        SpatialDebugPrint("Spatial::Check - loop:" + i + " out of " + playercount);
         PlayerBase player = PlayerBase.Cast(m_Players.GetRandomElement());
         if (!player || !player.IsAlive() || !player.GetIdentity()) {
           SpatialDebugPrint("Spatial::Check - invalid player");
@@ -158,8 +158,10 @@ class SpatialAI {
         int partycount = 0;
         #ifdef EXPANSIONMODGROUPS
           ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
+          if (party) {
           array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
           partycount = PartyMembers.Count();
+          }
         #endif
         int totalcount = Math.Max(groupcount, partycount);
         eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
@@ -209,9 +211,11 @@ class SpatialAI {
       waypointpos = startpos;
     }
     TVectorArray waypoints = { waypointpos };
+    int huntmode = m_Spatial_Groups.HuntMode;
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
     if (player.Spatial_CheckZone()) {
+      huntmode = player.Spatial_HuntMode();
       if (player.Spatial_HuntMode() == 3)
         behaviour = typename.StringToEnum(eAIWaypointBehavior, "HALT");
     }
@@ -219,7 +223,7 @@ class SpatialAI {
     mindistradius = 0;
     maxdistradius = 1200;
     despawnradius = 1200;
-    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Group.Spatial_Loadout, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Group.Spatial_Faction), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, 2.0, 3.0, Group.Spatial_Lootable, Group.Spatial_UnlimitedReload);
+    auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Group.Spatial_Loadout, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Group.Spatial_Faction), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, huntmode, 3.0, Group.Spatial_Lootable, Group.Spatial_UnlimitedReload);
     if (dynPatrol) {
       dynPatrol.SetGroupName(Group.Spatial_Name);
       dynPatrol.SetAccuracy(Group.Spatial_MinAccuracy, Group.Spatial_MaxAccuracy);
