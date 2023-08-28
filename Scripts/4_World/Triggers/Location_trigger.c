@@ -30,7 +30,7 @@ class Location_Trigger: CylinderTrigger
   void SpawnCheck(){
     if (dynPatrol || Spatial_TimerCheck || m_insiders.Count() == 0) return;
 
-    int m_Groupid = Math.RandomIntInclusive(0, int.MAX);
+    int m_Groupid = Math.RandomIntInclusive(5001, 10000);
     SpatialDebugPrint("LocationID: " + m_Groupid);
     float random = Math.RandomFloat(0.0, 1.0);
     SpatialDebugPrint("Location Chance: " + location.Spatial_Chance + " | random: " + random);

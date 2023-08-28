@@ -46,7 +46,7 @@ class SpatialSettings {
       m_Spatial_Groups = new Spatial_Groups();
       JsonFileLoader < Spatial_Groups > .JsonLoadFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Groups);
     }
-    if (m_Spatial_Groups.Version != 17) { // dont like this. change it.
+    if (m_Spatial_Groups.Version != 18) { // dont like this. change it.
       loggerPrint("Settings File Out of date. Please delete and restart server.");
       Spatial_Version = false;
       return;
@@ -284,7 +284,7 @@ class SpatialSettings {
 };
 //json data
 class Spatial_Groups {
-  int Version = 17;
+  int Version = 18;
   int Spatial_MinTimer = 1200000;
   int Spatial_MaxTimer = 1200000;
   int MinDistance = 140;
@@ -297,6 +297,8 @@ class Spatial_Groups {
   int PlayerChecks = 0;
   int MaxAI = 20;
   int GroupDifficulty = 1;
+  int MinimumPlayerDistance = 0;
+  int MaxSoloPlayers = 6;
   int MinimumAge = 0;
   int MessageType = 1;
   string MessageTitle = "Spatial AI";

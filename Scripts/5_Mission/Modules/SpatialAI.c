@@ -1,6 +1,6 @@
 class SpatialAI {
 
-  const string DateVersion = "Spatial AI Date: 27/8/2023 R7";
+  const string DateVersion = "Spatial AI Date: 28/8/2023 R9";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -44,7 +44,7 @@ class SpatialAI {
       int minAge = m_Spatial_Groups.MinimumAge;
       bool checkMinAge = minAge > 0;
       bool LoopLimit = playerChecks != 0;
-
+      int playersindistance;
       for (int i = 1; i <= playercount; ++i) 
       {
         SpatialDebugPrint("Spatial::Check - loop:" + i + " out of " + playercount);
@@ -59,20 +59,44 @@ class SpatialAI {
         if (checkOnlyLeader)
         {
             #ifdef EXPANSIONMODGROUPS
-              ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
-              // If the player is not in a party or isnt leader, skip to the next iteration.
-              if (!party || player.GetIdentity().GetId() != party.GetOwnerUID()){
-                  SpatialDebugPrint("Spatial::Check - player not leader of party");
-                  continue;
+                ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
+                // If the player is not in a party or isnt leader, skip to the next iteration.
+                if (!party || player.GetIdentity().GetId() != party.GetOwnerUID()){
+                    SpatialDebugPrint("Spatial::Check - player not leader of party");
+                    continue;
+                } else if (m_Spatial_Groups.MinimumPlayerDistance != 0){
+                  array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
+                  int partycount = PartyMembers.Count();
+                  playersindistance = GetCEApi().CountPlayersWithinRange(player.GetPosition(), m_Spatial_Groups.MinimumPlayerDistance);
+                  //if there's more players than the player's party around, skip to the next iteration.
+                  if (playersindistance > partycount + m_Spatial_Groups.MaxSoloPlayers){
+                    SpatialDebugPrint("Spatial::Check - too many players not in party around player");
+                    continue;
+                  } 
               }
             #else
-            eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
-            // If the player is not in an ai group or isnt leader, skip to the next iteration.
-            if (!PlayerGroup || player != player.GetGroup().GetLeader()){
-                SpatialDebugPrint("Spatial::Check - player not leader of group");
-                continue;
-            } 
+                eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
+                // If the player is not in an ai group or isnt leader, skip to the next iteration.
+                if (!PlayerGroup || player != player.GetGroup().GetLeader()){
+                    SpatialDebugPrint("Spatial::Check - player not leader of group");
+                    continue;
+                } else if (m_Spatial_Groups.MinimumPlayerDistance != 0){
+                  int groupcount = PlayerGroup.Count();
+                  playersindistance = GetCEApi().CountPlayersWithinRange(player.GetPosition(), m_Spatial_Groups.MinimumPlayerDistance);
+                  //if there's more players than the player's ai around, skip to the next iteration.
+                  if (playersindistance > groupcount + m_Spatial_Groups.MaxSoloPlayers){
+                    SpatialDebugPrint("Spatial::Check - too many players not in group around player");
+                    continue;
+                    } 
+                  }
             #endif
+        } else if (m_Spatial_Groups.MinimumPlayerDistance != 0) {
+          playersindistance = GetCEApi().CountPlayersWithinRange(player.GetPosition(), m_Spatial_Groups.MinimumPlayerDistance);
+          //if there's too many players around, skip to the next iteration.
+          if (playersindistance > m_Spatial_Groups.MaxSoloPlayers){
+            SpatialDebugPrint("Spatial::Check - player skipped, too many solo players around");
+            continue;
+          } 
         }
 
         #ifdef EXPANSIONMODSPAWNSELECTION
@@ -154,6 +178,7 @@ class SpatialAI {
 
     if (SpawnCount > 0) {
       if (m_Spatial_Groups.GroupDifficulty == 1) {
+        eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
         int groupcount = 0;
         int partycount = 0;
         #ifdef EXPANSIONMODGROUPS
@@ -163,9 +188,11 @@ class SpatialAI {
           partycount = PartyMembers.Count();
           }
         #endif
+
+        if (!PlayerGroup) groupcount = 1;
+        else groupcount = PlayerGroup.Count();
+
         int totalcount = Math.Max(groupcount, partycount);
-        eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
-        if (!PlayerGroup) PlayerGroup = eAIGroup.GetGroupByLeader(player);
         if (totalcount > 1) SpawnCount += (--totalcount);
       }
     Spatial_Spawn(player, SpawnCount, group);
