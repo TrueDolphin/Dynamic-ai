@@ -109,7 +109,7 @@ class eAISpatialPatrol : eAIPatrol
 
 	eAIGroup GetGroup(){
 		return m_Group;
-		}//null
+		}//always returns null
 
 	void SetLocation(){
 		m_Location = 1;
@@ -321,10 +321,10 @@ class eAISpatialPatrol : eAIPatrol
 		int i;
 		float c = (m_Spatial_Groups.EngageTimer / 2500) + 1;
 		m_Group.ClearWaypoints();
+		m_Group.m_BackTracking = true;
 		switch (m_Mode) {
 			case 1: 
 				//actively hunts player
-				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
 				player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
 				break;
 			case 2: 
@@ -336,7 +336,7 @@ class eAISpatialPatrol : eAIPatrol
 			break;
 			case 4: 
 				//stay around spawnpos
-				for (i = 0; i < c; ++i) m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 70, 80));
+				for (i = 0; i < c; ++i) m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 40, 45));
 			break;
 			case 5: 
 				//mix of 4 and 6 sorta

@@ -1,6 +1,6 @@
 class SpatialAI {
 
-  const string DateVersion = "Spatial AI Date: 28/8/2023 R9";
+  const string DateVersion = "Spatial AI Date: 28/8/2023 R10";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
