@@ -25,7 +25,27 @@ class Spatial_NotificationSettings {
       m_Spatial_Notifications = new Spatial_Notifications();
       JsonFileLoader < Spatial_Notifications > .JsonLoadFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Notifications);
     }
+    bool datacheck = false;
+    foreach(Spatial_Notification notification: m_Spatial_Notifications.notification) {
+      if (!notification.Spatial_Name || notification.Spatial_Name == "") {
+        notification.Spatial_Name = "null";
+        datacheck = true;
+        };
+      if (!notification.MessageType) {
+        notification.MessageType = 0;
+        datacheck = true;
+        };
+      if (!notification.MessageTitle || notification.MessageTitle == "") {
+        notification.MessageTitle = "null";
+        datacheck = true;
+        };
+      if (!notification.MessageText) {
+        notification.MessageText = {"null"};
+        datacheck = true;
+        };
+    if (datacheck) JsonFileLoader < Spatial_Notifications > .JsonSaveFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Notifications);
     }
+  }
 
   //generate default array data
   void DefaultSpatial_Notificationsettings(out Spatial_Notifications Data) {

@@ -9,12 +9,12 @@ class Location_Trigger: CylinderTrigger
   vector Spatial_SpawnPosition;
 
   eAISpatialPatrol dynPatrol;
-  Spatial_Location location;
-  Spatial_Notification notification;
+  ref Spatial_Location location;
+  ref Spatial_Notification notification;
   Notification_Trigger notif_trigger;
 
   ref Spatial_Groups m_Spatial_Groups;
-  array<ref TriggerInsider> notif;
+  autoptr array<ref TriggerInsider> notif;
 
   void Location_Trigger(){
     GetSpatialSettings().PullRef(m_Spatial_Groups);   
@@ -26,6 +26,18 @@ class Location_Trigger: CylinderTrigger
   } //changed to class instead of individuals
   void SetNotification(Spatial_Notification a){
     notification = a;
+    if (!notification.Spatial_Name || notification.Spatial_Name == "") {
+        notification.Spatial_Name = "null";
+        };
+      if (!notification.MessageType) {
+        notification.MessageType = 0;
+        };
+      if (!notification.MessageTitle || notification.MessageTitle == "") {
+        notification.MessageTitle = "null";
+        };
+      if (!notification.MessageText) {
+        notification.MessageText = {"null"};
+        };
     }
   void SpawnCheck(){
     if (dynPatrol || Spatial_TimerCheck || m_insiders.Count() == 0) return;

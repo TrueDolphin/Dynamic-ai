@@ -1,6 +1,6 @@
 class SpatialAI {
 
-  const string DateVersion = "Spatial AI Date: 28/8/2023 R10";
+  const string DateVersion = "Spatial AI Date: 31/8/2023 R12";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -179,21 +179,21 @@ class SpatialAI {
     if (SpawnCount > 0) {
       if (m_Spatial_Groups.GroupDifficulty == 1) {
         eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
-        int groupcount = 0;
-        int partycount = 0;
+        int groupnumber = 0;
+        int partynumber = 0;
         #ifdef EXPANSIONMODGROUPS
           ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
           if (party) {
           array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
-          partycount = PartyMembers.Count();
+          partynumber = PartyMembers.Count();
           }
         #endif
 
-        if (!PlayerGroup) groupcount = 1;
-        else groupcount = PlayerGroup.Count();
+        if (!PlayerGroup) groupnumber = 1;
+        else groupnumber = PlayerGroup.Count();
 
-        int totalcount = Math.Max(groupcount, partycount);
-        if (totalcount > 1) SpawnCount += (--totalcount);
+        int totalcount = Math.Max(groupnumber, partynumber);
+        if (totalcount > 1) SpawnCount += totalcount - 1;
       }
     Spatial_Spawn(player, SpawnCount, group);
     } else SpatialDebugPrint("group/point ai count too low this check");
@@ -271,8 +271,9 @@ class SpatialAI {
     int i = 0;
     if (m_Spatial_Groups.Points_Enabled == 1 || m_Spatial_Groups.Points_Enabled == 2) {
       SpatialLoggerPrint("points Enabled");
-      for (i = 0; i < m_Spatial_Groups.Point.Count(); ++i) {
-        Spatial_Point points = m_Spatial_Groups.Point[i];
+      for (i = 0; i <= m_Spatial_Groups.Point.Count(); ++i) {
+        Spatial_Point points = Spatial_Point.Cast(m_Spatial_Groups.Point[i]);
+        if (!points) continue;
         Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
         spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
         spatial_trigger.SetSpatialPoint(points);
@@ -284,8 +285,9 @@ class SpatialAI {
     
     if (m_Spatial_Groups.Locations_Enabled != 0) {
       SpatialLoggerPrint("Locations Enabled");
-      for (i = 0; i < m_Spatial_Groups.Location.Count(); ++i) {
-          Spatial_Location location = m_Spatial_Groups.Location[i];
+      for (i = 0; i <= m_Spatial_Groups.Location.Count(); ++i) {
+          Spatial_Location location = Spatial_Location.Cast(m_Spatial_Groups.Location[i]);
+          if (!location) continue;
           Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
           Notification_Trigger notification_trigger = Notification_Trigger.Cast(GetGame().CreateObjectEx("Notification_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
           location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
@@ -297,11 +299,12 @@ class SpatialAI {
           SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
       }
     } else SpatialLoggerPrint("Locations Disabled");
-  SpatialDebugPrint("Spatial::Triggers - End");
+    SpatialDebugPrint("Spatial::Triggers - End");
   } //trigger zone initialisation
   void SetNotificationPoint(Spatial_Trigger trigger, Spatial_Point point){
     bool found = false;
-    for (int i = 0; i < m_Spatial_Notifications.notification.Count(); ++i) {
+    for (int i = 0; i <= m_Spatial_Notifications.notification.Count(); ++i) {
+        if (!m_Spatial_Notifications.notification[i]) continue;
         if (m_Spatial_Notifications.notification[i].Spatial_Name == point.Spatial_Name) {
           trigger.SetNotification(m_Spatial_Notifications.notification[i]);
           found = true;
@@ -314,7 +317,8 @@ class SpatialAI {
 
   void SetNotificationLocation(Location_Trigger trigger, Spatial_Location location){
     bool found = false;
-    for (int i = 0; i < m_Spatial_Notifications.notification.Count(); ++i) {
+    for (int i = 0; i <= m_Spatial_Notifications.notification.Count(); ++i) {
+        if (!m_Spatial_Notifications.notification[i]) continue;
         if (m_Spatial_Notifications.notification[i].Spatial_Name == location.Spatial_Name) {
           trigger.SetNotification(m_Spatial_Notifications.notification[i]);
           found = true;
