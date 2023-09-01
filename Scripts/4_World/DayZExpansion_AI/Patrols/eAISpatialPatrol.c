@@ -127,8 +127,7 @@ class eAISpatialPatrol : eAIPatrol
 
 		ai.SetPosition(pos);
 
-		if ( m_Loadout == "" )
-			m_Loadout = m_Faction.GetDefaultLoadout();
+		if ( m_Loadout == "" ) m_Loadout = m_Faction.GetDefaultLoadout();
 
 		ExpansionHumanLoadout.Apply(ai, m_Loadout, false);	
 		ai.SetMovementSpeedLimits(m_MovementSpeedLimit, m_MovementThreatSpeedLimit);
@@ -171,25 +170,18 @@ class eAISpatialPatrol : eAIPatrol
 		return false;
 	}//CheckLootable(m_lootcheck);
 	bool WasGroupDestroyed() {
-		if (!m_Group)
-			return false;
-
-		if (m_WasGroupDestroyed)
-			return true;
+		if (!m_Group) return false;
+		if (m_WasGroupDestroyed) return true;
 
 		for (int i = 0; i < m_Group.Count(); ++i)
 		{
 			DayZPlayerImplement member = m_Group.GetMember(i);
-			if (member && member.IsInherited(PlayerBase) && member.IsAlive())
-			{
-				return false;
-			}
+			if (member && member.IsInherited(PlayerBase) && member.IsAlive()) return false;
 		}
 
 		m_WasGroupDestroyed = true;
 
-		if (m_NumberOfSpatialPatrols)
-			m_NumberOfSpatialPatrols--;
+		if (m_NumberOfSpatialPatrols) m_NumberOfSpatialPatrols--;
 
 		return true;
 		}
@@ -204,8 +196,7 @@ class eAISpatialPatrol : eAIPatrol
 		if (GetExpansionSettings().GetLog().AIPatrol)
 		{
 			string name = m_GroupName;
-			if (name == string.Empty)
-				name = m_Faction.ClassName().Substring(10, m_Faction.ClassName().Length() - 10);
+			if (name == string.Empty) name = m_Faction.ClassName().Substring(10, m_Faction.ClassName().Length() - 10);
             GetExpansionSettings().GetLog().PrintLog("[Spatial AI] Spawning " + m_NumberOfAI + " " + name + " bots at " + m_Position);
         }
 		m_TimeSinceLastSpawn = 0;
@@ -231,7 +222,7 @@ class eAISpatialPatrol : eAIPatrol
 
 		//getting m_Group outside of this function returns null, irrelevant of before or after.
 
-		for (int i = 0; i < m_NumberOfAI; ++i)
+		for (int i = 1; i < m_NumberOfAI; ++i)
 		{
 			ai = SpawnAI(m_Formation.ToWorld(m_Formation.GetPosition(i)));
 			ai.SetGroup(m_Group);
@@ -264,11 +255,8 @@ class eAISpatialPatrol : eAIPatrol
 		auto trace = CF_Trace_0(this, "Spatial OnUpdate");
 		#endif
 
-		if ( WasGroupDestroyed() && m_RespawnTime < 0 )
-		{
-			return;
-		}
-
+		if ( WasGroupDestroyed() && m_RespawnTime < 0 ) return;
+		
 		if (!m_CanSpawn && (!m_Group || m_WasGroupDestroyed))
 		{
 			m_TimeSinceLastSpawn += eAIPatrol.UPDATE_RATE_IN_SECONDS;
@@ -301,16 +289,16 @@ class eAISpatialPatrol : eAIPatrol
 			if (GetCEApi().AvoidPlayer(patrolPos, m_DespawnRadius))
 			{
 				m_TimeSinceLastSpawn += eAIPatrol.UPDATE_RATE_IN_SECONDS;
-				if (m_TimeSinceLastSpawn >= m_DespawnTime)
-					Despawn();
+				if (m_TimeSinceLastSpawn >= m_DespawnTime) Despawn();
 			}
 			
-			if (m_Waypoints.Count() == 0)
+			if (m_Group.GetWaypoints().Count() <= 1)
 			{
 				switch (m_Huntmode)
 				{
 					case 4:
-							for (int wpg1 = 0; wpg1 <= 5; ++wpg1) m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(m_Position, 0, 40));
+							for (int wpg1 = 0; wpg1 <= 5; ++wpg1) 
+								m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(m_Position, 0, 40));
 					break;
 					case 2:
 						if (leader)
@@ -409,11 +397,11 @@ class eAISpatialPatrol : eAIPatrol
 			player.GetTargetInformation().AddAI(lead, m_Spatial_Groups.EngageTimer);
 			GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer, distance);
 		}
-		else {
+		else 
+		{
 			//! Update target found at time if already targeting
 			player.GetTargetInformation().Update(m_Group);
 		}
-
 	}
 	override void Debug() {
 		///super.Debug();
