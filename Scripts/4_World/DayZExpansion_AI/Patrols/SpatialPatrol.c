@@ -1,5 +1,6 @@
 
 //polygon zone - wip
+//should actually get ready to test this...
 
 class SpatialPatrol : Managed
 {
