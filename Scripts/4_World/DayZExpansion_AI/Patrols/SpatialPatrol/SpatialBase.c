@@ -106,23 +106,14 @@ class SpatialBase : eAIPatrol {
 	void TrailingPos(eAIGroup AiGroup, vector pos = "0 0 0", int timer = 10000, int distance = 40) {
 		//Print("Trailing trigger" + this);
 		if (!AiGroup) return;
-		eAIBase lead = eAIBase.Cast(AiGroup.GetLeader());
-		if (!lead) return;
 		int waypointcount = Math.Min(AiGroup.GetWaypoints().Count(), 2);
 
 		int min = distance; //40
 		int max = distance * 1.5; //60
 		int overdist = distance * 2; //80
-
-		if ((vector.Distance(pos, lead.GetPosition()) > overdist) && (lead.TargetCount() < 1)) {
-			if(waypointcount <= 3) {
-				for (int i = 0; i < 4; ++i) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(pos, min, max));
-			}
-		} 
-		else
-		{
-			AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(lead.GetTarget().GetPosition(), (min / 4), min));
-		} 
+		if(waypointcount <= 3) {
+			for (int i = 0; i < 4; ++i) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(pos, min, max));
+		}
 	}//TrailingPos(m_Group, pos, timer, distance);
 
 }
