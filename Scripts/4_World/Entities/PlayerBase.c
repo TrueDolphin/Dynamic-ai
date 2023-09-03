@@ -24,7 +24,7 @@ modded class PlayerBase
     override void EEKilled( Object killer ) {
         if (GetGame().IsServer())
         {   
-            if (!IsAI()) {
+            if (GetIdentity() != null) {
                 if (!m_Spatial_Players) SpatialPlayerSettings().PullRef(m_Spatial_Players);
                 SpatialPlayerSettings().Update_Player(GetIdentity().GetPlainId(), 0); 
             }
