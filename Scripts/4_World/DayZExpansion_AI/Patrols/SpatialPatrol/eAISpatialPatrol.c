@@ -6,7 +6,6 @@ class eAISpatialPatrol : SpatialBase
 {
 	private static int m_NumberOfSpatialPatrols;
 
-
 	autoptr array<vector> m_Waypoints;
 	eAIWaypointBehavior m_WaypointBehaviour;
 	float m_MinimumRadius;
@@ -33,7 +32,8 @@ class eAISpatialPatrol : SpatialBase
 	bool m_CanSpawn;
 	private bool m_WasGroupDestroyed;
 
-	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false) {
+	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
+    {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0("eAISpatialPatrol", "Create");
 		#endif
@@ -66,45 +66,56 @@ class eAISpatialPatrol : SpatialBase
 		if (patrol.m_Formation == null) patrol.m_Formation = new eAIFormationVee();
 		patrol.Start();
 		return patrol;
-		}//edited
+	}//edited
 
-	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false) {
+	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
+    {
 		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, despawnTime, faction, null, player, minR, maxR, maxR * 1.1, HuntMode, threatspeedLimit, lootcheck, unlimitedReload);
-		}//edited
+	}//edited
 
-	void SetAccuracy(float accuracyMin, float accuracyMax) {
+	void SetAccuracy(float accuracyMin, float accuracyMax)
+    {
 		m_AccuracyMin = accuracyMin;
 		m_AccuracyMax = accuracyMax;
-		}
+	}
 
-	void SetThreatDistanceLimit(float distance) {
+	void SetThreatDistanceLimit(float distance)
+    {
 		m_ThreatDistanceLimit = distance;
-		}
+	}
 
-	void SetDamageMultiplier(float multiplier) {
+	void SetDamageMultiplier(float multiplier)
+    {
 		m_DamageMultiplier = multiplier;
-		}
+	}
 
-	void SetGroupName(string name) {
+	void SetGroupName(string name)
+    {
 		m_GroupName = name;
-		}
+	}
 
-	void SetHunted(PlayerBase p){
+	void SetHunted(PlayerBase p)
+    {
 		m_Hunted = p;
 	}//for movement checks
-	void SetSniperProneDistanceThreshold(float distance) {
+
+	void SetSniperProneDistanceThreshold(float distance)
+    {
 		m_SniperProneDistanceThreshold = distance;
-		}
+	}
 
-	eAIGroup GetGroup(){
+	eAIGroup GetGroup()
+    {
 		return m_Group;
-		}//always returns null
+	}//always returns null
 
-	void SetLocation(){
+	void SetLocation()
+    {
 		m_Location = 1;
-		}//for location checks
+	}//for location checks
 
-	private eAIBase SpawnAI(vector pos) {
+	private eAIBase SpawnAI(vector pos)
+    {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0(this, "SpawnAI");
 		#endif
@@ -128,10 +139,12 @@ class eAISpatialPatrol : SpatialBase
 		ai.eAI_SetSniperProneDistanceThreshold(m_SniperProneDistanceThreshold);
 
 		return ai;
-		}//edited
+	}//edited
 
-	bool CheckMemberLootable(eAIBase ai = null, int lootcheck = 0) {
-		switch (lootcheck) {
+	bool CheckMemberLootable(eAIBase ai = null, int lootcheck = 0)
+    {
+		switch (lootcheck)
+    	{
 			case 1:
 				return true;
 			case 2:
@@ -145,9 +158,12 @@ class eAISpatialPatrol : SpatialBase
 		}
 		return false;
 	}//CheckMemberLootable(ai, m_lootcheck);
-	static bool CheckLootable(int lootcheck = 0) {
+
+	static bool CheckLootable(int lootcheck = 0)
+    {
 		if (lootcheck > 2) lootcheck = 0;
-		switch (lootcheck) {
+		switch (lootcheck)
+    	{
 			case 0:
 			case 1:
 				return lootcheck;
@@ -158,7 +174,9 @@ class eAISpatialPatrol : SpatialBase
 		}
 		return false;
 	}//CheckLootable(m_lootcheck);
-	bool WasGroupDestroyed() {
+
+	bool WasGroupDestroyed()
+    {
 		if (!m_Group) return false;
 		if (m_WasGroupDestroyed) return true;
 
@@ -173,15 +191,15 @@ class eAISpatialPatrol : SpatialBase
 		if (m_NumberOfSpatialPatrols) m_NumberOfSpatialPatrols--;
 
 		return true;
-		}
+	}
 
-	void Spawn() {
+	void Spawn()
+    {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0(this, "Spatial Spawn");
 		#endif
 
 		if (m_Group) return;
-
 		
 		string name = m_GroupName;
 		if (name == string.Empty) name = m_Faction.ClassName().Substring(10, m_Faction.ClassName().Length() - 10);
@@ -198,11 +216,8 @@ class eAISpatialPatrol : SpatialBase
 		m_Group.SetWaypointBehaviour(m_WaypointBehaviour);
 		m_Group.SetName(m_GroupName);
 
-
 		Spatial_Movement(m_Huntmode);
 		//getting m_Group outside of this function returns null, irrelevant of before or after.
-		
-
 
 		for (int i = 1; i < m_NumberOfAI; ++i)
 		{
@@ -211,11 +226,11 @@ class eAISpatialPatrol : SpatialBase
 			ai.eAI_SetAccuracy(-1, -1);
 		}
 
-
 		++m_NumberOfSpatialPatrols;
-		}//edited
+	}//edited
 
-	void Despawn(bool deferDespawnUntilLoosingAggro = false) {
+	void Despawn(bool deferDespawnUntilLoosingAggro = false)
+    {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0(this, "Spatial Despawn");
 		#endif
@@ -230,9 +245,10 @@ class eAISpatialPatrol : SpatialBase
 
 		if (!m_WasGroupDestroyed && m_NumberOfSpatialPatrols) m_NumberOfSpatialPatrols--;
 		if (this) this.Delete();
-		}//edited
+	}//edited
 
-	override void OnUpdate() {
+	override void OnUpdate()
+    {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0(this, "Spatial OnUpdate");
 		#endif
@@ -290,10 +306,10 @@ class eAISpatialPatrol : SpatialBase
 			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false, true);
 			} 
 		}
-		}//edited
+	}//edited
 
-
-	override void Debug() {
+	override void Debug()
+    {
 		///super.Debug();
 		Print("=======Dynamic Debug========");
 		Print(m_Hunted);
@@ -301,5 +317,5 @@ class eAISpatialPatrol : SpatialBase
 		Print(m_NumberOfAI);
 		Print(WasGroupDestroyed());
 		Print("=======Dynamic Debug========");
-		}//edited
+	}//edited
 };
