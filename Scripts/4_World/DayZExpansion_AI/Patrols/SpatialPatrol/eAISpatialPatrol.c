@@ -198,17 +198,11 @@ class eAISpatialPatrol : SpatialBase
 		m_Group.SetWaypointBehaviour(m_WaypointBehaviour);
 		m_Group.SetName(m_GroupName);
 
-		for (int idx = 0; idx < m_Waypoints.Count(); ++idx)
-		{
-			m_Group.AddWaypoint(m_Waypoints[idx]);
-			if (m_Waypoints[idx] == m_Position)
-			{
-				m_Group.m_CurrentWaypointIndex = idx;
-				//if (Math.RandomIntInclusive(0, 1)) m_Group.m_BackTracking = true;
-			}
-		}
 
+		Spatial_Movement(m_Huntmode);
 		//getting m_Group outside of this function returns null, irrelevant of before or after.
+		
+
 
 		for (int i = 1; i < m_NumberOfAI; ++i)
 		{
@@ -216,7 +210,7 @@ class eAISpatialPatrol : SpatialBase
 			ai.SetGroup(m_Group);
 			ai.eAI_SetAccuracy(-1, -1);
 		}
-		Spatial_Movement(m_Huntmode);
+
 
 		++m_NumberOfSpatialPatrols;
 		}//edited

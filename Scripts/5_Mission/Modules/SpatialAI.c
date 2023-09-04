@@ -1,6 +1,6 @@
 class SpatialAI {
 
-  const string DateVersion = "Spatial AI Date: 3/9/2023 R14";
+  const string DateVersion = "Spatial AI Date: 4/9/2023 R15";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -255,7 +255,6 @@ class SpatialAI {
       dynPatrol.SetGroupName(Group.Spatial_Name);
       dynPatrol.SetAccuracy(Group.Spatial_MinAccuracy, Group.Spatial_MaxAccuracy);
       dynPatrol.SetSniperProneDistanceThreshold(0.0);
-      dynPatrol.SetHunted(player);
     }
 
     if (player.Spatial_CheckZone())

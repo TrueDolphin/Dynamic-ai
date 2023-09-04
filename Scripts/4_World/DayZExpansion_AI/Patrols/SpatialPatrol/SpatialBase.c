@@ -36,14 +36,15 @@ class SpatialBase : eAIPatrol {
 			break;
 			case 2: 
 				//last known location 
-				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 5, 10));
+				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 10, 20));
 			break;
 			case 3: 
 				//halt
 			break;
 			case 4: 
 				//stay around spawnpos - extended onupdate
-				GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingPos, 10000, true, m_Group, m_Position, 10000, 40);
+				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 20, 40));
+				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingPos, 10000, true, m_Group, m_Position, 40);
 			break;
 			case 5: 
 				//mix of 4 and 6 sorta
@@ -103,17 +104,10 @@ class SpatialBase : eAIPatrol {
 			player.GetTargetInformation().Update(m_Group);
 		}
 	}//HuntCheck(m_Group, player, pos, timer, distance);
-	void TrailingPos(eAIGroup AiGroup, vector pos = "0 0 0", int timer = 10000, int distance = 40) {
+	void TrailingPos(eAIGroup AiGroup, vector position, int distance = 20) {
 		//Print("Trailing trigger" + this);
 		if (!AiGroup) return;
-		int waypointcount = Math.Min(AiGroup.GetWaypoints().Count(), 2);
-
-		int min = distance; //40
-		int max = distance * 1.5; //60
-		int overdist = distance * 2; //80
-		if(waypointcount <= 3) {
-			for (int i = 0; i < 4; ++i) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(pos, min, max));
-		}
-	}//TrailingPos(m_Group, pos, timer, distance);
+		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(position, distance, (distance * 1.5))); 
+	}//TrailingPos(pos, distance, m_Group);
 
 }
