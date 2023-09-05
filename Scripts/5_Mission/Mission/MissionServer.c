@@ -28,11 +28,14 @@ modded class MissionServer
   } //constructor
   void SpatialTimer()
   {
+    int m_Spatial = Math.RandomIntInclusive(m_Spatial_Groups.Spatial_MinTimer, m_Spatial_Groups.Spatial_MaxTimer);
+    if (GetCEApi())
+  {
     Spatialai.SpatialDebugPrint("Spatial::Stack - Start");
     Spatialai.Spatial_Check(m_Players);
     Spatialai.SpatialDebugPrint("Spatial::Stack - End");
-    int m_cor = Math.RandomIntInclusive(m_Spatial_Groups.Spatial_MinTimer, m_Spatial_Groups.Spatial_MaxTimer);
-    Spatialai.SpatialLoggerPrint("Next valid check in: " + m_cor + "ms");
-    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SpatialTimer, m_cor, false);
+    Spatialai.SpatialLoggerPrint("Next valid check in: " + m_Spatial + "ms");
+  }
+    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SpatialTimer, m_Spatial, false);
   } //timer call for varied check loops #refactored by LieutenantMaster
 };

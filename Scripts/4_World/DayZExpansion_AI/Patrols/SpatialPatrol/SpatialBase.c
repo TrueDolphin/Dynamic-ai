@@ -117,7 +117,9 @@ class SpatialBase : eAIPatrol
     {
 		//Print("Trailing trigger" + this);
 		if (!AiGroup) return;
-		AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(position, distance, (distance * 1.5))); 
+		AiGroup.ClearWaypoints();
+		vector waypoint = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(position, distance, (distance * 1.5)));
+		AiGroup.AddWaypoint(waypoint); 
 	}//TrailingPos(pos, distance, m_Group);
 
 }
