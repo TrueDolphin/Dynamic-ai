@@ -1,6 +1,8 @@
 #ifdef EXPANSIONMODSPAWNSELECTION
-    modded class ExpansionRespawnHandlerModule {
-    bool IsPlayerInSpawnSelect(PlayerIdentity identity) {
+modded class ExpansionRespawnHandlerModule
+{
+    bool IsPlayerInSpawnSelect(PlayerIdentity identity)
+    {
         string uid = identity.GetId();
         ExpansionPlayerState state = m_PlayerStartStates.Get(uid);
 
@@ -8,6 +10,6 @@
             return true;
 
         return false;
-        }
-    };
+    }
+};
 #endif
