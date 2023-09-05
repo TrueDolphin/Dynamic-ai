@@ -1,5 +1,3 @@
-#define _ARMA_
-
 class CfgPatches
 {
 	class DayZ_Expansion_AI_Dynamic_scripts
