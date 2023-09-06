@@ -29,7 +29,7 @@ modded class PlayerBase
 
     override void EEKilled( Object killer )
     {
-#ifdef SERVER
+        #ifdef SERVER
         if (GetIdentity() && !IsAI())
         {
             if (!m_Spatial_Players)
@@ -37,7 +37,7 @@ modded class PlayerBase
 
             SpatialPlayerSettings().Update_Player(GetIdentity().GetPlainId(), 0); 
         }
-#endif
+        #endif
 		super.EEKilled(killer);
 	} //set file birthday to 0
 
@@ -81,27 +81,27 @@ modded class PlayerBase
     int Spatial_HuntMode()
     {
         return m_spatial_point.Spatial_HuntMode;
-    }
+    } // point huntmode
 
     int Spatial_LocationHunt()
     {
         return Spatial_LocationHunt;
-    }
+    }   //location huntmode
 
     bool Spatial_CheckSafe()
     {
         return m_Zone_Safe;
-    }
+    } // is in spatial safezone
 
     bool Spatial_CheckZone()
     {
         return Spatial_InZone;
-    }
+    } //is in any spatial zone
 
     bool Spatial_IsInLocation()
     {
         return Spatial_InLocation;
-    }
+    } //is in any location
 
     bool Spatial_HasGPSReceiver()
     {
@@ -142,6 +142,7 @@ modded class PlayerBase
     
     bool Spatial_CheckAge(int a)
     {
+        //update to CF_Date.Compare()
         a = a * 60;
         CF_Date date1 = CF_Date.Now(true);
         CF_Date date2 = CF_Date.Epoch(m_Spatial_Birthday + a);
