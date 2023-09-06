@@ -208,11 +208,29 @@ class SpatialAI
         int groupnumber = 0;
         int partynumber = 0;
         #ifdef EXPANSIONMODGROUPS
+
+          //Change this. i hate it.
+
           ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
           if (party)
           {
+            array < Man > players = new array < Man > ;
+            GetGame().GetPlayers(players); 
             array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
-            partynumber = PartyMembers.Count();
+            
+          for (int i = 0; i <= PartyMembers.Count(); ++i)
+          {
+            if (!PartyMembers[i]) continue;
+            for (int j = 0; j <= players.Count(); ++j)
+            {
+                if (!players[j]) continue;
+                if (PartyMembers[i].UID == players[j].GetIdentity().GetPlainId())
+                {
+                  ++partynumber;
+                }
+
+            }
+          }
           }
         #endif
 
@@ -237,7 +255,7 @@ class SpatialAI
       for (int i = 0; i < groups.Count(); ++i)
     {
         weights_T.Insert(groups[i].Spatial_Weight);
-      }
+    }
     }
     int index = ExpansionStatic.GetWeightedRandom(weights_T);
     if (index > -1)

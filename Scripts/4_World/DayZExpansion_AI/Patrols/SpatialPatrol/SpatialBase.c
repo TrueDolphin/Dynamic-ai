@@ -36,7 +36,7 @@ class SpatialBase : eAIPatrol
     {
 			case 1: 
 				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-				HuntCheck(m_Group, player, "0 0 0", 10000, 20);
+				HuntCheck(m_Group, player, vector.Zero, 10000, 20);
 			break;
 			case 2: 
 				//last known location 
@@ -57,7 +57,7 @@ class SpatialBase : eAIPatrol
 			case 6: 
 				//follows player
 				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 10000, false, m_Group, player, "0 0 0", 10000, 80);
+				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 10000, false, m_Group, player, vector.Zero, 10000, 80);
 			break;
     	}
 	}//Spatial_Movement(ai, group);
@@ -69,7 +69,7 @@ class SpatialBase : eAIPatrol
 		if (d > 94) AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 10, 20));
 	}//Spatial_PointGen(ai, AiGroup, player);
 	 //! https://feedback.bistudio.com/T173348 - readded null checks
-	void TrailingGroup(eAIGroup AiGroup, PlayerBase player, vector pos = "0 0 0", int timer = 10000, int distance = 80)
+	void TrailingGroup(eAIGroup AiGroup, PlayerBase player, vector pos = vector.Zero, int timer = 10000, int distance = 80)
     {
 		//Print("Trailing trigger" + this);
 		if (!player || !AiGroup) return;
@@ -97,7 +97,7 @@ class SpatialBase : eAIPatrol
 		}
 		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer, distance);
 	}//TrailingGroup(m_Group, player, pos, timer, distance);
-	void HuntCheck(eAIGroup AiGroup, PlayerBase player, vector pos = "0 0 0", int timer = 10000, int distance = 20)
+	void HuntCheck(eAIGroup AiGroup, PlayerBase player, vector pos = vector.Zero, int timer = 10000, int distance = 20)
     {
 			//actively hunts player
 			eAIBase lead = eAIBase.Cast(AiGroup.GetLeader());
