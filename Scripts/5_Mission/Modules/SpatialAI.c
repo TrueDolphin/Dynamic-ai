@@ -245,7 +245,7 @@ class SpatialAI
     
     SpatialDebugPrint("End GroupID: " + m_Groupid);
     SpatialDebugPrint("Spatial::LocalSpawn - End");
-  } //create and stuff.
+  } //dealing with group/party stuff in a more restricted scope
   Spatial_Group Spatial_GetWeightedGroup(array < ref Spatial_Group > groups, array < float > weights = NULL)
   {
     array < float > weights_T = weights;
