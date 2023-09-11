@@ -1,6 +1,6 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 6/9/2023 R17";
+  const string DateVersion = "Spatial AI Date: 11/9/2023 R18";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -209,29 +209,29 @@ class SpatialAI
         int partynumber = 0;
         #ifdef EXPANSIONMODGROUPS
 
-          //Change this. i hate it.
+        //Change this. i hate it.
 
-          ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
-          if (party)
-          {
-            array < Man > players = new array < Man > ;
-            GetGame().GetPlayers(players); 
-            array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
-            
-          for (int i = 0; i <= PartyMembers.Count(); ++i)
+        ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
+        if (party)
+        {
+          array < Man > players = new array < Man > ;
+          GetGame().GetPlayers(players); 
+          array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
+          
+        for (int i = 0; i <= PartyMembers.Count(); ++i)
           {
             if (!PartyMembers[i]) continue;
             for (int j = 0; j <= players.Count(); ++j)
             {
-                if (!players[j]) continue;
-                if (PartyMembers[i].UID == players[j].GetIdentity().GetPlainId())
-                {
-                  ++partynumber;
-                }
-
+              if (!players[j]) continue;
+              if (PartyMembers[i].UID == players[j].GetIdentity().GetPlainId())
+              {
+                players.RemoveItem(players[j]);
+                ++partynumber;
+              }
             }
           }
-          }
+        }
         #endif
 
         if (!PlayerGroup) groupnumber = 1;
@@ -246,6 +246,7 @@ class SpatialAI
     SpatialDebugPrint("End GroupID: " + m_Groupid);
     SpatialDebugPrint("Spatial::LocalSpawn - End");
   } //dealing with group/party stuff in a more restricted scope
+
   Spatial_Group Spatial_GetWeightedGroup(array < ref Spatial_Group > groups, array < float > weights = NULL)
   {
     array < float > weights_T = weights;
@@ -316,10 +317,10 @@ class SpatialAI
     }
 
     if (player.Spatial_CheckZone())
-      Spatial_message(player, bod, Group, player.Spatial_notification());
+      Spatial_Message_parse(player, bod, Group, player.Spatial_notification());
     else {
       Spatial_Notification notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
-      Spatial_message(player, bod, Group, notification);
+      Spatial_Message_parse(player, bod, Group, notification);
     }
     SpatialDebugPrint("Spatial::Spawn - End");
   } //Spatial_Spawn(player, SpawnCount, group)
@@ -400,6 +401,38 @@ class SpatialAI
         trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
+
+  void Spatial_Message_parse(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification){
+    //Change this. i hate it. seriously.
+    #ifdef EXPANSIONMODGROUPS
+
+          //Change this. i hate it.
+          ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
+          if (party)
+          {
+            array < Man > players = new array < Man > ;
+            GetGame().GetPlayers(players); 
+            array<ref ExpansionPartyPlayerData> PartyMembers = party.GetPlayers();
+            
+          for (int i = 0; i <= PartyMembers.Count(); ++i)
+            {
+              if (!PartyMembers[i]) continue;
+              for (int j = 0; j <= players.Count(); ++j)
+              {
+                if (!players[j]) continue;
+                if (PartyMembers[i].UID == players[j].GetIdentity().GetPlainId())
+                {
+                  players.RemoveItem(players[j]);
+                  Spatial_message(PlayerBase.Cast(players[j]), SpawnCount, group, notification);
+                }
+              }
+            }
+          }
+        return;
+    #endif
+    Spatial_message(player, SpawnCount, group, notification);
+  }
+
 
   void Spatial_message(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
   {
