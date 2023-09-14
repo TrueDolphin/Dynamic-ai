@@ -1,6 +1,6 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 12/9/2023 R19";
+  const string DateVersion = "Spatial AI Date: 14/9/2023 R20";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -62,7 +62,11 @@ class SpatialAI
         }
 
         m_Players.RemoveItem(player);
-        //GetGame().GetMission().IsPlayerDisconnecting(target_player)
+        if (GetGame().GetMission().IsPlayerDisconnecting(player))
+        {
+          SpatialDebugPrint("Spatial::Check - player is disconnecting");
+           continue;
+        }
         if (checkOnlyLeader)
         {
             #ifdef EXPANSIONMODGROUPS
@@ -212,14 +216,13 @@ class SpatialAI
         ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
         if (party)
         {
-          array < Man > players = new array < Man > ;
-          GetGame().GetPlayers(players); 
+          array<ref ExpansionPartyPlayerData> players = party.GetPlayers();
 
           for (int i = 0; i <= players.Count(); ++i)
           {
-            PlayerBase member = PlayerBase.Cast(players[i]);
-            if (!member) continue;
-            if (party.IsMember(member.GetIdentity().GetPlainId()))
+            PlayerBase partyPlayer = PlayerBase.GetPlayerByUID(players[i].UID);
+            if (!partyPlayer) continue;
+            if (partyPlayer && partyPlayer.GetIdentity())
             {
                 ++partynumber;
             }
@@ -398,16 +401,14 @@ class SpatialAI
         ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
         if (party)
         {
-          array < Man > players = new array < Man > ;
-          GetGame().GetPlayers(players); 
+          array<ref ExpansionPartyPlayerData> players = party.GetPlayers();
 
           for (int i = 0; i <= players.Count(); ++i)
           {
-            PlayerBase member = PlayerBase.Cast(players[i]);
-            if (!member) continue;
-            if (party.IsMember(member.GetIdentity().GetPlainId()))
+            PlayerBase partyPlayer = PlayerBase.GetPlayerByUID(players[i].UID);
+            if (partyPlayer && partyPlayer.GetIdentity())
             {
-                Spatial_message(member, SpawnCount, group, notification);
+                Spatial_message(partyPlayer, SpawnCount, group, notification);  
             }
           }
         }
