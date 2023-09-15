@@ -1,6 +1,6 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 14/9/2023 R20";
+  const string DateVersion = "Spatial AI Date: 16/9/2023 R22";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -211,24 +211,20 @@ class SpatialAI
         eAIGroup PlayerGroup = eAIGroup.Cast(player.GetGroup());
         int groupnumber = 0;
         int partynumber = 0;
-        #ifdef EXPANSIONMODGROUPS
+      #ifdef EXPANSIONMODGROUPS
 
         ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
         if (party)
         {
-          array<ref ExpansionPartyPlayerData> players = party.GetPlayers();
-
-          for (int i = 0; i <= players.Count(); ++i)
+          foreach (ExpansionPartyPlayerData partyPlayer : party.GetPlayers())
           {
-            PlayerBase partyPlayer = PlayerBase.GetPlayerByUID(players[i].UID);
-            if (!partyPlayer) continue;
-            if (partyPlayer && partyPlayer.GetIdentity())
-            {
-                ++partynumber;
-            }
+            if (!partyPlayer || !partyPlayer.UID) continue;
+           PlayerBase online = PlayerBase.GetPlayerByUID(partyPlayer.UID);
+            if (online && online.GetIdentity()) ++partynumber;
           }
         }
-        #endif
+
+      #endif
 
         if (!PlayerGroup) groupnumber = 1;
         else groupnumber = PlayerGroup.Count();
@@ -310,9 +306,26 @@ class SpatialAI
     }
 
     if (player.Spatial_CheckZone())
+    {
       Spatial_Message_parse(player, bod, Group, player.Spatial_notification());
-    else {
-      Spatial_Notification notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+    }
+    else 
+    {
+
+      Spatial_Notification notification;
+      foreach (Spatial_Notification notifcheck : m_Spatial_Notifications.notification)
+      {
+          if (!notifcheck || !notifcheck.Spatial_Name) continue;
+          if (notifcheck.Spatial_Name == Group.Spatial_Name)
+          {
+            notification = notifcheck;
+          }
+      }
+
+      if (!notification)
+      {
+        notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+      }
       Spatial_Message_parse(player, bod, Group, notification);
     }
     SpatialDebugPrint("Spatial::Spawn - End");
@@ -396,20 +409,17 @@ class SpatialAI
       }
     }
 
-  void Spatial_Message_parse(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification){
+  void Spatial_Message_parse(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
+    {
     #ifdef EXPANSIONMODGROUPS
         ExpansionPartyData party = ExpansionPartyData.Cast(player.Expansion_GetParty());
         if (party)
         {
-          array<ref ExpansionPartyPlayerData> players = party.GetPlayers();
-
-          for (int i = 0; i <= players.Count(); ++i)
+          foreach (ExpansionPartyPlayerData partyPlayer : party.GetPlayers())
           {
-            PlayerBase partyPlayer = PlayerBase.GetPlayerByUID(players[i].UID);
-            if (partyPlayer && partyPlayer.GetIdentity())
-            {
-                Spatial_message(partyPlayer, SpawnCount, group, notification);  
-            }
+            if (!partyPlayer || !partyPlayer.UID) continue;
+            PlayerBase online = PlayerBase.GetPlayerByUID(partyPlayer.UID);
+            if (online && online.GetIdentity()) Spatial_message(online, SpawnCount, group, notification);
           }
         }
         else 
