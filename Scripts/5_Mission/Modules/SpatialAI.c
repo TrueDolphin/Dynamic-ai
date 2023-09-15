@@ -62,6 +62,7 @@ class SpatialAI
         }
 
         m_Players.RemoveItem(player);
+        
         if (GetGame().GetMission().IsPlayerDisconnecting(player))
         {
           SpatialDebugPrint("Spatial::Check - player is disconnecting");
@@ -237,7 +238,7 @@ class SpatialAI
     
     SpatialDebugPrint("End GroupID: " + m_Groupid);
     SpatialDebugPrint("Spatial::LocalSpawn - End");
-  } //dealing with group/party stuff in a more restricted scope
+  } //dealing with group/party stuff in a more restricted scope #refactored by wrdg
   Spatial_Group Spatial_GetWeightedGroup(array < ref Spatial_Group > groups, array < float > weights = NULL)
    {
     array < float > weights_T = weights;
@@ -429,8 +430,7 @@ class SpatialAI
       return;
     #endif
     Spatial_message(player, SpawnCount, group, notification);
-    }
-
+  } // deals with party members online #refactored by wrdg
   void Spatial_message(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
     {
     if (!player) return;

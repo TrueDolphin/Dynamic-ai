@@ -36,7 +36,8 @@ class SpatialBase : eAIPatrol
     {
 			case 1: 
 				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
-				HuntCheck(m_Group, player, vector.Zero, 10000, 20);
+				player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
+				HuntCheck(m_Group, player, vector.Zero, 10000, 2);
 			break;
 			case 2: 
 				//last known location 
