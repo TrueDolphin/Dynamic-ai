@@ -103,7 +103,7 @@ class Location_Trigger: CylinderTrigger
   {
     if (m_insiders.Count() == 0) return;
     PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
-    if (!playerInsider || playerInsider.IsAI()) return;
+    if (!playerInsider || playerInsider.IsAI() || !playerInsider.GetIdentity()) return;
     SpatialDebugPrint(playerInsider.GetIdentity().GetName());
     vector startpos = ValidPos();
     TVectorArray waypoints = { ValidPos() };
