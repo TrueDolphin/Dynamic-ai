@@ -369,6 +369,30 @@ class SpatialAI
           SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
       }
     } else SpatialLoggerPrint("Locations Disabled");
+
+
+
+    if (m_Spatial_Groups.Audio_Enabled != 0)
+    {
+      SpatialLoggerPrint("Audio Sensitive Locations Enabled");
+      for (i = 0; i <= m_Spatial_Groups.Audio.Count(); ++i)
+      {
+          Spatial_Audio audio = Spatial_Audio.Cast(m_Spatial_Groups.Audio[i]);
+          if (!audio) continue;
+          Audio_trigger audio_trigger = Audio_trigger.Cast(GetGame().CreateObjectEx("Audio_trigger", audio.Spatial_TriggerPosition, ECE_NONE));
+          Notification_Trigger notification_trigger2 = Notification_Trigger.Cast(GetGame().CreateObjectEx("Notification_Trigger", audio.Spatial_TriggerPosition, ECE_NONE));
+          audio_trigger.SetCollisionCylinder(audio.Spatial_TriggerRadius, audio.Spatial_TriggerRadius / 2);
+          notification_trigger2.SetCollisionCylinder(audio.Spatial_TriggerRadius * 2, audio.Spatial_TriggerRadius);
+          SetNotificationAudio(audio_trigger, audio);
+          audio_trigger.Spatial_SetData(audio, notification_trigger2);
+          SpatialLoggerPrint("audio Trigger at location: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius + " - Spawn audio location: " + audio.Spatial_SpawnPosition);
+          SpatialLoggerPrint("Notification covering audio location at: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius * 2);
+          SpatialLoggerPrint("Faction: " + audio.Spatial_Faction + " - Loadout: " + audio.Spatial_ZoneLoadout + " - counts: " + audio.Spatial_MinCount + ":" + audio.Spatial_MaxCount);
+      }
+    } else SpatialLoggerPrint("Audio Sensitive Locations Disabled");
+
+
+
     SpatialDebugPrint("Spatial::Triggers - End");
   } //trigger zone initialisation
   void SetNotificationPoint(Spatial_Trigger trigger, Spatial_Point point)
@@ -409,7 +433,25 @@ class SpatialAI
         trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
+  void SetNotificationAudio(Audio_trigger trigger, Spatial_Audio location)
+    {
+    bool found = false;
+    for (int i = 0; i <= m_Spatial_Notifications.notification.Count(); ++i)
+    {
+      Spatial_Notification notification = Spatial_Notification.Cast(m_Spatial_Notifications.notification[i]);
+        if (!notification) continue;
+        if (notification.Spatial_Name == location.Spatial_Name)
+        {
+          trigger.SetNotification(notification);
+          found = true;
+        }
+      }
 
+      if (!found)
+      {
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+      }
+    }
   void Spatial_Message_parse(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
     {
     #ifdef EXPANSIONMODGROUPS

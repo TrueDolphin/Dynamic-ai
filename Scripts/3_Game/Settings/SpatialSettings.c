@@ -7,6 +7,7 @@ class SpatialSettings
   //declares
   private const static string EXP_SPATIAL_FOLDER = "$profile:ExpansionMod\\AI\\Spatial\\";
   private const static string EXP_AI_SPATIAL_SETTINGS = EXP_SPATIAL_FOLDER + "SpatialSettings.json";
+  const int VERSION = 19;
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   int m_Spatial_Total = -1;
@@ -55,7 +56,7 @@ class SpatialSettings
       m_Spatial_Groups = new Spatial_Groups();
       JsonFileLoader < Spatial_Groups > .JsonLoadFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Groups);
     }
-    if (m_Spatial_Groups.Version != 18) { // dont like this. change it.
+    if (m_Spatial_Groups.Version != VERSION) {
       loggerPrint("Settings File Out of date. Please delete and restart server.");
       Spatial_Version = false;
       return;
@@ -278,6 +279,9 @@ class SpatialSettings
 
     Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
     Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    
+    Data.Audio.Insert(new Spatial_Audio("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Audio.Insert(new Spatial_Audio("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
   } //generate default array data
 
   void loggerPrint(string msg)
@@ -342,7 +346,7 @@ class SpatialSettings
 //json data
 class Spatial_Groups
 {
-  int Version = 18;
+  int Version = 19;
   int Spatial_MinTimer = 1200000;
   int Spatial_MaxTimer = 1200000;
   int MinDistance = 140;
@@ -350,6 +354,7 @@ class Spatial_Groups
   int HuntMode = 1;
   int Points_Enabled = 0;
   int Locations_Enabled = 0;
+  int Audio_Enabled = 0;
   int EngageTimer = 300000;
   int CleanupTimer = 360000;
   int PlayerChecks = 0;
@@ -372,12 +377,14 @@ class Spatial_Groups
   ref array < ref Spatial_Group > Group;
   ref array < ref Spatial_Point > Point;
   ref array < ref Spatial_Location > Location;
+  ref array < ref Spatial_Audio > Audio; 
 
   void Spatial_Groups()
   {
     Group = new array < ref Spatial_Group > ;
     Point = new array < ref Spatial_Point > ;
     Location = new array < ref Spatial_Location > ;
+    Audio = new array < ref Spatial_Audio > ;
   }
 };
 
@@ -472,6 +479,38 @@ class Spatial_Location
   }
 };
 
+class Spatial_Audio
+{
+  string Spatial_Name;
+  float  Spatial_TriggerRadius;
+  string  Spatial_ZoneLoadout;
+  int Spatial_MinCount, Spatial_MaxCount;
+  int  Spatial_HuntMode;
+  string  Spatial_Faction;
+  int  Spatial_Lootable;
+  float  Spatial_Chance, Spatial_MinAccuracy, Spatial_MaxAccuracy, Spatial_Timer;
+  bool Spatial_UnlimitedReload;
+  vector  Spatial_TriggerPosition, Spatial_SpawnPosition;
+
+  void Spatial_Audio(string i, float b, string c, int d, int e, int h, string f, int j, float k, float n, float o, float l, bool m, vector g, vector a )
+  {
+    Spatial_Name = i;
+    Spatial_TriggerRadius = b;
+    Spatial_ZoneLoadout = c;
+    Spatial_MinCount = d;
+    Spatial_MaxCount = e;
+    Spatial_HuntMode = h;
+    Spatial_Faction = f;
+    Spatial_Lootable = j;
+    Spatial_Chance = k;
+    Spatial_MinAccuracy = n;
+    Spatial_MaxAccuracy = o;
+    Spatial_Timer = l;
+    Spatial_UnlimitedReload = m;
+    Spatial_TriggerPosition = g;
+    Spatial_SpawnPosition = a;
+  }
+};
 
 static ref SpatialSettings g_SpatialSettings;
 static SpatialSettings GetSpatialSettings()

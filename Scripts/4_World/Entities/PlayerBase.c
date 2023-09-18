@@ -167,11 +167,13 @@ modded class PlayerBase
         if (GetSpatialSettings().Spatial_Debug())
         {
             CF_Date date3 = CF_Date.Epoch(m_Spatial_Birthday);
+            float Spatial_Playtime = StatGet("playtime");
             SpatialDebugPrint("player: " + GetIdentity().GetName());
             SpatialDebugPrint("now: " + string.Format("%1 %2 %3 @ %4:%5", date1.GetDay(), date1.GetFullMonthString(), date1.GetYear(), date1.GetHours().ToStringLen(2), date1.GetMinutes().ToStringLen(2)));
             SpatialDebugPrint("Valid Time: " + string.Format("%1 %2 %3 @ %4:%5", date2.GetDay(), date2.GetFullMonthString(), date2.GetYear(), date2.GetHours().ToStringLen(2), date2.GetMinutes().ToStringLen(2)));
             SpatialDebugPrint("birthday: " + string.Format("%1 %2 %3 @ %4:%5", date3.GetDay(), date3.GetFullMonthString(), date3.GetYear(), date3.GetHours().ToStringLen(2), date3.GetMinutes().ToStringLen(2)));
             SpatialDebugPrint("Difference: " + string.Format("hours:%1 - Minutes:%2", hoursDiff, minutesDiff));
+            SpatialDebugPrint("Native check: " + string.Format("Playtime:%1", Spatial_Playtime));
             SpatialDebugPrint("Difference calc: " + (a / 60));
         }
 
