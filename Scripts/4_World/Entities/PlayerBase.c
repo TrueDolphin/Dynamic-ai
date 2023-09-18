@@ -106,7 +106,21 @@ modded class PlayerBase
     bool Spatial_HasGPSReceiver()
     {
         if (GetMapNavigationBehaviour())
-            return (GetMapNavigationBehaviour().GetNavigationType() & EMapNavigationType.GPS | EMapNavigationType.ALL == 0);
+        {
+        int num = GetMapNavigationBehaviour().GetNavigationType();
+        if (num > 1) return true;
+        }
+
+       GPSReceiver Spatial_HasRecevier = GPSReceiver.Cast(FindAttachmentBySlotName("WalkieTalkie"));
+       if (Spatial_HasRecevier && Spatial_HasRecevier.IsTurnedOn()) return true;
+
+        int item_count = GetInventory().GetCargo().GetItemCount();
+		for (int i = 0; i < item_count; i++)
+		{
+			GPSReceiver item = GPSReceiver.Cast(GetInventory().GetCargo().GetItem(i));
+            if (!item) continue;
+            if (item) return item.IsTurnedOn();
+		}
 
         return false;
     } //wardog's code
@@ -119,8 +133,10 @@ modded class PlayerBase
         if (birth != 0)
         {
             m_Spatial_Birthday = birth;
-        } else {
-            m_Spatial_Birthday = CF_Date.Now(true).GetTimestamp();
+        } 
+        else 
+        {
+            m_Spatial_Birthday = CF_Date.Now().GetTimestamp();
             SpatialPlayerSettings().Update_Player(GetIdentity().GetPlainId(), m_Spatial_Birthday); 
         }
     } //pull ref, check file and get/set birthday, otherwise new and set.
@@ -142,35 +158,28 @@ modded class PlayerBase
     
     bool Spatial_CheckAge(int a)
     {
-        //update to CF_Date.Compare()
         a = a * 60;
-        CF_Date date1 = CF_Date.Now(true);
+        CF_Date date1 = CF_Date.Now();
         CF_Date date2 = CF_Date.Epoch(m_Spatial_Birthday + a);
-        CF_Date date3 = CF_Date.Epoch(m_Spatial_Birthday);
         int hoursDiff, minutesDiff;
-        Spatial_CompareDates(date2, date1, hoursDiff, minutesDiff);
+        date1.CalculateDifference(date2, hoursDiff, minutesDiff);
 
-        SpatialDebugPrint("player: " + GetIdentity().GetName());
-        SpatialDebugPrint("now: " + string.Format("%1 %2 %3 @ %4:%5", date1.GetDay(), date1.GetFullMonthString(), date1.GetYear(), date1.GetHours().ToStringLen(2), date1.GetMinutes().ToStringLen(2)));
-        SpatialDebugPrint("Valid Time: " + string.Format("%1 %2 %3 @ %4:%5", date2.GetDay(), date2.GetFullMonthString(), date2.GetYear(), date2.GetHours().ToStringLen(2), date2.GetMinutes().ToStringLen(2)));
-        SpatialDebugPrint("birthday: " + string.Format("%1 %2 %3 @ %4:%5", date3.GetDay(), date3.GetFullMonthString(), date3.GetYear(), date3.GetHours().ToStringLen(2), date3.GetMinutes().ToStringLen(2)));
-        SpatialDebugPrint("Difference: " + string.Format("hours:%1 - Minutes:%2", hoursDiff, minutesDiff));
-        SpatialDebugPrint("Difference calc: " + (a / 60));
+        if (GetSpatialSettings().Spatial_Debug())
+        {
+            CF_Date date3 = CF_Date.Epoch(m_Spatial_Birthday);
+            SpatialDebugPrint("player: " + GetIdentity().GetName());
+            SpatialDebugPrint("now: " + string.Format("%1 %2 %3 @ %4:%5", date1.GetDay(), date1.GetFullMonthString(), date1.GetYear(), date1.GetHours().ToStringLen(2), date1.GetMinutes().ToStringLen(2)));
+            SpatialDebugPrint("Valid Time: " + string.Format("%1 %2 %3 @ %4:%5", date2.GetDay(), date2.GetFullMonthString(), date2.GetYear(), date2.GetHours().ToStringLen(2), date2.GetMinutes().ToStringLen(2)));
+            SpatialDebugPrint("birthday: " + string.Format("%1 %2 %3 @ %4:%5", date3.GetDay(), date3.GetFullMonthString(), date3.GetYear(), date3.GetHours().ToStringLen(2), date3.GetMinutes().ToStringLen(2)));
+            SpatialDebugPrint("Difference: " + string.Format("hours:%1 - Minutes:%2", hoursDiff, minutesDiff));
+            SpatialDebugPrint("Difference calc: " + (a / 60));
+        }
 
         if (hoursDiff > -1 && minutesDiff > -1)
             return true;
 
         return false;
     } //compare offset to birthday
-
-    void Spatial_CompareDates(CF_Date date1, CF_Date date2, out int hours, out int minutes)
-    {
-        int timestamp1 = date1.GetTimestamp();
-        int timestamp2 = date2.GetTimestamp();
-        int timestampDiff = timestamp2 - timestamp1;
-        hours = timestampDiff / 3600;
-        minutes = (timestampDiff % 3600) / 60;
-    }  //compare function
 
     void SpatialDebugPrint(string msg)
     {

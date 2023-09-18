@@ -1,11 +1,11 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 16/9/2023 R22";
+  const string DateVersion = "Spatial AI Date: 18/9/2023 R23";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
   ref Spatial_Players m_Spatial_Players; // birthday config
-  ref Spatial_Notifications m_Spatial_Notifications; // location/point notification system
+  ref Spatial_Notifications m_Spatial_Notifications; // notification config
 
   #ifdef EXPANSIONMODSPAWNSELECTION
     private ExpansionRespawnHandlerModule m_RespawnModule;
