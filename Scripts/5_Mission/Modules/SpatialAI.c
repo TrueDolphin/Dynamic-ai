@@ -370,8 +370,6 @@ class SpatialAI
       }
     } else SpatialLoggerPrint("Locations Disabled");
 
-
-
     if (m_Spatial_Groups.Audio_Enabled != 0)
     {
       SpatialLoggerPrint("Audio Sensitive Locations Enabled");
@@ -391,8 +389,6 @@ class SpatialAI
       }
     } else SpatialLoggerPrint("Audio Sensitive Locations Disabled");
 
-
-
     SpatialDebugPrint("Spatial::Triggers - End");
   } //trigger zone initialisation
   void SetNotificationPoint(Spatial_Trigger trigger, Spatial_Point point)
@@ -406,6 +402,7 @@ class SpatialAI
         {
           trigger.SetNotification(notification);
           found = true;
+          i = m_Spatial_Notifications.notification.Count();
         }
       }
       if (!found)
@@ -413,7 +410,6 @@ class SpatialAI
         trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
-
   void SetNotificationLocation(Location_Trigger trigger, Spatial_Location location)
     {
     bool found = false;
@@ -425,6 +421,7 @@ class SpatialAI
         {
           trigger.SetNotification(notification);
           found = true;
+          i = m_Spatial_Notifications.notification.Count();
         }
       }
 
@@ -444,6 +441,7 @@ class SpatialAI
         {
           trigger.SetNotification(notification);
           found = true;
+          i = m_Spatial_Notifications.notification.Count();
         }
       }
 
@@ -475,7 +473,8 @@ class SpatialAI
   } // deals with party members online #refactored by wrdg
   void Spatial_message(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
     {
-    if (!player) return;
+    if (!player || !group) return;
+    if (!notification) notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
     string title, text, faction, loadout;
     int msg_no = notification.MessageType;
     title = notification.MessageTitle;
