@@ -1,5 +1,6 @@
 /*
 altered for whitelist. LM rewrote my over-the-top if checks to this.
+this reqs client side loading afaik. it's very eh.
 */
 
 modded class ItemBase

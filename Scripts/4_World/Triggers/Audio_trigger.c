@@ -102,18 +102,17 @@ class Audio_trigger: CylinderTrigger
     void audiocheck(int loop)
     {
         int totalnoise;
+        int insidercount = m_insiders.Count();
         if (loop < 1) return;
-        for (int i = 0; i < m_insiders.Count(); ++i)
+        for (int i = 0; i < insidercount; ++i)
         {
-            PlayerBase player = PlayerBase.Cast(m_insiders.GetRandomElement().GetObject());
-            if (player) 
-            {
-                int player_noise = player.GetNoisePresenceInAI();
-                SpatialDebugPrint("Player noise in area: " + player_noise);
-                totalnoise += player_noise;
-            }
+            PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
+            if (!player) continue;
+            int player_noise = player.GetNoisePresenceInAI();
+            SpatialDebugPrint("Player noise in area: " + player_noise);
+            totalnoise += player_noise;
         }
-        if ((totalnoise / m_insiders.Count()) > m_insiders.Count() && m_insiders.Count() > 0)
+        if ((totalnoise / insidercount) > insidercount && insidercount > 0)
         {
           SpawnCheck();
           return;  

@@ -1,3 +1,5 @@
+//CF Dependancies here.
+
 modded class PlayerBase
 {
     bool Spatial_InZone;

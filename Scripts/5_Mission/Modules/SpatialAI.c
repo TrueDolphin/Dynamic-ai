@@ -1,6 +1,6 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 18/9/2023 R23";
+  const string DateVersion = "Spatial AI Date: 21/9/2023 R24";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -474,7 +474,7 @@ class SpatialAI
   void Spatial_message(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
     {
     if (!player || !group) return;
-    if (!notification) notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+    if (!notification) notification = Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
     string title, text, faction, loadout;
     int msg_no = notification.MessageType;
     title = notification.MessageTitle;
