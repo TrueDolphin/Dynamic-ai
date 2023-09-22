@@ -21,7 +21,7 @@ class Audio_trigger: CylinderTrigger
 
   void Spatial_SetData(Spatial_Audio audio, Notification_Trigger b)
   {
-    Audio = Audio;
+    Audio = audio;
     notif_trigger = b;
   } //changed to class instead of individuals
   void SetNotification(Spatial_Notification a)
@@ -74,7 +74,7 @@ class Audio_trigger: CylinderTrigger
   override void Enter(TriggerInsider insider)
   {
     PlayerBase player = PlayerBase.Cast(insider.GetObject());
-    if (player)
+    if (player && Audio)
     {
       player.Spatial_InLocation(true, Audio.Spatial_HuntMode);
     } 
@@ -101,22 +101,29 @@ class Audio_trigger: CylinderTrigger
 
     void audiocheck(int loop)
     {
-        int totalnoise;
+        int totalnoise = 0;
         int insidercount = m_insiders.Count();
         if (loop < 1) return;
-        for (int i = 0; i < insidercount; ++i)
+        if (insidercount > 0)
         {
-            PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
-            if (!player) continue;
-            int player_noise = player.GetNoisePresenceInAI();
-            SpatialDebugPrint("Player noise in area: " + player_noise);
-            totalnoise += player_noise;
+          for (int i = 0; i < insidercount; ++i)
+          {
+              PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
+              if (!player) continue;
+              int player_noise = player.GetNoisePresenceInAI();
+              SpatialDebugPrint("Player noise in area: " + player_noise);
+              totalnoise += player_noise;
+          }
+          if (totalnoise > 1)
+          {
+            if ((totalnoise / insidercount) > insidercount)
+            {
+              SpawnCheck();
+              return;  
+            }
+          }
         }
-        if ((totalnoise / insidercount) > insidercount && insidercount > 0)
-        {
-          SpawnCheck();
-          return;  
-        }
+
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(audiocheck, 1000, false, --loop);
     }
 
