@@ -21,7 +21,7 @@ modded class PlayerBase
 
     void PlayerBase()
     {
-        GetRPCManager().AddRPC("DayZ-Expansion-AI-Dynamic", "Spatial_GetThreat", this, SingleplayerExecutionType.Both);
+        GetRPCManager().AddRPC("DayZ_Expansion_AI_Dynamic", "Spatial_GetThreat", this, SingleplayerExecutionType.Both);
 #ifdef SERVER
         if (!IsAI())
         {
@@ -195,6 +195,10 @@ modded class PlayerBase
     {
         return Spatial_noisepresence;
     }
+    void Spatial_SetNoise(int a)
+    {
+        Spatial_noisepresence = a;
+    }
 
     void SpatialDebugPrint(string msg)
     {
@@ -209,7 +213,9 @@ modded class PlayerBase
         Param1 < int > data;
         if (!ctx.Read(data)) return;
         if (sender == null) return;
-        Spatial_noisepresence = data.param1;
+        PlayerBase Serverside_sender = PlayerBase.GetPlayerByUID(sender.GetId());
+        if (!Serverside_sender) return;
+        Serverside_sender.Spatial_SetNoise(data.param1);
     }
 
     void Spatial_NoisePresence()
@@ -217,7 +223,7 @@ modded class PlayerBase
         if (this)
         {
             int threat = GetNoisePresenceInAI();
-            GetRPCManager().SendRPC("DayZ-Expansion-AI-Dynamic", "Spatial_GetThreat", new Param1<int>(threat), true, NULL);   
+            GetRPCManager().SendRPC("DayZ_Expansion_AI_Dynamic", "Spatial_GetThreat", new Param1<int>(threat), true, NULL);   
         }
     }
 };
