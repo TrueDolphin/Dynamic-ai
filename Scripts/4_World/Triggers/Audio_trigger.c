@@ -110,7 +110,7 @@ class Audio_trigger: CylinderTrigger
           {
               PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
               if (!player) continue;
-              int player_noise = player.GetNoisePresenceInAI();
+              int player_noise = player.Spatial_GetNoise();
               SpatialDebugPrint("Player noise in area: " + player_noise);
               totalnoise += player_noise;
           }

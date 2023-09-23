@@ -8,6 +8,8 @@ modded class PlayerBase
     int Spatial_LocationHunt = 0;
     bool Spatial_InLocation;
 
+    int Spatial_noisepresence = 0;
+
     int m_Spatial_Birthday;
     bool Spatial_UnlimitedReload;
 
@@ -19,6 +21,7 @@ modded class PlayerBase
 
     void PlayerBase()
     {
+        GetRPCManager().AddRPC("DayZ-Expansion-AI-Dynamic", "Spatial_GetThreat", this, SingleplayerExecutionType.Both);
 #ifdef SERVER
         if (!IsAI())
         {
@@ -26,6 +29,9 @@ modded class PlayerBase
             GetSpatialSettings().PullRef(m_Spatial_Groups);
             GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_SetBirthday, 500, false);
         }
+#else
+    GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(Spatial_NoisePresence, 1000, true);
+
 #endif
     } //load file birthday
 
@@ -185,9 +191,33 @@ modded class PlayerBase
         return false;
     } //compare offset to birthday
 
+    int Spatial_GetNoise()
+    {
+        return Spatial_noisepresence;
+    }
+
     void SpatialDebugPrint(string msg)
     {
         if (GetSpatialSettings().Spatial_Debug())
             GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
     } //expansion debug print
+
+    void Spatial_GetThreat(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target) 
+    {
+        if (type != CallType.Server) return;
+
+        Param1 < int > data;
+        if (!ctx.Read(data)) return;
+        if (sender == null) return;
+        Spatial_noisepresence = data.param1;
+    }
+
+    void Spatial_NoisePresence()
+    {
+        if (this)
+        {
+            int threat = GetNoisePresenceInAI();
+            GetRPCManager().SendRPC("DayZ-Expansion-AI-Dynamic", "Spatial_GetThreat", new Param1<int>(threat), true, NULL);   
+        }
+    }
 };
