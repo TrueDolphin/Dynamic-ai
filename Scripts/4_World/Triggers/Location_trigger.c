@@ -94,9 +94,9 @@ class Location_Trigger: CylinderTrigger
   override protected bool CanAddObjectAsInsider(Object object)
   {
     if (!super.CanAddObjectAsInsider(object)) return false;
-    bool ai = eAIBase.Cast(object) != null;
-    if (ai) return false;
-    return PlayerBase.Cast(object) != null;
+    PlayerBase player = PlayerBase.Cast(object);
+    if (!player || !player.GetIdentity() || player.IsAI()) return false;
+    return true;
   }
 
   void Spatial_Spawn(int count, Spatial_Location Location)

@@ -11,11 +11,11 @@ class Notification_Trigger: CylinderTrigger
         super.Leave(insider);
     }
     
-    override protected bool CanAddObjectAsInsider(Object object)
-    {
-        if (!super.CanAddObjectAsInsider(object)) return false;
-        bool ai = eAIBase.Cast(object) != null;
-        if (ai) return false;
-        return PlayerBase.Cast(object) != null;
-    }
+  override protected bool CanAddObjectAsInsider(Object object)
+  {
+    if (!super.CanAddObjectAsInsider(object)) return false;
+    PlayerBase player = PlayerBase.Cast(object);
+    if (!player || !player.GetIdentity() || player.IsAI()) return false;
+    return true;
+  }
 }
