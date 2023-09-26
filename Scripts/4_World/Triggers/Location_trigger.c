@@ -1,5 +1,5 @@
 //!TODO: change this whole system to avoidplayer
-class Location_Trigger: CylinderTrigger
+class Location_Trigger: Spatial_TriggerBase
 {
   int i_PlayerCount;
   bool Spatial_TimerCheck;
@@ -58,6 +58,12 @@ class Location_Trigger: CylinderTrigger
     {
       Spatial_Spawn(SpawnCount, location);
       Spatial_TimerCheck = true;
+
+  #ifdef EXPANSIONMODNAVIGATION
+        if (GetSpatialSettings().Spatial_Debug())
+        CreateMissionMarker(m_Groupid, ValidPos(m_Spatial_Groups.Locations_Enabled, location.Spatial_SpawnPosition), location.Spatial_Name + " Spawn", m_Spatial_Groups.CleanupTimer);
+  #endif
+
       GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, location.Spatial_Timer, false);
     } else {
       SpatialDebugPrint("Location ai count too low this check");
@@ -73,7 +79,7 @@ class Location_Trigger: CylinderTrigger
   override void Enter(TriggerInsider insider)
   {
     PlayerBase player = PlayerBase.Cast(insider.GetObject());
-    if (player)
+    if (player && location)
     {
       player.Spatial_InLocation(true, location.Spatial_HuntMode);
     } 
@@ -90,14 +96,6 @@ class Location_Trigger: CylinderTrigger
     }
     super.Leave(insider);
   }
-  
-  override protected bool CanAddObjectAsInsider(Object object)
-  {
-    if (!super.CanAddObjectAsInsider(object)) return false;
-    PlayerBase player = PlayerBase.Cast(object);
-    if (!player || !player.GetIdentity() || player.IsAI()) return false;
-    return true;
-  }
 
   void Spatial_Spawn(int count, Spatial_Location Location)
   {
@@ -105,8 +103,8 @@ class Location_Trigger: CylinderTrigger
     PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
     if (!playerInsider || playerInsider.IsAI() || !playerInsider.GetIdentity()) return;
     SpatialDebugPrint(playerInsider.GetIdentity().GetName());
-    vector startpos = ValidPos();
-    TVectorArray waypoints = { ValidPos() };
+    vector startpos = ValidPos(m_Spatial_Groups.Locations_Enabled, location.Spatial_SpawnPosition);
+    TVectorArray waypoints = { ValidPos(m_Spatial_Groups.Locations_Enabled, location.Spatial_SpawnPosition) };
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
     if (Location.Spatial_HuntMode == 3) 
@@ -167,36 +165,4 @@ class Location_Trigger: CylinderTrigger
         SpatialLoggerPrint(message);
       }
   } //chat message or vanilla notification
-
-  vector ValidPos()
-    {
-      if (m_Spatial_Groups.Locations_Enabled == 2) return location.Spatial_SpawnPosition;
-      return ExpansionStatic.GetSurfacePosition(location.Spatial_SpawnPosition);
-    }
-
-  bool ValidSpawn()
-  {
-			return !GetCEApi().AvoidPlayer(location.Spatial_SpawnPosition, 5);
-  }
-
-  void Spatial_WarningMessage(PlayerBase player, string message)
-  {
-    if ((player) && (message != ""))
-    {
-      Param1 < string > Msgparam;
-      Msgparam = new Param1 < string > (message);
-      GetGame().RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
-    }
-  } //Ingame chat message
-
-  void SpatialDebugPrint(string msg)
-  {
-    if (GetSpatialSettings().Spatial_Debug())
-      GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
-  } //expansion debug print
-
-  void SpatialLoggerPrint(string msg)
-  {
-    GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
-  } //expansion logging
 }

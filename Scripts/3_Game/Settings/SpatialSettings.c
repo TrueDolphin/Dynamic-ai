@@ -277,11 +277,11 @@ class SpatialSettings
     Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", 1, 0.5, 0.25, 0.66, false, "0.0 0.0 0.0"));
     Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", 1, 0.5, 0.25, 0.66, false, "0.0 0.0 0.0"));
 
-    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
-    Data.Location.Insert(new Spatial_Location("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
     
-    Data.Audio.Insert(new Spatial_Audio("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
-    Data.Audio.Insert(new Spatial_Audio("Name", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
   } //generate default array data
 
   void loggerPrint(string msg)

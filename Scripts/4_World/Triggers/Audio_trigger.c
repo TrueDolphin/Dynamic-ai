@@ -1,5 +1,5 @@
 //!TODO: change this whole system to avoidplayer
-class Audio_trigger: CylinderTrigger
+class Audio_trigger: Spatial_TriggerBase
 {
   int i_PlayerCount;
   bool Spatial_TimerCheck;
@@ -59,6 +59,12 @@ class Audio_trigger: CylinderTrigger
     {
       Spatial_Spawn(SpawnCount, Audio);
       Spatial_TimerCheck = true;
+
+  #ifdef EXPANSIONMODNAVIGATION
+        if (GetSpatialSettings().Spatial_Debug())
+        CreateMissionMarker(m_Groupid, ValidPos(m_Spatial_Groups.Audio_Enabled, Audio.Spatial_SpawnPosition), Audio.Spatial_Name + " Spawn", m_Spatial_Groups.CleanupTimer);
+  #endif
+
       GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, Audio.Spatial_Timer, false);
     } else {
       SpatialDebugPrint("Audio ai count too low this check");
@@ -90,14 +96,6 @@ class Audio_trigger: CylinderTrigger
     }
     super.Leave(insider);
   }
-  
-  override protected bool CanAddObjectAsInsider(Object object)
-  {
-    if (!super.CanAddObjectAsInsider(object)) return false;
-    PlayerBase player = PlayerBase.Cast(object);
-    if (!player || !player.GetIdentity() || player.IsAI()) return false;
-    return true;
-  }
 
     void audiocheck(int loop)
     {
@@ -111,19 +109,19 @@ class Audio_trigger: CylinderTrigger
               PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
               if (!player) continue;
               int player_noise = player.Spatial_GetNoise();
-              SpatialDebugPrint("Player noise in area: " + player_noise);
               totalnoise += player_noise;
           }
-          if (totalnoise > 1)
+          if (totalnoise > 0)
           {
+            SpatialDebugPrint("Player noise in area: " + player_noise);
             if ((totalnoise / insidercount) > insidercount)
             {
+              SpatialDebugPrint("Spawning due to noise: " + player_noise);
               SpawnCheck();
               return;  
             }
           }
         }
-
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(audiocheck, 1000, false, --loop);
     }
 
@@ -133,8 +131,8 @@ class Audio_trigger: CylinderTrigger
     PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
     if (!playerInsider || playerInsider.IsAI() || !playerInsider.GetIdentity()) return;
     SpatialDebugPrint(playerInsider.GetIdentity().GetName());
-    vector startpos = ValidPos();
-    TVectorArray waypoints = { ValidPos() };
+    vector startpos = ValidPos(m_Spatial_Groups.Audio_Enabled, Audio.Spatial_SpawnPosition);
+    TVectorArray waypoints = { ValidPos(m_Spatial_Groups.Audio_Enabled, Audio.Spatial_SpawnPosition) };
     string Formation = "RANDOM";
     eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
     if (audio.Spatial_HuntMode == 3) 
@@ -194,36 +192,4 @@ class Audio_trigger: CylinderTrigger
         SpatialLoggerPrint(message);
       }
   } //chat message or vanilla notification
-
-  vector ValidPos()
-    {
-      if (m_Spatial_Groups.Audio_Enabled == 2) return Audio.Spatial_SpawnPosition;
-      return ExpansionStatic.GetSurfacePosition(Audio.Spatial_SpawnPosition);
-    }
-
-  bool ValidSpawn()
-  {
-			return !GetCEApi().AvoidPlayer(Audio.Spatial_SpawnPosition, 5);
-  }
-
-  void Spatial_WarningMessage(PlayerBase player, string message)
-  {
-    if ((player) && (message != ""))
-    {
-      Param1 < string > Msgparam;
-      Msgparam = new Param1 < string > (message);
-      GetGame().RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
-    }
-  } //Ingame chat message
-
-  void SpatialDebugPrint(string msg)
-  {
-    if (GetSpatialSettings().Spatial_Debug())
-      GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
-  } //expansion debug print
-
-  void SpatialLoggerPrint(string msg)
-  {
-    GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
-  } //expansion logging
 }

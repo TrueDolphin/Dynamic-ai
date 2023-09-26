@@ -1,6 +1,6 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 21/9/2023 R24";
+  const string DateVersion = "Spatial AI Date: 21/9/2023 R25";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -367,6 +367,12 @@ class SpatialAI
           SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
           SpatialLoggerPrint("Notification covering location at: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius * 2);
           SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
+      
+    #ifdef EXPANSIONMODNAVIGATION
+        if (GetSpatialSettings().Spatial_Debug())
+        location_trigger.CreateMissionMarker(i, location_trigger.ValidPos(m_Spatial_Groups.Locations_Enabled, location.Spatial_TriggerPosition), location.Spatial_Name, m_Spatial_Groups.CleanupTimer, 0);
+    #endif
+
       }
     } else SpatialLoggerPrint("Locations Disabled");
 
@@ -386,6 +392,12 @@ class SpatialAI
           SpatialLoggerPrint("audio Trigger at location: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius + " - Spawn audio location: " + audio.Spatial_SpawnPosition);
           SpatialLoggerPrint("Notification covering audio location at: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius * 2);
           SpatialLoggerPrint("Faction: " + audio.Spatial_Faction + " - Loadout: " + audio.Spatial_ZoneLoadout + " - counts: " + audio.Spatial_MinCount + ":" + audio.Spatial_MaxCount);
+      
+    #ifdef EXPANSIONMODNAVIGATION
+        if (GetSpatialSettings().Spatial_Debug())
+        audio_trigger.CreateMissionMarker(i, audio_trigger.ValidPos(m_Spatial_Groups.Audio_Enabled, audio.Spatial_TriggerPosition), audio.Spatial_Name, m_Spatial_Groups.CleanupTimer, 0);
+    #endif
+      
       }
     } else SpatialLoggerPrint("Audio Sensitive Locations Disabled");
 
