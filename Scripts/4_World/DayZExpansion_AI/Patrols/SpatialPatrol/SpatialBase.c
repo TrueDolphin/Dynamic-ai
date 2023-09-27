@@ -33,7 +33,7 @@ class SpatialBase : eAIPatrol
 		m_Group.ClearWaypoints();
 		m_Group.m_BackTracking = true;
 		switch (m_Mode)
-    {
+    	{
 			case 1: 
 				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 0, 3));
 				player.GetTargetInformation().AddAI(ai, m_Spatial_Groups.EngageTimer);
@@ -84,7 +84,7 @@ class SpatialBase : eAIPatrol
 		eAIBase lead = eAIBase.Cast(AiGroup.GetLeader());
 		if (!lead) return;
 		if (vector.Distance(player.GetPosition(), lead.GetPosition()) > overdist)
-    {
+    	{
 			AiGroup.ClearWaypoints();
 			AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), min, max));
 		} else AiGroup.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), min, max));
@@ -93,7 +93,7 @@ class SpatialBase : eAIPatrol
 		pos = player.GetPosition();
 		if (!player || !AiGroup) return;
 		if (m_Spatial_Groups.HuntMode == 1)
-    {
+    	{
 			if (player.GetTargetInformation().IsTargettedBy(lead)) return;
 		}
 		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer, distance);
@@ -122,5 +122,4 @@ class SpatialBase : eAIPatrol
 		vector waypoint = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(position, distance, (distance * 1.5)));
 		AiGroup.AddWaypoint(waypoint); 
 	}//TrailingPos(pos, distance, m_Group);
-
 }
