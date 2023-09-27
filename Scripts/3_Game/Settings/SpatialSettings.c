@@ -1,5 +1,5 @@
 /*
-19/7/2023
+27/9/2023
 spatial settings
 */
 class SpatialSettings
@@ -135,6 +135,10 @@ class SpatialSettings
           loggerPrint("Point Name set incorrectly. setting to Survivor");
           point.Spatial_Name = "Survivor";
         }
+        if (point.Spatial_Position[1] == 0)
+        {
+          point.Spatial_Position[1] = 1;
+        }
       }
     } else {
       loggerPrint("error, disabling points");
@@ -227,42 +231,64 @@ class SpatialSettings
     m_Spatial_InOwnTerritory = m_Spatial_Groups.Spatial_InOwnTerritory;
     m_Spatial_Total = 0;
     foreach(Spatial_Group group: m_Spatial_Groups.Group)
+      {
+        if (group.Spatial_MinCount < 0)
+        {
+          group.Spatial_MinCount = 0;
+          loggerPrint("Group Spatial_MinCount error, setting to 0");
+          continue;
+        }
+
+        if (!group.Spatial_Name || group.Spatial_Name == "")
+        {
+            loggerPrint("group Name set incorrectly. setting to Survivor");
+            group.Spatial_Name = "Survivor";
+        }
+
+        if (group.Spatial_MinCount > group.Spatial_MaxCount)
+        {
+          loggerPrint("Minimum cant be more than maximum: " + group.Spatial_MinCount);
+          continue;
+        }
+        if (group.Spatial_MaxCount < 1)
+        {
+          loggerPrint("Maximum count cant be less than 0: " + group.Spatial_MaxCount);
+          continue;
+        }
+        if (!FileExist("$profile:ExpansionMod\\Loadouts\\" + group.Spatial_Loadout))
+        {
+          loggerPrint("Loadout Not Found: " + group.Spatial_Loadout);
+          continue;
+        }
+        eAIFaction faction2 = eAIFaction.Create(group.Spatial_Faction);
+        if (!faction2)
+        {
+          loggerPrint("Faction not correct: " + group.Spatial_Faction);
+          group.Spatial_Faction = "Raiders";
+        }
+        m_Spatial_Total += 1;
+      }
+    
+    if (m_Spatial_Groups.Locations_Enabled != 0)
     {
-      if (group.Spatial_MinCount < 0)
-      {
-        group.Spatial_MinCount = 0;
-        loggerPrint("Group Spatial_MinCount error, setting to 0");
-        continue;
-      }
+      foreach(Spatial_Location location: m_Spatial_Groups.Location)
+        {
+          if (location.Spatial_TriggerPosition[1] == 0)
+          {
+            location.Spatial_TriggerPosition[1] = 1;
+          }
+        }
+    }
 
-      if (!group.Spatial_Name || group.Spatial_Name == "")
-      {
-          loggerPrint("group Name set incorrectly. setting to Survivor");
-          group.Spatial_Name = "Survivor";
-      }
-
-      if (group.Spatial_MinCount > group.Spatial_MaxCount)
-      {
-        loggerPrint("Minimum cant be more than maximum: " + group.Spatial_MinCount);
-        continue;
-      }
-      if (group.Spatial_MaxCount < 1)
-      {
-        loggerPrint("Maximum count cant be less than 0: " + group.Spatial_MaxCount);
-        continue;
-      }
-      if (!FileExist("$profile:ExpansionMod\\Loadouts\\" + group.Spatial_Loadout))
-      {
-        loggerPrint("Loadout Not Found: " + group.Spatial_Loadout);
-        continue;
-      }
-      eAIFaction faction2 = eAIFaction.Create(group.Spatial_Faction);
-      if (!faction2)
-      {
-        loggerPrint("Faction not correct: " + group.Spatial_Faction);
-        group.Spatial_Faction = "Raiders";
-      }
-      m_Spatial_Total += 1;
+    if (m_Spatial_Groups.Audio_Enabled != 0)
+    {
+      foreach(Spatial_Audio audio: m_Spatial_Groups.Audio)
+        {
+          if (audio.Spatial_TriggerPosition[1] == 0)
+          {
+            audio.Spatial_TriggerPosition[1] = 1;
+          }
+        }
     }
   } //load from file/data checks
 
@@ -273,15 +299,15 @@ class SpatialSettings
     Data.Group.Insert(new Spatial_Group(1, 3, 300, "HumanLoadout.json", "Shamans", "Shaman", 1, 0.5, 0.25, 0.66, true));
     Data.Group.Insert(new Spatial_Group(2, 3, 350, "EastLoadout.json", "Passive", "Passive", 1, 0.5, 0.25, 0.66, true));
 
-    Data.Point.Insert(new Spatial_Point("East", 0, 50, "EastLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, false, "0.0 0.0 0.0"));
-    Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", 1, 0.5, 0.25, 0.66, false, "0.0 0.0 0.0"));
-    Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", 1, 0.5, 0.25, 0.66, false, "0.0 0.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("East", 0, 50, "EastLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
 
-    Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
-    Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 1.0 0.0", "0.0 1.0 0.0"));
+    Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 1.0 0.0", "0.0 1.0 0.0"));
     
-    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
-    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 0.0 0.0", "0.0 0.0 0.0"));
+    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 1.0 0.0", "0.0 1.0 0.0"));
+    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 1.0 0.0", "0.0 1.0 0.0"));
   } //generate default array data
 
   void loggerPrint(string msg)

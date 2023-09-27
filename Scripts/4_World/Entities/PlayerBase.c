@@ -21,7 +21,6 @@ modded class PlayerBase
 
     void PlayerBase()
     {
-        //GetRPCManager().AddRPC("DayZ_Expansion_AI_Dynamic", "Spatial_GetThreat", this, SingleplayerExecutionType.Both);
 #ifdef SERVER
         if (!IsAI())
         {
@@ -29,9 +28,6 @@ modded class PlayerBase
             GetSpatialSettings().PullRef(m_Spatial_Groups);
             GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Spatial_SetBirthday, 500, false);
         }
-#else
-    GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(Spatial_NoisePresence, 1000, true);
-
 #endif
     } //load file birthday
 

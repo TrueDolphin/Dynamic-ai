@@ -1,6 +1,6 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 21/9/2023 R25";
+  const string DateVersion = "Spatial AI Date: 27/9/2023 R26";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -345,6 +345,9 @@ class SpatialAI
         Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
         spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
         spatial_trigger.SetSpatialPoint(points);
+        vector move0 = points.Spatial_Position;
+        move0[1] = move0[1] - points.Spatial_Radius / 4;
+        spatial_trigger.SetPosition(move0);
         SetNotificationPoint(spatial_trigger, points);
         SpatialLoggerPrint("Trigger at point: " + points.Spatial_Position + " - Radius: " + points.Spatial_Radius);
         SpatialLoggerPrint("Safe: " + points.Spatial_Safe + " - Faction: " + points.Spatial_Faction + " - Loadout: " + points.Spatial_ZoneLoadout + " - counts: " + points.Spatial_MinCount + ":" + points.Spatial_MaxCount);
@@ -363,6 +366,10 @@ class SpatialAI
           location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
           notification_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius * 2, location.Spatial_TriggerRadius);
           SetNotificationLocation(location_trigger, location);
+          vector move1 = location.Spatial_TriggerPosition;
+          move1[1] = move1[1] - (location.Spatial_TriggerRadius / 4);
+          location_trigger.SetPosition(move1);
+          notification_trigger.SetPosition(move1);
           location_trigger.Spatial_SetData(location, notification_trigger);
           SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
           SpatialLoggerPrint("Notification covering location at: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius * 2);
@@ -388,6 +395,10 @@ class SpatialAI
           audio_trigger.SetCollisionCylinder(audio.Spatial_TriggerRadius, audio.Spatial_TriggerRadius / 2);
           notification_trigger2.SetCollisionCylinder(audio.Spatial_TriggerRadius * 2, audio.Spatial_TriggerRadius);
           SetNotificationAudio(audio_trigger, audio);
+          vector move2 = audio.Spatial_TriggerPosition;
+          move2[1] = move2[1] - (audio.Spatial_TriggerRadius / 4);
+          audio_trigger.SetPosition(move2);
+          notification_trigger2.SetPosition(move2);
           audio_trigger.Spatial_SetData(audio, notification_trigger2);
           SpatialLoggerPrint("audio Trigger at location: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius + " - Spawn audio location: " + audio.Spatial_SpawnPosition);
           SpatialLoggerPrint("Notification covering audio location at: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius * 2);

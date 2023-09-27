@@ -16,7 +16,6 @@ class Audio_trigger: Spatial_TriggerBase
     void Audio_trigger()
     {
       GetSpatialSettings().PullRef(m_Spatial_Groups);   
-      GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(audiocheck, 15000, true, 5);
     }
 
     void Spatial_SetData(Spatial_Audio audio, Notification_Trigger b)
@@ -89,14 +88,18 @@ class Audio_trigger: Spatial_TriggerBase
     #endif
     }
 
-    void audiocheck(int loop)
+
+    //protected void OnStayStartServerEvent(int nrOfInsiders) {}
+
+    override void OnStayStartServerEvent(int nrOfInsiders)
     {
+      super.OnStayStartServerEvent(nrOfInsiders);
+      if (nrOfInsiders == 0) return;
+
         int totalnoise = 0;
-        int insidercount = m_insiders.Count();
-        if (loop < 1) return;
-        if (insidercount > 0)
+        if (nrOfInsiders > 0)
         {
-          for (int i = 0; i < insidercount; ++i)
+          for (int i = 0; i < nrOfInsiders; ++i)
           {
               PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
               if (!player) continue;
@@ -106,7 +109,7 @@ class Audio_trigger: Spatial_TriggerBase
           if (totalnoise > 0)
           {
             SpatialDebugPrint("Player noise in area: " + player_noise);
-            if ((totalnoise / insidercount) > insidercount)
+            if ((totalnoise / nrOfInsiders) > nrOfInsiders + 1)
             {
               SpatialDebugPrint("Spawning due to noise: " + player_noise);
               SpawnCheck();
@@ -114,7 +117,6 @@ class Audio_trigger: Spatial_TriggerBase
             }
           }
         }
-        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(audiocheck, 1000, false, --loop);
     }
 
     void Spatial_Spawn(int count, Spatial_Audio audio)
