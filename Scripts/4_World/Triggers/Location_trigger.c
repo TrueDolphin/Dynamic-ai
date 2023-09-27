@@ -1,32 +1,16 @@
 //!TODO: change this whole system to avoidplayer
 class Location_Trigger: Spatial_TriggerBase
 {
-    int i_PlayerCount;
-    bool Spatial_TimerCheck;
     vector Spatial_SpawnPosition;
-
-    eAISpatialPatrol dynPatrol;
     ref Spatial_Location location;
-    ref Spatial_Notification notification;
     Notification_Trigger notif_trigger;
-
-    ref Spatial_Groups m_Spatial_Groups;
     autoptr array<ref TriggerInsider> notif;
-
-    void Location_Trigger()
-    {
-      GetSpatialSettings().PullRef(m_Spatial_Groups);   
-    }
 
     void Spatial_SetData(Spatial_Location Location, Notification_Trigger b)
     {
       location = Location;
       notif_trigger = b;
     } //changed to class instead of individuals
-    void SetNotification(Spatial_Notification a)
-    {
-      notification = a;
-    }
     void SpawnCheck()
     {
       if (dynPatrol || Spatial_TimerCheck || m_insiders.Count() == 0) return;
@@ -55,11 +39,6 @@ class Location_Trigger: Spatial_TriggerBase
       SpatialDebugPrint("End LocationID: " + m_Groupid);
     }
 
-    void Spatial_timer()
-    {
-      Spatial_TimerCheck = false;
-    }
-
     override void Enter(TriggerInsider insider)
     {
       PlayerBase player = PlayerBase.Cast(insider.GetObject());
@@ -68,10 +47,6 @@ class Location_Trigger: Spatial_TriggerBase
         player.Spatial_InLocation(true, location.Spatial_HuntMode);
       } 
       super.Enter(insider);
-    #ifdef EXPANSIONMODNAVIGATION
-          if (GetSpatialSettings().Spatial_Debug())
-          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, player.GetPosition()), location.Spatial_Name + " Enter", m_Spatial_Groups.CleanupTimer);
-    #endif
       SpawnCheck();
     }
         
@@ -83,12 +58,9 @@ class Location_Trigger: Spatial_TriggerBase
         player.Spatial_InLocation(false, 0);
       }
       super.Leave(insider);
-    #ifdef EXPANSIONMODNAVIGATION
-          if (GetSpatialSettings().Spatial_Debug())
-          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, player.GetPosition()), location.Spatial_Name + " Exit", m_Spatial_Groups.CleanupTimer);
-    #endif
     }
 
+    //next plan - split spawn back into Spatial_Group and add a vector array check to Spatial_TriggerPosition
     void Spatial_Spawn(int count, Spatial_Location Location)
     {
       if (m_insiders.Count() == 0) return;
@@ -121,44 +93,4 @@ class Location_Trigger: Spatial_TriggerBase
       }
     }
 
-    void Spatial_message(PlayerBase player, int SpawnCount)
-    {
-        if (!player) return;
-        if (!notification)
-        {
-          notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
-        }
-        string title, text, faction, loadout;
-        int msg_no = notification.MessageType;
-        title = notification.MessageTitle;
-        text = notification.MessageText.GetRandomElement();
-        faction = location.Spatial_Faction;
-        loadout = location.Spatial_ZoneLoadout;
-        
-        string message = string.Format("Player: %1 Number: %2, Faction name: %3, Loadout: %4", player.GetIdentity().GetName(), SpawnCount, faction, loadout);
-        if (msg_no == 0)
-        {
-          SpatialLoggerPrint(message);
-        }else if (msg_no == 1)
-        {
-          Spatial_WarningMessage(player, string.Format("%1 %2", SpawnCount, text));
-          SpatialLoggerPrint(message);
-        } else if (msg_no == 2)
-        {
-          Spatial_WarningMessage(player, text);
-          SpatialLoggerPrint(message);
-        } else if (msg_no == 3)
-        {
-          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, string.Format("%1 %2", SpawnCount, text), "set:dayz_gui image:tutorials");
-          SpatialLoggerPrint(message);
-        } else if (msg_no == 4)
-        {
-          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
-          SpatialLoggerPrint(message);
-        } else if (msg_no == 5 && player.Spatial_HasGPSReceiver())
-        {
-          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
-          SpatialLoggerPrint(message);
-        }
-    } //chat message or vanilla notification
 }

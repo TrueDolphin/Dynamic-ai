@@ -1,6 +1,14 @@
+/*
+base used for locations and audio.
+prep for splitting the spawn function to use a vector array on Spatial_TriggerPosition
+*/
+
 class Spatial_TriggerBase: CylinderTrigger
 {
-
+    ref Spatial_Notification notification;
+    ref Spatial_Groups m_Spatial_Groups;
+    eAISpatialPatrol dynPatrol;
+    bool Spatial_TimerCheck;
 
 #ifdef EXPANSIONMODNAVIGATION
    //declares
@@ -27,44 +35,119 @@ class Spatial_TriggerBase: CylinderTrigger
 	}
 #endif
 
-  vector ValidPos(int enabled, vector pos)
+
+    void Spatial_TriggerBase()
     {
-        if (enabled == 2) return pos;
-        return ExpansionStatic.GetSurfacePosition(pos);
+      GetSpatialSettings().PullRef(m_Spatial_Groups);   
     }
 
-  bool ValidSpawn(vector pos)
-  {
-        return !GetCEApi().AvoidPlayer(pos, 5);
-  }
-
-  override protected bool CanAddObjectAsInsider(Object object)
-  {
-        if (!super.CanAddObjectAsInsider(object)) return false;
-        PlayerBase player = PlayerBase.Cast(object);
-        if (!player || !player.GetIdentity() || player.IsAI()) return false;
-        return true;
-  }
-
-  void Spatial_WarningMessage(PlayerBase player, string message)
-  {
-    if ((player) && (message != ""))
+    override void Enter(TriggerInsider insider)
     {
-        Param1 < string > Msgparam;
-        Msgparam = new Param1 < string > (message);
-        GetGame().RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
+      super.Enter(insider);
+    #ifdef EXPANSIONMODNAVIGATION
+          if (GetSpatialSettings().Spatial_Debug())
+          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, player.GetPosition()), location.Spatial_Name + " Enter", m_Spatial_Groups.CleanupTimer);
+    #endif
     }
-  } //Ingame chat message
 
-  void SpatialDebugPrint(string msg)
-  {
-        if (GetSpatialSettings().Spatial_Debug())
-            GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
-  } //expansion debug print
+    override void Leave(TriggerInsider insider)
+    {
+      super.Leave(insider);
+    #ifdef EXPANSIONMODNAVIGATION
+          if (GetSpatialSettings().Spatial_Debug())
+          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, player.GetPosition()), location.Spatial_Name + " Leave", m_Spatial_Groups.CleanupTimer);
+    #endif
+    }
 
-  void SpatialLoggerPrint(string msg)
-  {
-        GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
-  } //expansion logging
+    void Spatial_timer()
+    {
+      Spatial_TimerCheck = false;
+    }
+
+    void SetNotification(Spatial_Notification a)
+    {
+      notification = a;
+    }
+
+    vector ValidPos(int enabled, vector pos)
+      {
+          if (enabled == 2) return pos;
+          return ExpansionStatic.GetSurfacePosition(pos);
+      }
+
+    bool ValidSpawn(vector pos)
+    {
+          return !GetCEApi().AvoidPlayer(pos, 5);
+    }
+
+    override protected bool CanAddObjectAsInsider(Object object)
+    {
+          if (!super.CanAddObjectAsInsider(object)) return false;
+          PlayerBase player = PlayerBase.Cast(object);
+          if (!player || !player.GetIdentity() || player.IsAI()) return false;
+          return true;
+    }
+
+    void Spatial_WarningMessage(PlayerBase player, string message)
+    {
+      if ((player) && (message != ""))
+      {
+          Param1 < string > Msgparam;
+          Msgparam = new Param1 < string > (message);
+          GetGame().RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
+      }
+    } //Ingame chat message
+
+    void SpatialDebugPrint(string msg)
+    {
+          if (GetSpatialSettings().Spatial_Debug())
+              GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
+    } //expansion debug print
+
+    void SpatialLoggerPrint(string msg)
+    {
+          GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
+    } //expansion logging
+
+    void Spatial_message(PlayerBase player, int SpawnCount)
+    {
+        if (!player) return;
+        if (!notification)
+        {
+          notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+        }
+        string title, text, faction, loadout;
+        int msg_no = notification.MessageType;
+        title = notification.MessageTitle;
+        text = notification.MessageText.GetRandomElement();
+        faction = Audio.Spatial_Faction;
+        loadout = Audio.Spatial_ZoneLoadout;
+        
+        string message = string.Format("Player: %1 Number: %2, Faction name: %3, Loadout: %4", player.GetIdentity().GetName(), SpawnCount, faction, loadout);
+        if (msg_no == 0)
+        {
+          SpatialLoggerPrint(message);
+        }else if (msg_no == 1)
+        {
+          Spatial_WarningMessage(player, string.Format("%1 %2", SpawnCount, text));
+          SpatialLoggerPrint(message);
+        } else if (msg_no == 2)
+        {
+          Spatial_WarningMessage(player, text);
+          SpatialLoggerPrint(message);
+        } else if (msg_no == 3)
+        {
+          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, string.Format("%1 %2", SpawnCount, text), "set:dayz_gui image:tutorials");
+          SpatialLoggerPrint(message);
+        } else if (msg_no == 4)
+        {
+          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
+          SpatialLoggerPrint(message);
+        } else if (msg_no == 5 && player.Spatial_HasGPSReceiver())
+        {
+          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
+          SpatialLoggerPrint(message);
+        }
+    } //chat message or vanilla notification
 
 }

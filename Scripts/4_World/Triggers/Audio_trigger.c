@@ -1,32 +1,22 @@
 //!TODO: change this whole system to avoidplayer
 class Audio_trigger: Spatial_TriggerBase
 {
-    int i_PlayerCount;
-    bool Spatial_TimerCheck;
+    //allowed audio limits
+    const int SOUND_WALK = 1;
+    const int SOUND_JOG = 2;
+    const int SOUND_RUN = 3;
+
     vector Spatial_SpawnPosition;
-
-    eAISpatialPatrol dynPatrol;
     ref Spatial_Audio Audio;
-    ref Spatial_Notification notification;
     Notification_Trigger notif_trigger;
-
-    ref Spatial_Groups m_Spatial_Groups;
     autoptr array<ref TriggerInsider> notif;
-
-    void Audio_trigger()
-    {
-      GetSpatialSettings().PullRef(m_Spatial_Groups);   
-    }
 
     void Spatial_SetData(Spatial_Audio audio, Notification_Trigger b)
     {
       Audio = audio;
       notif_trigger = b;
     } //changed to class instead of individuals
-    void SetNotification(Spatial_Notification a)
-    {
-      notification = a;
-    }
+
     void SpawnCheck()
     {
       if (dynPatrol || Spatial_TimerCheck || m_insiders.Count() == 0) return;
@@ -55,11 +45,6 @@ class Audio_trigger: Spatial_TriggerBase
       SpatialDebugPrint("End audioID: " + m_Groupid);
     }
 
-    void Spatial_timer()
-    {
-      Spatial_TimerCheck = false;
-    }
-
     override void Enter(TriggerInsider insider)
     {
       PlayerBase player = PlayerBase.Cast(insider.GetObject());
@@ -68,10 +53,6 @@ class Audio_trigger: Spatial_TriggerBase
         player.Spatial_InLocation(true, Audio.Spatial_HuntMode);
       } 
       super.Enter(insider);
-    #ifdef EXPANSIONMODNAVIGATION
-          if (GetSpatialSettings().Spatial_Debug())
-          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, player.GetPosition()), Audio.Spatial_Name + " Enter", m_Spatial_Groups.CleanupTimer);
-    #endif
     }
 
     override void Leave(TriggerInsider insider)
@@ -82,14 +63,7 @@ class Audio_trigger: Spatial_TriggerBase
         player.Spatial_InLocation(false, 0);
       }
       super.Leave(insider);
-    #ifdef EXPANSIONMODNAVIGATION
-          if (GetSpatialSettings().Spatial_Debug())
-          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, player.GetPosition()), Audio.Spatial_Name + " Exit", m_Spatial_Groups.CleanupTimer);
-    #endif
     }
-
-
-    //protected void OnStayStartServerEvent(int nrOfInsiders) {}
 
     override void OnStayStartServerEvent(int nrOfInsiders)
     {
@@ -97,7 +71,7 @@ class Audio_trigger: Spatial_TriggerBase
       if (nrOfInsiders == 0) return;
 
         int totalnoise = 0;
-        if (nrOfInsiders > 0)
+        if (nrOfInsiders > 0) //divide by zero
         {
           for (int i = 0; i < nrOfInsiders; ++i)
           {
@@ -106,10 +80,10 @@ class Audio_trigger: Spatial_TriggerBase
               int player_noise = player.Spatial_GetNoise();
               totalnoise += player_noise;
           }
-          if (totalnoise > 0)
+          if (totalnoise > 0) //divide by zero
           {
             SpatialDebugPrint("Player noise in area: " + player_noise);
-            if ((totalnoise / nrOfInsiders) > nrOfInsiders + 1)
+            if ((totalnoise / nrOfInsiders) > SOUND_JOG)
             {
               SpatialDebugPrint("Spawning due to noise: " + player_noise);
               SpawnCheck();
@@ -119,6 +93,7 @@ class Audio_trigger: Spatial_TriggerBase
         }
     }
 
+    //next plan - split spawn back into Spatial_Group and add a vector array check to Spatial_TriggerPosition
     void Spatial_Spawn(int count, Spatial_Audio audio)
     {
       if (m_insiders.Count() == 0) return;
@@ -150,44 +125,4 @@ class Audio_trigger: Spatial_TriggerBase
       }
     }
 
-    void Spatial_message(PlayerBase player, int SpawnCount)
-    {
-        if (!player) return;
-        if (!notification)
-        {
-          notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
-        }
-        string title, text, faction, loadout;
-        int msg_no = notification.MessageType;
-        title = notification.MessageTitle;
-        text = notification.MessageText.GetRandomElement();
-        faction = Audio.Spatial_Faction;
-        loadout = Audio.Spatial_ZoneLoadout;
-        
-        string message = string.Format("Player: %1 Number: %2, Faction name: %3, Loadout: %4", player.GetIdentity().GetName(), SpawnCount, faction, loadout);
-        if (msg_no == 0)
-        {
-          SpatialLoggerPrint(message);
-        }else if (msg_no == 1)
-        {
-          Spatial_WarningMessage(player, string.Format("%1 %2", SpawnCount, text));
-          SpatialLoggerPrint(message);
-        } else if (msg_no == 2)
-        {
-          Spatial_WarningMessage(player, text);
-          SpatialLoggerPrint(message);
-        } else if (msg_no == 3)
-        {
-          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, string.Format("%1 %2", SpawnCount, text), "set:dayz_gui image:tutorials");
-          SpatialLoggerPrint(message);
-        } else if (msg_no == 4)
-        {
-          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
-          SpatialLoggerPrint(message);
-        } else if (msg_no == 5 && player.Spatial_HasGPSReceiver())
-        {
-          NotificationSystem.SendNotificationToPlayerExtended(player, 5, title, text, "set:dayz_gui image:tutorials");
-          SpatialLoggerPrint(message);
-        }
-    } //chat message or vanilla notification
 }
