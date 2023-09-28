@@ -5,16 +5,21 @@ class Audio_trigger: Spatial_TriggerBase
     const int SOUND_WALK = 1;
     const int SOUND_JOG = 2;
     const int SOUND_RUN = 3;
+    const int SOUND_GUNFIRE = 1000;
 
     vector Spatial_SpawnPosition;
     ref Spatial_Audio Audio;
     Notification_Trigger notif_trigger;
     autoptr array<ref TriggerInsider> notif;
+    bool cooldown = false;
 
     void Spatial_SetData(Spatial_Audio audio, Notification_Trigger b)
     {
       Audio = audio;
       notif_trigger = b;
+      TriggerName = audio.Spatial_Name;
+      TriggerLoadout = audio.Spatial_ZoneLoadout;
+      TriggerFaction = audio.Spatial_Faction;
     } //changed to class instead of individuals
 
     void SpawnCheck()
@@ -51,6 +56,7 @@ class Audio_trigger: Spatial_TriggerBase
       if (player && Audio)
       {
         player.Spatial_InLocation(true, Audio.Spatial_HuntMode);
+        player.Spatial_Firing(0);
       } 
       super.Enter(insider);
     }
@@ -69,28 +75,57 @@ class Audio_trigger: Spatial_TriggerBase
     {
       super.OnStayStartServerEvent(nrOfInsiders);
       if (nrOfInsiders == 0) return;
+      
+      
+      //! wtf
 
-        int totalnoise = 0;
-        if (nrOfInsiders > 0) //divide by zero
+      if (!cooldown && dynPatrol) 
+      {
+        for (int d = 0; d < nrOfInsiders; ++d)
         {
-          for (int i = 0; i < nrOfInsiders; ++i)
-          {
-              PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
-              if (!player) continue;
-              int player_noise = player.Spatial_GetNoise();
-              totalnoise += player_noise;
-          }
-          if (totalnoise > 0) //divide by zero
-          {
-            SpatialDebugPrint("Player noise in area: " + player_noise);
-            if ((totalnoise / nrOfInsiders) > SOUND_JOG)
+            PlayerBase playerfiring = PlayerBase.Cast(m_insiders.Get(d).GetObject());
+            if (!playerfiring || cooldown) continue;
+            if (playerfiring.Spatial_GetNoise() > 4)
             {
-              SpatialDebugPrint("Spawning due to noise: " + player_noise);
-              SpawnCheck();
-              return;  
+              dynPatrol.CheckLocation(playerfiring.GetPosition());
+              cooldown = true;
+              GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(EndCooldown, 10000, false);
             }
+        }
+      }
+
+      if (cooldown || dynPatrol) return;
+
+
+      //from here on works flawlessly
+      int totalnoise = 0;
+      if (nrOfInsiders > 0) //divide by zero
+      {
+        for (int i = 0; i < nrOfInsiders; ++i)
+        {
+            PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
+            if (!player) continue;
+            int player_noise = player.Spatial_GetNoise();
+            if (player_noise > 4) 
+            {
+              totalnoise += SOUND_GUNFIRE;
+              SpatialDebugPrint("Loud Noise Detected: " + player_noise);
+            }
+            else
+            {
+              totalnoise += player_noise;
+            }
+        }
+        if (totalnoise > 0) //divide by zero
+        {
+          if ((totalnoise / nrOfInsiders) > SOUND_JOG)
+          {
+            SpatialDebugPrint("Spawning due to noise: " + totalnoise);
+            SpawnCheck();
+            return;  
           }
         }
+      }
     }
 
     //next plan - split spawn back into Spatial_Group and add a vector array check to Spatial_TriggerPosition
@@ -123,6 +158,11 @@ class Audio_trigger: Spatial_TriggerBase
         PlayerBase player = PlayerBase.Cast(notif[i].GetObject());
         if (player) Spatial_message(player, count);
       }
+    }
+
+    void EndCooldown()
+    {
+      cooldown = false;
     }
 
 }

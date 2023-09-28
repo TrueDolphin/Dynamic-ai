@@ -10,6 +10,9 @@ class Location_Trigger: Spatial_TriggerBase
     {
       location = Location;
       notif_trigger = b;
+      TriggerName = Location.Spatial_Name;
+      TriggerLoadout = Location.Spatial_ZoneLoadout;
+      TriggerFaction = Location.Spatial_Faction;
     } //changed to class instead of individuals
     void SpawnCheck()
     {

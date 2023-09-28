@@ -9,6 +9,8 @@ class Spatial_TriggerBase: CylinderTrigger
     ref Spatial_Groups m_Spatial_Groups;
     eAISpatialPatrol dynPatrol;
     bool Spatial_TimerCheck;
+    string TriggerName, TriggerLoadout, TriggerFaction;
+
 
 #ifdef EXPANSIONMODNAVIGATION
    //declares
@@ -46,7 +48,10 @@ class Spatial_TriggerBase: CylinderTrigger
       super.Enter(insider);
     #ifdef EXPANSIONMODNAVIGATION
           if (GetSpatialSettings().Spatial_Debug())
-          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, player.GetPosition()), location.Spatial_Name + " Enter", m_Spatial_Groups.CleanupTimer);
+          {
+            PlayerBase PlayerMarker = PlayerBase.Cast(insider.GetObject());
+            CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, PlayerMarker.GetPosition()), TriggerName + " Enter", m_Spatial_Groups.CleanupTimer);
+          }
     #endif
     }
 
@@ -55,7 +60,10 @@ class Spatial_TriggerBase: CylinderTrigger
       super.Leave(insider);
     #ifdef EXPANSIONMODNAVIGATION
           if (GetSpatialSettings().Spatial_Debug())
-          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, player.GetPosition()), location.Spatial_Name + " Leave", m_Spatial_Groups.CleanupTimer);
+          {
+          PlayerBase PlayerMarker = PlayerBase.Cast(insider.GetObject());
+          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, PlayerMarker.GetPosition()), TriggerName + " Leave", m_Spatial_Groups.CleanupTimer);
+          }
     #endif
     }
 
@@ -120,8 +128,8 @@ class Spatial_TriggerBase: CylinderTrigger
         int msg_no = notification.MessageType;
         title = notification.MessageTitle;
         text = notification.MessageText.GetRandomElement();
-        faction = Audio.Spatial_Faction;
-        loadout = Audio.Spatial_ZoneLoadout;
+        faction = TriggerFaction;
+        loadout = TriggerLoadout;
         
         string message = string.Format("Player: %1 Number: %2, Faction name: %3, Loadout: %4", player.GetIdentity().GetName(), SpawnCount, faction, loadout);
         if (msg_no == 0)

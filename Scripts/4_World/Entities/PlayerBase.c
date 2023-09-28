@@ -8,7 +8,7 @@ modded class PlayerBase
     int Spatial_LocationHunt = 0;
     bool Spatial_InLocation;
 
-    int Spatial_noisepresence = 0;
+    int Spatial_Firing = 0;
 
     int m_Spatial_Birthday;
     bool Spatial_UnlimitedReload;
@@ -54,6 +54,11 @@ modded class PlayerBase
     {
         Spatial_Group group = new Spatial_Group(m_spatial_point.Spatial_MinCount, m_spatial_point.Spatial_MaxCount, 100, m_spatial_point.Spatial_ZoneLoadout, m_spatial_point.Spatial_Faction, m_spatial_point.Spatial_Name, m_spatial_point.Spatial_Lootable, m_spatial_point.Spatial_Chance, m_spatial_point.Spatial_MinAccuracy, m_spatial_point.Spatial_MaxAccuracy, m_spatial_point.Spatial_UnlimitedReload);
         return group;
+    }
+
+    void Spatial_Firing(int a)
+    {
+        Spatial_Firing = a;
     }
 
     void Spatial_SetInZone(bool in)
@@ -194,6 +199,7 @@ modded class PlayerBase
 		{
 			noise = NoiseAIEvaluate.GetNoiseMultiplier(this);
 			noise = Math.Round(noise * 5);
+            noise += Spatial_Firing;
 		}
 		return Math.Clamp(noise, 0, 5);
     } //NoiseAIEvaluate exists serverside

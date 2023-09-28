@@ -122,4 +122,11 @@ class SpatialBase : eAIPatrol
 		vector waypoint = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(position, distance, (distance * 1.5)));
 		AiGroup.AddWaypoint(waypoint); 
 	}//TrailingPos(pos, distance, m_Group);
+
+	void CheckLocation(vector pos)
+	{
+		if (m_Group)
+		m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(pos, 0, 6));
+	}//audio reasonable location
+
 }
