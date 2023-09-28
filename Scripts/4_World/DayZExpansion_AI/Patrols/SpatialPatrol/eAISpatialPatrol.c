@@ -323,7 +323,7 @@ class eAISpatialPatrol : SpatialBase
 
 			if (m_Huntmode == 2)
 			{
-				if (m_Group.GetWaypoints().Count() <= 1)
+				if (m_Group.GetWaypoints().Count() < 1)
 				{
 						for (int wpg2 = 0; wpg2 <= 2; ++wpg2)
 							m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(leader.GetPosition(), 10, 20));

@@ -127,8 +127,11 @@ class SpatialBase : eAIPatrol
 	void CheckLocation(vector pos)
 	{
 		if (m_Group)
-		m_Group.ClearWaypoints();
-		m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(pos, 0, 6));
+		{
+			m_Group.ClearWaypoints();
+			m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(pos, 0, 6));
+		}
+
 	}//audio reasonable location
 
 }

@@ -11,7 +11,6 @@ class Audio_trigger: Spatial_TriggerBase
     ref Spatial_Audio Audio;
     Notification_Trigger notif_trigger;
     autoptr array<ref TriggerInsider> notif;
-    bool cooldown = false;
 
     void Spatial_SetData(Spatial_Audio audio, Notification_Trigger b)
     {
@@ -78,9 +77,10 @@ class Audio_trigger: Spatial_TriggerBase
       
       if (dynPatrol || Spatial_TimerCheck) return;
 
-      int totalnoise = 0;
+
       if (nrOfInsiders > 0) //divide by zero
       {
+        int totalnoise = 0;
         for (int i = 0; i < nrOfInsiders; ++i)
         {
             PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
@@ -140,10 +140,5 @@ class Audio_trigger: Spatial_TriggerBase
         if (player) Spatial_message(player, count);
       }
     }
-
-    void EndCooldown()
-    {
-      cooldown = false;
-    }
-
+    
 }
