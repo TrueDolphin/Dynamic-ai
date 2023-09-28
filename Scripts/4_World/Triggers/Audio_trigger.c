@@ -76,28 +76,8 @@ class Audio_trigger: Spatial_TriggerBase
       super.OnStayStartServerEvent(nrOfInsiders);
       if (nrOfInsiders == 0) return;
       
-      
-      //! wtf
+      if (dynPatrol || Spatial_TimerCheck) return;
 
-      if (!cooldown && dynPatrol) 
-      {
-        for (int d = 0; d < nrOfInsiders; ++d)
-        {
-            PlayerBase playerfiring = PlayerBase.Cast(m_insiders.Get(d).GetObject());
-            if (!playerfiring || cooldown) continue;
-            if (playerfiring.Spatial_GetNoise() > 4)
-            {
-              dynPatrol.CheckLocation(playerfiring.GetPosition());
-              cooldown = true;
-              GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(EndCooldown, 10000, false);
-            }
-        }
-      }
-
-      if (cooldown || dynPatrol) return;
-
-
-      //from here on works flawlessly
       int totalnoise = 0;
       if (nrOfInsiders > 0) //divide by zero
       {
@@ -118,6 +98,7 @@ class Audio_trigger: Spatial_TriggerBase
         }
         if (totalnoise > 0) //divide by zero
         {
+
           if ((totalnoise / nrOfInsiders) > SOUND_JOG)
           {
             SpatialDebugPrint("Spawning due to noise: " + totalnoise);

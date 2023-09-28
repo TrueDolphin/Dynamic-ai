@@ -31,7 +31,7 @@ class SpatialBase : eAIPatrol
 		int i;
 		float c = (m_Spatial_Groups.EngageTimer / 2500) + 1;
 		m_Group.ClearWaypoints();
-		m_Group.m_BackTracking = true;
+		m_Group.m_BackTracking = false;
 		switch (m_Mode)
     	{
 			case 1: 
@@ -53,6 +53,7 @@ class SpatialBase : eAIPatrol
 			break;
 			case 5: 
 				//mix of 4 and 6 sorta
+				m_Group.m_BackTracking = true;
 				for (i = 0; i <= c; ++i) Spatial_PointGen(ai, m_Group, player);
 			break;
 			case 6: 
@@ -126,6 +127,7 @@ class SpatialBase : eAIPatrol
 	void CheckLocation(vector pos)
 	{
 		if (m_Group)
+		m_Group.ClearWaypoints();
 		m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(pos, 0, 6));
 	}//audio reasonable location
 

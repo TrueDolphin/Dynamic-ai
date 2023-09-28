@@ -30,6 +30,7 @@ class eAISpatialPatrol : SpatialBase
 	string m_GroupName;
 	float m_TimeSinceLastSpawn;
 	bool m_CanSpawn;
+	bool m_Cooldown;
 	private bool m_WasGroupDestroyed;
 
 	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
@@ -61,6 +62,7 @@ class eAISpatialPatrol : SpatialBase
 		patrol.m_CanSpawn = true;
 		patrol.m_Location = 0;
 		patrol.m_Huntmode = HuntMode;
+		patrol.m_Cooldown = false;
 		GetSpatialSettings().PullRef(patrol.m_Spatial_Groups);
 		if (patrol.m_Faction == null) patrol.m_Faction = new eAIFactionCivilian();
 		if (patrol.m_Formation == null) patrol.m_Formation = new eAIFormationVee();
@@ -288,6 +290,36 @@ class eAISpatialPatrol : SpatialBase
 				m_TimeSinceLastSpawn += eAIPatrol.UPDATE_RATE_IN_SECONDS;
 				if (m_TimeSinceLastSpawn >= m_DespawnTime) Despawn();
 			}
+			else
+			{
+				//! wtf
+				if (!m_Cooldown) 
+				{
+					array<Man> m_Players;
+					GetGame().GetPlayers(m_Players);
+					if (m_Players)
+					{
+						int playercount = m_Players.Count();
+						if (playercount > 0)
+						{
+							for (int d = 0; d < playercount; ++d)
+							{
+								PlayerBase playerfiring = PlayerBase.Cast(m_Players[d]);
+								if (!playerfiring || m_Cooldown) continue;
+								if (vector.DistanceSq(patrolPos, playerfiring.GetPosition()) > m_ThreatDistanceLimit) continue;
+
+								if (playerfiring.Spatial_GetNoise() > 4)
+								{
+								CheckLocation(playerfiring.GetPosition());
+								m_Cooldown = true;
+								GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(EndCooldown, 10000, false);
+								}
+							}
+						}
+					}
+
+				}
+			}
 
 			if (m_Huntmode == 2)
 			{
@@ -307,6 +339,11 @@ class eAISpatialPatrol : SpatialBase
 			} 
 		}
 	}//edited
+
+	void EndCooldown()
+	{
+		m_Cooldown = false;
+	}
 
 	override void Debug()
     {

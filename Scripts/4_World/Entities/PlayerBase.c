@@ -8,7 +8,7 @@ modded class PlayerBase
     int Spatial_LocationHunt = 0;
     bool Spatial_InLocation;
 
-    int Spatial_Firing = 0;
+    bool Spatial_Firing = false;
 
     int m_Spatial_Birthday;
     bool Spatial_UnlimitedReload;
@@ -199,7 +199,7 @@ modded class PlayerBase
 		{
 			noise = NoiseAIEvaluate.GetNoiseMultiplier(this);
 			noise = Math.Round(noise * 5);
-            noise += Spatial_Firing;
+            if (Spatial_Firing) noise = 5;
 		}
 		return Math.Clamp(noise, 0, 5);
     } //NoiseAIEvaluate exists serverside
