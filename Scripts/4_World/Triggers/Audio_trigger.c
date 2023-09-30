@@ -23,7 +23,7 @@ class Audio_trigger: Spatial_TriggerBase
 
     void SpawnCheck()
     {
-      if (dynPatrol || Spatial_TimerCheck || m_insiders.Count() == 0) return;
+      if (dynPatrol.Count() > 0 || Spatial_TimerCheck || m_insiders.Count() == 0) return;
 
       int m_Groupid = Math.RandomIntInclusive(10001, 15000);
       SpatialDebugPrint("audioID: " + m_Groupid);
@@ -36,11 +36,6 @@ class Audio_trigger: Spatial_TriggerBase
       {
         Spatial_Spawn(SpawnCount, Audio);
         Spatial_TimerCheck = true;
-
-    #ifdef EXPANSIONMODNAVIGATION
-          if (GetSpatialSettings().Spatial_Debug())
-          CreateMissionMarker(m_Groupid, ValidPos(m_Spatial_Groups.Audio_Enabled, Audio.Spatial_SpawnPosition), Audio.Spatial_Name + " Spawn", m_Spatial_Groups.CleanupTimer);
-    #endif
 
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, Audio.Spatial_Timer, false);
       } else {
@@ -75,8 +70,7 @@ class Audio_trigger: Spatial_TriggerBase
       super.OnStayStartServerEvent(nrOfInsiders);
       if (nrOfInsiders == 0) return;
       
-      if (dynPatrol || Spatial_TimerCheck) return;
-
+      if (dynPatrol.Count() > 0 || Spatial_TimerCheck) return;
 
       if (nrOfInsiders > 0) //divide by zero
       {
@@ -86,20 +80,22 @@ class Audio_trigger: Spatial_TriggerBase
             PlayerBase player = PlayerBase.Cast(m_insiders.Get(i).GetObject());
             if (!player) continue;
             int player_noise = player.Spatial_GetNoise();
-            if (player_noise > 4) 
+            if (player_noise == 1000) 
             {
               totalnoise += SOUND_GUNFIRE;
               SpatialDebugPrint("Loud Noise Detected: " + player_noise);
             }
             else
             {
+              player_noise = Math.Round(player_noise * 5);
+              Math.Clamp(player_noise, 0, 5);
               totalnoise += player_noise;
             }
         }
         if (totalnoise > 0) //divide by zero
         {
 
-          if ((totalnoise / nrOfInsiders) > SOUND_JOG)
+          if ((totalnoise / nrOfInsiders) > Audio.Spatial_Sensitivity)
           {
             SpatialDebugPrint("Spawning due to noise: " + totalnoise);
             SpawnCheck();
@@ -116,23 +112,64 @@ class Audio_trigger: Spatial_TriggerBase
       PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
       if (!playerInsider || playerInsider.IsAI() || !playerInsider.GetIdentity()) return;
       SpatialDebugPrint(playerInsider.GetIdentity().GetName());
-      vector startpos = ValidPos(m_Spatial_Groups.Audio_Enabled, Audio.Spatial_SpawnPosition);
-      TVectorArray waypoints = { ValidPos(m_Spatial_Groups.Audio_Enabled, Audio.Spatial_SpawnPosition) };
+
       string Formation = "RANDOM";
       eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
       if (audio.Spatial_HuntMode == 3) 
         behaviour = typename.StringToEnum(eAIWaypointBehavior, "HALT");
+      vector startpos;
+      TVectorArray waypoints;
+      eAISpatialPatrol DynPatrol;
       int mindistradius, maxdistradius, despawnradius;
       mindistradius = 0;
       maxdistradius = 1000;
       despawnradius = 1200;
-      dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, audio.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(audio.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, audio.Spatial_HuntMode, 3.0, audio.Spatial_Lootable, audio.Spatial_UnlimitedReload);
-      if (dynPatrol)
+
+      if (Audio.Spatial_SpawnMode == 0) 
       {
-        dynPatrol.SetAccuracy(audio.Spatial_MinAccuracy, audio.Spatial_MaxAccuracy);
-        dynPatrol.SetGroupName(audio.Spatial_Name);
-        dynPatrol.SetSniperProneDistanceThreshold(0.0);
+        vector interm = Audio.Spatial_SpawnPosition.GetRandomElement();
+        startpos = ValidPos(m_Spatial_Groups.Audio_Enabled, interm);
+        waypoints = { ValidPos(m_Spatial_Groups.Audio_Enabled, interm) };
+        DynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, audio.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(audio.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, audio.Spatial_HuntMode, 3.0, audio.Spatial_Lootable, audio.Spatial_UnlimitedReload);
+        if (DynPatrol)
+        {
+          DynPatrol.SetAccuracy(audio.Spatial_MinAccuracy, audio.Spatial_MaxAccuracy);
+          DynPatrol.SetGroupName(audio.Spatial_Name);
+          DynPatrol.SetSniperProneDistanceThreshold(0.0);
+          dynPatrol.Insert(DynPatrol);
+
+    #ifdef EXPANSIONMODNAVIGATION
+          if (GetSpatialSettings().Spatial_Debug())
+          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Audio_Enabled, startpos), Audio.Spatial_Name + " Spawn", m_Spatial_Groups.CleanupTimer);
+    #endif
+        } 
       }
+
+      if (Audio.Spatial_SpawnMode == 1)
+      {
+        int recount = 0;
+        foreach (vector pos : Audio.Spatial_SpawnPosition)
+        {
+          startpos = ValidPos(m_Spatial_Groups.Audio_Enabled, pos);
+          waypoints = { ValidPos(m_Spatial_Groups.Audio_Enabled, pos) };
+          DynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, audio.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(audio.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, audio.Spatial_HuntMode, 3.0, audio.Spatial_Lootable, audio.Spatial_UnlimitedReload);
+          if (DynPatrol)
+          {
+            DynPatrol.SetAccuracy(audio.Spatial_MinAccuracy, audio.Spatial_MaxAccuracy);
+            DynPatrol.SetGroupName(audio.Spatial_Name);
+            DynPatrol.SetSniperProneDistanceThreshold(0.0);
+            recount += count;
+            dynPatrol.Insert(DynPatrol);
+
+    #ifdef EXPANSIONMODNAVIGATION
+          if (GetSpatialSettings().Spatial_Debug())
+          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Audio_Enabled, startpos), Audio.Spatial_Name + " Spawn", m_Spatial_Groups.CleanupTimer);
+    #endif
+          }
+        }
+        count = recount;
+      }
+
       notif = notif_trigger.GetInsiders();
       for (int i = 0; i < notif.Count(); ++i)
       {

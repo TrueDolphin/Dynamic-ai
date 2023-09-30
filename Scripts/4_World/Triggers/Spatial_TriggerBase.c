@@ -7,7 +7,7 @@ class Spatial_TriggerBase: CylinderTrigger
 {
     ref Spatial_Notification notification;
     ref Spatial_Groups m_Spatial_Groups;
-    eAISpatialPatrol dynPatrol;
+    ref array<ref eAISpatialPatrol> dynPatrol;
     bool Spatial_TimerCheck;
     string TriggerName, TriggerLoadout, TriggerFaction;
 
@@ -40,6 +40,7 @@ class Spatial_TriggerBase: CylinderTrigger
 
     void Spatial_TriggerBase()
     {
+      dynPatrol = {};
       GetSpatialSettings().PullRef(m_Spatial_Groups);   
     }
 

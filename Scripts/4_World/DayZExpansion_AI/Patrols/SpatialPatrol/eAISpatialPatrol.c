@@ -1,5 +1,5 @@
 /*
-13/8/2023
+30/9/2023
 spatial patrol
 */
 class eAISpatialPatrol : SpatialBase
@@ -257,6 +257,9 @@ class eAISpatialPatrol : SpatialBase
 
 		if ( WasGroupDestroyed() && m_RespawnTime < 0 ) return;
 		
+		//hard cleanup
+		if (m_WasGroupDestroyed) this.Delete();
+
 		if (!m_CanSpawn && (!m_Group || m_WasGroupDestroyed))
 		{
 			m_TimeSinceLastSpawn += eAIPatrol.UPDATE_RATE_IN_SECONDS;
@@ -295,29 +298,7 @@ class eAISpatialPatrol : SpatialBase
 				//! wtf
 				if (!m_Cooldown) 
 				{
-					array<Man> m_Players;
-					GetGame().GetPlayers(m_Players);
-					if (m_Players)
-					{
-						int playercount = m_Players.Count();
-						if (playercount > 0)
-						{
-							for (int d = 0; d < playercount; ++d)
-							{
-								PlayerBase playerfiring = PlayerBase.Cast(m_Players[d]);
-								if (!playerfiring || m_Cooldown) continue;
-								if (vector.DistanceSq(patrolPos, playerfiring.GetPosition()) > m_ThreatDistanceLimit) continue;
-
-								if (playerfiring.Spatial_GetNoise() > 4)
-								{
-								CheckLocation(playerfiring.GetPosition());
-								m_Cooldown = true;
-								GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(EndCooldown, 10000, false);
-								}
-							}
-						}
-					}
-
+					AudioMovement(patrolPos);
 				}
 			}
 
@@ -343,6 +324,32 @@ class eAISpatialPatrol : SpatialBase
 	void EndCooldown()
 	{
 		m_Cooldown = false;
+	}
+
+	void AudioMovement(vector pos)
+	{
+		array<Man> m_Players;
+		GetGame().GetPlayers(m_Players);
+		if (m_Players)
+		{
+			int playercount = m_Players.Count();
+			if (playercount > 0)
+			{
+				for (int d = 0; d < playercount; ++d)
+				{
+					PlayerBase playerfiring = PlayerBase.Cast(m_Players[d]);
+					if (!playerfiring || m_Cooldown) continue;
+					if (vector.DistanceSq(pos, playerfiring.GetPosition()) > m_ThreatDistanceLimit) continue;
+
+					if (playerfiring.Spatial_GetNoise() == 1000)
+					{
+						CheckLocation(playerfiring.GetPosition());
+						m_Cooldown = true;
+						GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(EndCooldown, 10000, false);
+					}
+				}
+			}
+		}
 	}
 
 	override void Debug()

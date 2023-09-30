@@ -1,4 +1,5 @@
 //CF Dependancies here.
+//30/9/2023
 
 modded class PlayerBase
 {
@@ -192,16 +193,14 @@ modded class PlayerBase
         return false;
     } //compare offset to birthday
 
-    int Spatial_GetNoise()
+    int Spatial_GetNoise(float noise = 0)
     {
-        float noise = 0;
 		if (this)
 		{
-			noise = NoiseAIEvaluate.GetNoiseMultiplier(this);
-			noise = Math.Round(noise * 5);
-            if (Spatial_Firing) noise = 5;
+			noise += NoiseAIEvaluate.GetNoiseMultiplier(this);
+            if (Spatial_Firing) noise = 1000;
 		}
-		return Math.Clamp(noise, 0, 5);
+		return noise;
     } //NoiseAIEvaluate exists serverside
 
     void SpatialDebugPrint(string msg)

@@ -1,9 +1,11 @@
 /*
 moved spatial stuff as much as possible out of the eAISpatialPatrol class
 sick of little things breaking because of dumb ideas/silly mistakes.
+
+30/9/2023
 */
 
-class SpatialBase : eAIPatrol
+class SpatialBase : SpatialPatrol
 {
 
     //compatibility moves

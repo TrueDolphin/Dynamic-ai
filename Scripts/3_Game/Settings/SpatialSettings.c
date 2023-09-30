@@ -1,5 +1,5 @@
 /*
-27/9/2023
+30/9/2023
 spatial settings
 */
 class SpatialSettings
@@ -277,6 +277,8 @@ class SpatialSettings
           {
             location.Spatial_TriggerPosition[1] = 1;
           }
+          if (location.Spatial_SpawnMode > 1 || location.Spatial_SpawnMode < 0)
+            location.Spatial_SpawnMode = 0;
         }
     }
 
@@ -288,6 +290,8 @@ class SpatialSettings
           {
             audio.Spatial_TriggerPosition[1] = 1;
           }
+          if (audio.Spatial_SpawnMode > 1 || audio.Spatial_SpawnMode < 0)
+              audio.Spatial_SpawnMode = 0;
         }
     }
   } //load from file/data checks
@@ -303,11 +307,11 @@ class SpatialSettings
     Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
     Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
 
-    Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 1.0 0.0", "0.0 1.0 0.0"));
-    Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 1.0 0.0", "0.0 1.0 0.0"));
-    
-    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 1.0 0.0", "0.0 1.0 0.0"));
-    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, false, "0.0 1.0 0.0", "0.0 1.0 0.0"));
+    Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+    Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+
+    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
   } //generate default array data
 
   void loggerPrint(string msg)
@@ -453,22 +457,22 @@ class Spatial_Point
   bool Spatial_UnlimitedReload;
   vector Spatial_Position;
 
-  void Spatial_Point(string i, bool a, float b, string c, int d, int e, int h, string f, int j, float k, float m, float n, bool l, vector g)
+  void Spatial_Point(string a, bool b, float c, string d, int e, int f, int g, string h, int i, float j, float k, float l, bool m, vector n)
   {
-    Spatial_Name = i;
-    Spatial_Safe = a;
-    Spatial_Radius = b;
-    Spatial_ZoneLoadout = c;
-    Spatial_MinCount = d;
-    Spatial_MaxCount = e;
-    Spatial_HuntMode = h;
-    Spatial_Faction = f;
-    Spatial_Lootable = j;
-    Spatial_Chance = k;
-    Spatial_MinAccuracy = m;
-    Spatial_MaxAccuracy = n;
-    Spatial_UnlimitedReload = l;
-    Spatial_Position = g;
+    Spatial_Name = a;
+    Spatial_Safe = b;
+    Spatial_Radius = c;
+    Spatial_ZoneLoadout = d;
+    Spatial_MinCount = e;
+    Spatial_MaxCount = f;
+    Spatial_HuntMode = g;
+    Spatial_Faction = h;
+    Spatial_Lootable = i;
+    Spatial_Chance = j;
+    Spatial_MinAccuracy = k;
+    Spatial_MaxAccuracy = l;
+    Spatial_UnlimitedReload = m;
+    Spatial_Position = n;
   }
 };
 
@@ -482,26 +486,30 @@ class Spatial_Location
   string  Spatial_Faction;
   int  Spatial_Lootable;
   float  Spatial_Chance, Spatial_MinAccuracy, Spatial_MaxAccuracy, Spatial_Timer;
+  int Spatial_SpawnMode;
   bool Spatial_UnlimitedReload;
-  vector  Spatial_TriggerPosition, Spatial_SpawnPosition;
+  vector  Spatial_TriggerPosition; 
+  ref TVectorArray Spatial_SpawnPosition;
 
-  void Spatial_Location(string i, float b, string c, int d, int e, int h, string f, int j, float k, float n, float o, float l, bool m, vector g, vector a )
+  void Spatial_Location(string a, float b, string c, int d, int e, int f, string g, int h, float i, float j, float k, float l, int m, bool n, vector o, TVectorArray p ) // one left
   {
-    Spatial_Name = i;
+    //one left
+    Spatial_Name = a;
     Spatial_TriggerRadius = b;
     Spatial_ZoneLoadout = c;
     Spatial_MinCount = d;
     Spatial_MaxCount = e;
-    Spatial_HuntMode = h;
-    Spatial_Faction = f;
-    Spatial_Lootable = j;
-    Spatial_Chance = k;
-    Spatial_MinAccuracy = n;
-    Spatial_MaxAccuracy = o;
+    Spatial_HuntMode = f;
+    Spatial_Faction = g;
+    Spatial_Lootable = h;
+    Spatial_Chance = i;
+    Spatial_MinAccuracy = j;
+    Spatial_MaxAccuracy = k;
     Spatial_Timer = l;
-    Spatial_UnlimitedReload = m;
-    Spatial_TriggerPosition = g;
-    Spatial_SpawnPosition = a;
+    Spatial_SpawnMode = m;
+    Spatial_UnlimitedReload = n;
+    Spatial_TriggerPosition = o;
+    Spatial_SpawnPosition = p;
   }
 };
 
@@ -514,27 +522,32 @@ class Spatial_Audio
   int  Spatial_HuntMode;
   string  Spatial_Faction;
   int  Spatial_Lootable;
-  float  Spatial_Chance, Spatial_MinAccuracy, Spatial_MaxAccuracy, Spatial_Timer;
+  float  Spatial_Chance, Spatial_MinAccuracy, Spatial_MaxAccuracy, Spatial_Timer, Spatial_Sensitivity;
+  int Spatial_SpawnMode;
   bool Spatial_UnlimitedReload;
-  vector  Spatial_TriggerPosition, Spatial_SpawnPosition;
+  vector  Spatial_TriggerPosition; 
+  ref TVectorArray Spatial_SpawnPosition;
 
-  void Spatial_Audio(string i, float b, string c, int d, int e, int h, string f, int j, float k, float n, float o, float l, bool m, vector g, vector a )
+  void Spatial_Audio(string a, float b, string c, int d, int e, int f, string g, int h, float i, float j, float k, float l,int m, float n, bool o, vector p, TVectorArray q ) //maxed
   {
-    Spatial_Name = i;
+    //maxed
+    Spatial_Name = a;
     Spatial_TriggerRadius = b;
     Spatial_ZoneLoadout = c;
     Spatial_MinCount = d;
     Spatial_MaxCount = e;
-    Spatial_HuntMode = h;
-    Spatial_Faction = f;
-    Spatial_Lootable = j;
-    Spatial_Chance = k;
-    Spatial_MinAccuracy = n;
-    Spatial_MaxAccuracy = o;
+    Spatial_HuntMode = f;
+    Spatial_Faction = g;
+    Spatial_Lootable = h;
+    Spatial_Chance = i;
+    Spatial_MinAccuracy = j;
+    Spatial_MaxAccuracy = k;
     Spatial_Timer = l;
-    Spatial_UnlimitedReload = m;
-    Spatial_TriggerPosition = g;
-    Spatial_SpawnPosition = a;
+    Spatial_Sensitivity = m;
+    Spatial_SpawnMode = n;
+    Spatial_UnlimitedReload = o;
+    Spatial_TriggerPosition = p;
+    Spatial_SpawnPosition = q;
   }
 };
 

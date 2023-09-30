@@ -1,6 +1,10 @@
+/*
+polygon zone - wip
+should actually get ready to test this...
 
-//polygon zone - wip
-//should actually get ready to test this...
+
+using due to private con/decon on eAIPatrol - 30/9/2023
+*/
 
 class SpatialPatrol : Managed
 {
@@ -21,16 +25,15 @@ class SpatialPatrol : Managed
 		m_AllPatrols.Remove(index);
 	}
 
-    private void SpatialPatrol(array<vector> polygonVertices)
+    void SpatialPatrol()
     {
         #ifdef EAI_TRACE
 		auto trace = CF_Trace_0(this, "SpatialPatrol");
 		#endif
-        m_PolygonVertices = polygonVertices;
         m_AllPatrols.Insert(this);
     }
 
-	private void ~SpatialPatrol()
+	void ~SpatialPatrol()
     {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0(this, "~SpatialPatrol");
@@ -45,6 +48,11 @@ class SpatialPatrol : Managed
 		Stop();
 	}
 	
+	void Polygoninit(array<vector> polygonVertices)
+	{
+        m_PolygonVertices = polygonVertices;
+	}
+
 	static void DebugAll()
     {
 		Print("DebugAll");

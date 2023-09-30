@@ -16,7 +16,7 @@ class Location_Trigger: Spatial_TriggerBase
     } //changed to class instead of individuals
     void SpawnCheck()
     {
-      if (dynPatrol || Spatial_TimerCheck || m_insiders.Count() == 0) return;
+      if (dynPatrol.Count() > 0  || Spatial_TimerCheck || m_insiders.Count() == 0) return;
 
       int m_Groupid = Math.RandomIntInclusive(5001, 10000);
       SpatialDebugPrint("LocationID: " + m_Groupid);
@@ -29,11 +29,6 @@ class Location_Trigger: Spatial_TriggerBase
       {
         Spatial_Spawn(SpawnCount, location);
         Spatial_TimerCheck = true;
-
-    #ifdef EXPANSIONMODNAVIGATION
-          if (GetSpatialSettings().Spatial_Debug())
-          CreateMissionMarker(m_Groupid, ValidPos(m_Spatial_Groups.Locations_Enabled, location.Spatial_SpawnPosition), location.Spatial_Name + " Spawn", m_Spatial_Groups.CleanupTimer);
-    #endif
 
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, location.Spatial_Timer, false);
       } else {
@@ -70,24 +65,65 @@ class Location_Trigger: Spatial_TriggerBase
       PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
       if (!playerInsider || playerInsider.IsAI() || !playerInsider.GetIdentity()) return;
       SpatialDebugPrint(playerInsider.GetIdentity().GetName());
-      vector startpos = ValidPos(m_Spatial_Groups.Locations_Enabled, location.Spatial_SpawnPosition);
-      TVectorArray waypoints = { ValidPos(m_Spatial_Groups.Locations_Enabled, location.Spatial_SpawnPosition) };
+
       string Formation = "RANDOM";
       eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
       if (Location.Spatial_HuntMode == 3) 
         behaviour = typename.StringToEnum(eAIWaypointBehavior, "HALT");
+      vector startpos;
+      TVectorArray waypoints;
+      eAISpatialPatrol DynPatrol;
       int mindistradius, maxdistradius, despawnradius;
       mindistradius = 0;
       maxdistradius = 1000;
       despawnradius = 1200;
-      dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, Location.Spatial_HuntMode, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
-      if (dynPatrol)
+
+      if (Location.Spatial_SpawnMode == 0) 
       {
-        dynPatrol.SetAccuracy(Location.Spatial_MinAccuracy, Location.Spatial_MaxAccuracy);
-        dynPatrol.SetGroupName(Location.Spatial_Name);
-        dynPatrol.SetSniperProneDistanceThreshold(0.0);
-        dynPatrol.SetLocation();
+        vector interm = Location.Spatial_SpawnPosition.GetRandomElement();
+        startpos = ValidPos(m_Spatial_Groups.Locations_Enabled, interm);
+        waypoints = { ValidPos(m_Spatial_Groups.Locations_Enabled, interm) };
+        DynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, Location.Spatial_HuntMode, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
+        if (DynPatrol)
+        {
+          DynPatrol.SetAccuracy(Location.Spatial_MinAccuracy, Location.Spatial_MaxAccuracy);
+          DynPatrol.SetGroupName(Location.Spatial_Name);
+          DynPatrol.SetSniperProneDistanceThreshold(0.0);
+          DynPatrol.SetLocation();
+          dynPatrol.Insert(DynPatrol);
+
+    #ifdef EXPANSIONMODNAVIGATION
+          if (GetSpatialSettings().Spatial_Debug())
+          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, startpos), location.Spatial_Name + " Spawn", m_Spatial_Groups.CleanupTimer);
+    #endif
+        } 
       }
+
+      if (Location.Spatial_SpawnMode == 1)
+      {
+        int recount = 0;
+        foreach (vector pos : Location.Spatial_SpawnPosition)
+        {
+          startpos = ValidPos(m_Spatial_Groups.Locations_Enabled, pos);
+          waypoints = { ValidPos(m_Spatial_Groups.Locations_Enabled, pos) };
+          DynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, Location.Spatial_HuntMode, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
+          if (DynPatrol)
+          {
+            DynPatrol.SetAccuracy(Location.Spatial_MinAccuracy, Location.Spatial_MaxAccuracy);
+            DynPatrol.SetGroupName(Location.Spatial_Name);
+            DynPatrol.SetSniperProneDistanceThreshold(0.0);
+            DynPatrol.SetLocation();
+            recount += count;
+            dynPatrol.Insert(DynPatrol);
+      #ifdef EXPANSIONMODNAVIGATION
+          if (GetSpatialSettings().Spatial_Debug())
+          CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, startpos), location.Spatial_Name + " Spawn", m_Spatial_Groups.CleanupTimer);
+      #endif
+          }
+        }
+        count = recount;
+      }
+
       notif = notif_trigger.GetInsiders();
       for (int i = 0; i < notif.Count(); ++i)
       {
