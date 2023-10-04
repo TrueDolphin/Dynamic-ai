@@ -1,6 +1,7 @@
 /*
 base used for locations and audio.
 prep for splitting the spawn function to use a vector array on Spatial_TriggerPosition
+4/10/2023
 */
 
 class Spatial_TriggerBase: CylinderTrigger
@@ -26,7 +27,6 @@ class Spatial_TriggerBase: CylinderTrigger
             if (remove == 1)
             GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(RemoveMissionMarker, timer, false, m_ServerMarker.GetUID());
         }
-
     }
 
 	void RemoveMissionMarker(string uid)
@@ -91,10 +91,19 @@ class Spatial_TriggerBase: CylinderTrigger
 
     override protected bool CanAddObjectAsInsider(Object object)
     {
-          if (!super.CanAddObjectAsInsider(object)) return false;
-          PlayerBase player = PlayerBase.Cast(object);
-          if (!player || !player.GetIdentity() || player.IsAI()) return false;
-          return true;
+      if (!notification)
+      {
+        notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+      } 
+      float time = GetGame().GetDayTime();
+      if (time >= notification.StartTime && time <= notification.StopTime)
+      {
+        if (!super.CanAddObjectAsInsider(object)) return false;
+        PlayerBase player = PlayerBase.Cast(object);
+        if (!player || !player.GetIdentity() || player.IsAI()) return false;
+        return true;
+      }
+      return false;
     }
 
     void Spatial_WarningMessage(PlayerBase player, string message)
@@ -123,7 +132,7 @@ class Spatial_TriggerBase: CylinderTrigger
         if (!player) return;
         if (!notification)
         {
-          notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+          notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
         }
         string title, text, faction, loadout;
         int msg_no = notification.MessageType;

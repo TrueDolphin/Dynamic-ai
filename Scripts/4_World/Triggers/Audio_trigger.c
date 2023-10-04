@@ -94,7 +94,6 @@ class Audio_trigger: Spatial_TriggerBase
         }
         if (totalnoise > 0) //divide by zero
         {
-
           if ((totalnoise / nrOfInsiders) > Audio.Spatial_Sensitivity)
           {
             SpatialDebugPrint("Spawning due to noise: " + totalnoise);

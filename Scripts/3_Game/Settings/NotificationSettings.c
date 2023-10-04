@@ -30,6 +30,11 @@ class Spatial_NotificationSettings
       JsonFileLoader < Spatial_Notifications > .JsonLoadFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Notifications);
     }
     bool datacheck = false;
+    if (m_Spatial_Notifications.Version == 1)
+    {
+      m_Spatial_Notifications.Version = 2;
+      datacheck = true;
+    }
     foreach(Spatial_Notification notification: m_Spatial_Notifications.notification)
     {
       if (!notification.Spatial_Name || notification.Spatial_Name == "")
@@ -37,6 +42,31 @@ class Spatial_NotificationSettings
         notification.Spatial_Name = "null";
         datacheck = true;
         };
+
+      if (!notification.StartTime)
+      {
+        notification.StartTime = 0.0;
+        datacheck = true;
+      }
+
+      if (!notification.StopTime)
+      {
+        notification.StopTime = 24.0;
+        datacheck = true;
+      } 
+
+      if (notification.StartTime > 24.0 || notification.StartTime < 0.0)
+      {
+        Math.Clamp(notification.StartTime, 0.0, 24.0);
+        datacheck = true;
+      }
+
+      if (notification.StopTime > 24.0 || notification.StopTime < 0.0)
+      {
+        Math.Clamp(notification.StopTime, 0.0, 24.0);
+        datacheck = true;
+      }
+
       if (!notification.MessageType)
       {
         notification.MessageType = 0;
@@ -61,10 +91,10 @@ class Spatial_NotificationSettings
   {
     Data = new Spatial_Notifications();
 
-    Data.notification.Insert(new Spatial_Notification( "East", 1, "East AI", {"Enemies nearby", "AI Detected: East", "Example 3"}));
-    Data.notification.Insert(new Spatial_Notification( "West", 3, "West AI", {"Enemies nearby", "AI Detected: West"}));
-    Data.notification.Insert(new Spatial_Notification( "Civilian", 5, "Civilian AI", {"Civilians detected", "Friendlies in the area"}));
-    Data.notification.Insert(new Spatial_Notification( "Name", 0, "Disabled", {"Disabled"}));
+    Data.notification.Insert(new Spatial_Notification( "East", 0.0, 24.0, 1, "East AI", {"Enemies nearby", "AI Detected: East", "Example 3"}));
+    Data.notification.Insert(new Spatial_Notification( "West", 0.0, 24.0, 3, "West AI", {"Enemies nearby", "AI Detected: West"}));
+    Data.notification.Insert(new Spatial_Notification( "Civilian", 0.0, 24.0, 5, "Civilian AI", {"Civilians detected", "Friendlies in the area"}));
+    Data.notification.Insert(new Spatial_Notification( "Disabled", 0.0, 0.0, 0, "Disabled", {"Disabled"}));
 
   }
 
@@ -77,7 +107,7 @@ class Spatial_NotificationSettings
 //json data
 class Spatial_Notifications
 {
-  int Version = 1;
+  int Version = 2;
   ref array < ref Spatial_Notification > notification;
 
   void Spatial_Notifications()
@@ -89,16 +119,19 @@ class Spatial_Notifications
 class Spatial_Notification
 {
   string Spatial_Name;
+  float StartTime, StopTime;
   int MessageType;
   string MessageTitle;
   ref TStringArray MessageText;
 
-  void Spatial_Notification( string a, int b, string c, TStringArray d)
+  void Spatial_Notification( string a, float b, float c, int d, string e, TStringArray f)
   {
     Spatial_Name = a;
-    MessageType = b;
-    MessageTitle = c;
-    MessageText = d;
+    StartTime = b;
+    StopTime = c;
+    MessageType = d;
+    MessageTitle = e;
+    MessageText = f;
   }
 }
 

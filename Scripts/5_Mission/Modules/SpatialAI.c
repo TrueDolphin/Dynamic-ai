@@ -1,6 +1,6 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 29/9/2023 R28";
+  const string DateVersion = "Spatial AI Date: 4/10/2023 R29";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -325,7 +325,7 @@ class SpatialAI
 
       if (!notification)
       {
-        notification = new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+        notification = new Spatial_Notification( "Default", 0.0 , 24.0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
       }
       Spatial_Message_parse(player, bod, Group, notification);
     }
@@ -430,7 +430,7 @@ class SpatialAI
       }
       if (!found)
       {
-        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
   void SetNotificationLocation(Location_Trigger trigger, Spatial_Location location)
@@ -450,7 +450,7 @@ class SpatialAI
 
       if (!found)
       {
-        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
   void SetNotificationAudio(Audio_trigger trigger, Spatial_Audio location)
@@ -470,7 +470,7 @@ class SpatialAI
 
       if (!found)
       {
-        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
   void Spatial_Message_parse(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
@@ -497,7 +497,7 @@ class SpatialAI
   void Spatial_message(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
     {
     if (!player || !group) return;
-    if (!notification) notification = Spatial_Notification( "Default", m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+    if (!notification) notification = Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
     string title, text, faction, loadout;
     int msg_no = notification.MessageType;
     title = notification.MessageTitle;

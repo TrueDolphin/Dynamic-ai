@@ -393,6 +393,9 @@ class Spatial_Groups
   int MinimumPlayerDistance = 0;
   int MaxSoloPlayers = 6;
   int MinimumAge = 0;
+  bool ActiveHoursEnabled = false;
+  float ActiveStartTime = 0;
+  float ActiveStopTime = 24;
   int MessageType = 1;
   string MessageTitle = "Spatial AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";
