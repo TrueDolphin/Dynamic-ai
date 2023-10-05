@@ -1,6 +1,6 @@
 class SpatialAI
 {
-  const string DateVersion = "Spatial AI Date: 4/10/2023 R29";
+  const string DateVersion = "Spatial AI Date: 4/10/2023 R29-3";
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   ref Spatial_Groups m_Spatial_Groups; // main config
@@ -191,8 +191,19 @@ class SpatialAI
     Spatial_Group group;
 
     if (player.Spatial_CheckZone()) group = player.GetSpatialGroup();
-    else group = Spatial_GetWeightedGroup(m_Spatial_Groups.Group);
-
+    else
+    {
+      if (m_Spatial_Groups.ActiveHoursEnabled == 2)
+      {
+        group = Spatial_GetTimeGroup(m_Spatial_Groups.Group);
+        if (!group) return;
+      }
+      else
+      {
+        group = Spatial_GetWeightedGroup(m_Spatial_Groups.Group);
+      }
+    } 
+ 
     if (!group)
     {
       SpatialDebugPrint("Spatial::LocalSpawn - Error - No Group.");
@@ -257,6 +268,35 @@ class SpatialAI
     Print("[Spatial_Group] GetWeightedGroup: All Groups have a 'Weight' of zero. Selecting pure random group instead.");
     return groups.GetRandomElement();
   } //expansion lightweight weighted group calcs
+
+  Spatial_Group Spatial_GetTimeGroup(array < ref Spatial_Group > groups)
+   {
+
+    Spatial_Groups TimedGroups;
+    Spatial_Notification notification;
+    float Spatial_daytime = Spatial_GetTime();
+
+    foreach (Spatial_Group group : groups)
+    {
+      foreach (Spatial_Notification notifcheck : m_Spatial_Notifications.notification)
+      {
+          if (!notifcheck.Spatial_Name) continue;
+          if (notifcheck.Spatial_Name == group.Spatial_Name)
+          {
+            if (Spatial_daytime >= notifcheck.StartTime && Spatial_daytime <= notifcheck.StopTime)
+            TimedGroups.Group.Insert(group);
+          }
+      }
+    }
+
+    if (TimedGroups && TimedGroups.Group.Count() > 0)
+      return TimedGroups.Group.GetRandomElement();
+
+    Print("[Spatial_Group] No valid group times found.");
+    return null;
+  } //time based group selection
+
+
   bool Spatial_ValidPos(PlayerBase player, out vector pos)
    {
     pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
@@ -316,7 +356,7 @@ class SpatialAI
       Spatial_Notification notification;
       foreach (Spatial_Notification notifcheck : m_Spatial_Notifications.notification)
       {
-          if (!notifcheck || !notifcheck.Spatial_Name) continue;
+          if (!notifcheck.Spatial_Name) continue;
           if (notifcheck.Spatial_Name == Group.Spatial_Name)
           {
             notification = notifcheck;
@@ -325,7 +365,7 @@ class SpatialAI
 
       if (!notification)
       {
-        notification = new Spatial_Notification( "Default", 0.0 , 24.0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+        notification = Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime, m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
       }
       Spatial_Message_parse(player, bod, Group, notification);
     }
@@ -430,7 +470,7 @@ class SpatialAI
       }
       if (!found)
       {
-        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime, m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
   void SetNotificationLocation(Location_Trigger trigger, Spatial_Location location)
@@ -450,7 +490,7 @@ class SpatialAI
 
       if (!found)
       {
-        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime, m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
   void SetNotificationAudio(Audio_trigger trigger, Spatial_Audio location)
@@ -470,7 +510,7 @@ class SpatialAI
 
       if (!found)
       {
-        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
+        trigger.SetNotification(new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime, m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
       }
     }
   void Spatial_Message_parse(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
@@ -497,7 +537,7 @@ class SpatialAI
   void Spatial_message(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification)
     {
     if (!player || !group) return;
-    if (!notification) notification = Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+    if (!notification) notification = Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime, m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
     string title, text, faction, loadout;
     int msg_no = notification.MessageType;
     title = notification.MessageTitle;
@@ -549,4 +589,11 @@ class SpatialAI
       if (GetSpatialSettings().Spatial_Debug())
           GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
   } //expansion debug print
+  float Spatial_GetTime()
+  {
+    int pass, hour, minute;
+    GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
+    if (minute == 0) return hour;
+    return hour + (minute * 0.01);
+  }
 }

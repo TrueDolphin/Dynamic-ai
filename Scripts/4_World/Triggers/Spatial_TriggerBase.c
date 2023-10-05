@@ -95,15 +95,16 @@ class Spatial_TriggerBase: CylinderTrigger
       {
         notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
       } 
-      float time = GetTime();
-      if (time >= notification.StartTime && time <= notification.StopTime)
+      if (m_Spatial_Groups.ActiveHoursEnabled != 0)
       {
-        if (!super.CanAddObjectAsInsider(object)) return false;
-        PlayerBase player = PlayerBase.Cast(object);
-        if (!player || !player.GetIdentity() || player.IsAI()) return false;
-        return true;
-      }
-      return false;
+        float time = GetTime();
+        if (time <= notification.StartTime && time >= notification.StopTime) return false;
+      }    
+
+      if (!super.CanAddObjectAsInsider(object)) return false;
+      PlayerBase player = PlayerBase.Cast(object);
+      if (!player || !player.GetIdentity() || player.IsAI()) return false;
+      return true;
     }
 
     void Spatial_WarningMessage(PlayerBase player, string message)

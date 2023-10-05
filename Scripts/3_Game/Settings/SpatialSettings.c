@@ -393,7 +393,7 @@ class Spatial_Groups
   int MinimumPlayerDistance = 0;
   int MaxSoloPlayers = 6;
   int MinimumAge = 0;
-  bool ActiveHoursEnabled = false;
+  int ActiveHoursEnabled = 0;
   float ActiveStartTime = 0;
   float ActiveStopTime = 24;
   int MessageType = 1;
