@@ -33,7 +33,7 @@ modded class MissionServer
     {
       if (m_Spatial_Groups.ActiveHoursEnabled)
       {
-        float Spatial_daytime = GetGame().GetDayTime();  
+        float Spatial_daytime = Spatial_GetTime();  
         if (Spatial_daytime >= m_Spatial_Groups.ActiveStartTime && Spatial_daytime <= m_Spatial_Groups.ActiveStopTime)
         {
           Spatialai.SpatialDebugPrint("Spatial::Stack - Start");
@@ -56,4 +56,12 @@ modded class MissionServer
     }
     GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SpatialTimer, m_Spatial, false);
   } //timer call for varied check loops #refactored by LieutenantMaster
+
+    float Spatial_GetTime()
+    {
+      int pass, hour, minute;
+      GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
+      if (minute == 0) return hour;
+      return hour + (minute * 0.01);
+    }
 };

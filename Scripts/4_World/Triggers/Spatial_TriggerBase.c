@@ -95,7 +95,7 @@ class Spatial_TriggerBase: CylinderTrigger
       {
         notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
       } 
-      float time = GetGame().GetDayTime();
+      float time = GetTime();
       if (time >= notification.StartTime && time <= notification.StopTime)
       {
         if (!super.CanAddObjectAsInsider(object)) return false;
@@ -126,6 +126,14 @@ class Spatial_TriggerBase: CylinderTrigger
     {
           GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
     } //expansion logging
+
+    float GetTime()
+    {
+      int pass, hour, minute;
+      GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
+      if (minute == 0) return hour;
+      return hour + (minute * 0.01);
+    }
 
     void Spatial_message(PlayerBase player, int SpawnCount)
     {
