@@ -31,7 +31,7 @@ modded class MissionServer
     int m_Spatial = Math.RandomIntInclusive(m_Spatial_Groups.Spatial_MinTimer, m_Spatial_Groups.Spatial_MaxTimer);
     if (GetCEApi())
     {
-      if (m_Spatial_Groups.ActiveHoursEnabled != 0)
+      if (m_Spatial_Groups.ActiveHoursEnabled == 1)
       {
         float Spatial_daytime = Spatial_GetTime();  
         if (Spatial_daytime >= m_Spatial_Groups.ActiveStartTime && Spatial_daytime <= m_Spatial_Groups.ActiveStopTime)
