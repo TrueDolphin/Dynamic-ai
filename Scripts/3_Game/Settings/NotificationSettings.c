@@ -53,6 +53,12 @@ class Spatial_NotificationSettings
       {
         notification.StopTime = 24.0;
         datacheck = true;
+      }
+
+      if (!notification.AgeTime)
+      {
+        notification.AgeTime = 1.30;
+        datacheck = true;
       } 
 
       if (notification.StartTime > 24.0 || notification.StartTime < 0.0)
@@ -91,10 +97,10 @@ class Spatial_NotificationSettings
   {
     Data = new Spatial_Notifications();
 
-    Data.notification.Insert(new Spatial_Notification( "East", 0.0, 24.0, 1, "East AI", {"Enemies nearby", "AI Detected: East", "Example 3"}));
-    Data.notification.Insert(new Spatial_Notification( "West", 0.0, 24.0, 3, "West AI", {"Enemies nearby", "AI Detected: West"}));
-    Data.notification.Insert(new Spatial_Notification( "Civilian", 0.0, 24.0, 5, "Civilian AI", {"Civilians detected", "Friendlies in the area"}));
-    Data.notification.Insert(new Spatial_Notification( "Disabled", 0.0, 0.0, 0, "Disabled", {"Disabled"}));
+    Data.notification.Insert(new Spatial_Notification( "East", 0.0, 24.0, 1.5, 1, "East AI", {"Enemies nearby", "AI Detected: East", "Example 3"}));
+    Data.notification.Insert(new Spatial_Notification( "West", 0.0, 24.0, 2.5, 3, "West AI", {"Enemies nearby", "AI Detected: West"}));
+    Data.notification.Insert(new Spatial_Notification( "Guard", 0.0, 24.0, 4.5, 5, "Guard AI", {"Guards detected", "Friendlies in the area, guns down."}));
+    Data.notification.Insert(new Spatial_Notification( "Disabled", 0.0, 0.0, 10.0, 0, "Disabled", {"Disabled"}));
 
   }
 
@@ -119,19 +125,20 @@ class Spatial_Notifications
 class Spatial_Notification
 {
   string Spatial_Name;
-  float StartTime, StopTime;
+  float StartTime, StopTime, AgeTime;
   int MessageType;
   string MessageTitle;
   ref TStringArray MessageText;
 
-  void Spatial_Notification( string a, float b, float c, int d, string e, TStringArray f)
+  void Spatial_Notification( string a, float b, float c, float d, int e, string f, TStringArray g)
   {
     Spatial_Name = a;
     StartTime = b;
     StopTime = c;
-    MessageType = d;
-    MessageTitle = e;
-    MessageText = f;
+    AgeTime = d;
+    MessageType = e;
+    MessageTitle = f;
+    MessageText = g;
   }
 }
 

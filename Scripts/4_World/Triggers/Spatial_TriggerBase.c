@@ -93,9 +93,9 @@ class Spatial_TriggerBase: CylinderTrigger
     {
       if (!notification)
       {
-        notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+        notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, 0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
       } 
-      if (m_Spatial_Groups.ActiveHoursEnabled != 0)
+      if (m_Spatial_Groups.ActiveHoursEnabled != 0 && m_Spatial_Groups.ActiveHoursEnabled != 3)
       {
         float time = GetTime();
         if (time <= notification.StartTime && time >= notification.StopTime) return false;
@@ -141,7 +141,7 @@ class Spatial_TriggerBase: CylinderTrigger
         if (!player) return;
         if (!notification)
         {
-          notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+          notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, 0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
         }
         string title, text, faction, loadout;
         int msg_no = notification.MessageType;
