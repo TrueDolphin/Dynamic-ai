@@ -35,13 +35,33 @@ class Spatial_TriggerBase: CylinderTrigger
 		return;
 		m_MarkerModule.RemoveServerMarker( uid );
 	}
+
+  vector ValidPos(int enabled, vector pos)
+    {
+        if (enabled == 2) return pos;
+        return ExpansionStatic.GetSurfacePosition(pos);
+    }
+
 #endif
 
 
     void Spatial_TriggerBase()
     {
       dynPatrol = {};
-      GetSpatialSettings().PullRef(m_Spatial_Groups);   
+      GetSpatialSettings().PullRef(m_Spatial_Groups);
+    }
+
+    override void OnStayStartServerEvent(int nrOfInsiders)
+    {
+      super.OnStayStartServerEvent(nrOfInsiders);
+      if (!dynPatrol) return;
+      if (dynPatrol.Count() > 0)
+      {
+        foreach (eAISpatialPatrol patrol : dynPatrol)
+        {
+          if (patrol && patrol.WasGroupDestroyed()) patrol.Despawn();
+        }
+      }
     }
 
     override void Enter(TriggerInsider insider)
@@ -78,12 +98,6 @@ class Spatial_TriggerBase: CylinderTrigger
       notification = a;
     }
 
-    vector ValidPos(int enabled, vector pos)
-      {
-          if (enabled == 2) return pos;
-          return ExpansionStatic.GetSurfacePosition(pos);
-      }
-
     bool ValidSpawn(vector pos)
     {
           return !GetCEApi().AvoidPlayer(pos, 5);
@@ -92,18 +106,18 @@ class Spatial_TriggerBase: CylinderTrigger
     override protected bool CanAddObjectAsInsider(Object object)
     {
       if (!notification)
-      {
         notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, 0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
-      } 
-      if (m_Spatial_Groups.ActiveHoursEnabled != 0 && m_Spatial_Groups.ActiveHoursEnabled != 3)
-      {
-        float time = GetTime();
-        if (time <= notification.StartTime && time >= notification.StopTime) return false;
-      }    
-
+      
       if (!super.CanAddObjectAsInsider(object)) return false;
       PlayerBase player = PlayerBase.Cast(object);
       if (!player || !player.GetIdentity() || player.IsAI()) return false;
+
+      if (m_Spatial_Groups.ActiveHoursEnabled != 0 && m_Spatial_Groups.ActiveHoursEnabled != 3)
+      {
+          float time = GetTime();
+          SpatialDebugPrint(TriggerName + ": " + time + " compare: " + notification.StartTime + ";" + notification.StopTime);
+          if (time <= notification.StartTime || time >= notification.StopTime) return false;
+      }
       return true;
     }
 

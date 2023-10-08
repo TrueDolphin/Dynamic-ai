@@ -107,11 +107,16 @@ class SpatialSettings
           loggerPrint("Radius on group incorrect, setting to 100m");
           point.Spatial_Radius = 100;
         }
-        if (!FileExist("$profile:ExpansionMod\\Loadouts\\" + point.Spatial_ZoneLoadout))
+
+        foreach (string loadout : point.Spatial_ZoneLoadout)
         {
-          loggerPrint("Loadout Not Found: " + point.Spatial_ZoneLoadout);
-          point.Spatial_ZoneLoadout = "HumanLoadout.json";
+          if (!FileExist("$profile:ExpansionMod\\Loadouts\\" + loadout))
+          {
+            loggerPrint("Loadout Not Found: " + loadout);
+            loadout = "HumanLoadout.json";
+          }
         }
+
         if (point.Spatial_Safe != 1 && point.Spatial_Safe != 0)
         {
           loggerPrint("Zone safe value incorrect. setting to safe");
@@ -303,9 +308,9 @@ class SpatialSettings
     Data.Group.Insert(new Spatial_Group(1, 3, 300, "HumanLoadout.json", "Shamans", "Shaman", 1, 0.5, 0.25, 0.66, true));
     Data.Group.Insert(new Spatial_Group(2, 3, 350, "EastLoadout.json", "Passive", "Passive", 1, 0.5, 0.25, 0.66, true));
 
-    Data.Point.Insert(new Spatial_Point("East", 0, 50, "EastLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
-    Data.Point.Insert(new Spatial_Point("West", 0, 100, "WestLoadout.json", 0, 5, 1, "West", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
-    Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, "HumanLoadout.json", 0, 0, 0, "Civilian", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("East", 0, 50, {"EastLoadout.json"}, 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("West", 0, 100, {"WestLoadout.json"}, 0, 5, 1, "West", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
+    Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, {"HumanLoadout.json", "NBCLoadout.json"}, 0, 0, 0, "Civilian", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
 
     Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
     Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
@@ -387,11 +392,11 @@ class Spatial_Groups
   int Audio_Enabled = 0;
   int EngageTimer = 300000;
   int CleanupTimer = 360000;
-  int PlayerChecks = 0;
+  int PlayerChecks = -5;
   int MaxAI = 20;
   int GroupDifficulty = 1;
   int MinimumPlayerDistance = 0;
-  int MaxSoloPlayers = 6;
+  int MaxSoloPlayers = 0;
   int MinimumAge = 0;
   int ActiveHoursEnabled = 0;
   float ActiveStartTime = 0;
@@ -451,7 +456,7 @@ class Spatial_Point
   string Spatial_Name;
   bool Spatial_Safe;
   float Spatial_Radius;
-  string Spatial_ZoneLoadout;
+  ref TStringArray Spatial_ZoneLoadout;
   int Spatial_MinCount, Spatial_MaxCount;
   int Spatial_HuntMode;
   string Spatial_Faction;
@@ -460,7 +465,7 @@ class Spatial_Point
   bool Spatial_UnlimitedReload;
   vector Spatial_Position;
 
-  void Spatial_Point(string a, bool b, float c, string d, int e, int f, int g, string h, int i, float j, float k, float l, bool m, vector n)
+  void Spatial_Point(string a, bool b, float c, TStringArray d, int e, int f, int g, string h, int i, float j, float k, float l, bool m, vector n)
   {
     Spatial_Name = a;
     Spatial_Safe = b;

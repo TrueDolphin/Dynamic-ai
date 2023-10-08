@@ -1,5 +1,5 @@
 class SpatialAI {
-    const string DateVersion = "Spatial AI Date: 4/10/2023 R29-5";
+    const string DateVersion = "Spatial AI Date: 4/10/2023 R29-6";
     const int SZ_IN_SAFEZONE = 0x0001;
     int m_cur = 0;
     ref Spatial_Groups m_Spatial_Groups; // main config
@@ -130,30 +130,58 @@ class SpatialAI {
     {
         SpatialDebugPrint("Spatial::CanSpawn - Start");
         if (player.IsBleeding() && !GetSpatialSettings().Spatial_IsBleeding())
+        {
+            SpatialDebugPrint("Spatial::Player is Bleeding");
             return false;
+        }
         if (player.IsInVehicle() && !GetSpatialSettings().Spatial_InVehicle())
+        {
+            SpatialDebugPrint("Spatial::Player is In Vehicle");
             return false;
+        }
         if (player.IsUnconscious() && !GetSpatialSettings().Spatial_IsUnconscious())
+        {
+            SpatialDebugPrint("Spatial::Player is Unconscious");
             return false;
+        }
         if (player.IsRestrained() && !GetSpatialSettings().Spatial_IsRestrained())
+        {
+            SpatialDebugPrint("Spatial::Player is Restrained");
             return false;
+        }
         #ifdef EXPANSIONMODBASEBUILDING
         // Check if player is inside their own territory and its override
         if (player.IsInsideOwnTerritory() && !GetSpatialSettings().Spatial_InOwnTerritory())
+        {
+            SpatialDebugPrint("Spatial::Player in own territory");
             return false;
+        }
         #endif
         if (player.Expansion_IsInSafeZone() && !GetSpatialSettings().Spatial_IsInSafeZone())
+        {
+            SpatialDebugPrint("Spatial::Player Expansion Safe");
             return false;
+        }
 
         #ifdef SZDEBUG
         // Check for specific safe zone debug status and its override
         if (player.GetSafeZoneStatus() == SZ_IN_SAFEZONE && !GetSpatialSettings().Spatial_TPSafeZone())
+        {
+            SpatialDebugPrint("Spatial::Player TraderPlus Safe");
             return false;
+        }
         #endif
         if (m_Spatial_Groups.Points_Enabled == 2 && !player.Spatial_CheckZone())
+        {
+            SpatialDebugPrint("Spatial::Player not in zone");
             return false;
+        }
         if (m_Spatial_Groups.Points_Enabled != 0 && player.Spatial_CheckSafe())
+        {
+            SpatialDebugPrint("Spatial::Player Safe");
             return false;
+        }
+            
         SpatialDebugPrint("Spatial::CanSpawn - End");
         return true;
     } //checks and overrides - #refactored by LieutenantMaster
@@ -276,7 +304,7 @@ class SpatialAI {
         if (TimedGroups && TimedGroups.Count() > 0)
             return TimedGroups.GetRandomElement();
 
-        Print("[Spatial_Group] No valid group times found.");
+        SpatialDebugPrint("[Spatial_Group] No valid group times found.");
         return null;
     } //time based group selection
 
@@ -305,7 +333,7 @@ class SpatialAI {
         if (AgeGroups && AgeGroups.Count() > 0)
             return AgeGroups.GetRandomElement();
 
-        Print("[Spatial_Group] No valid group ages found.");
+        SpatialDebugPrint("[Spatial_Group] No valid group ages found.");
         return null;
     } //time based group selection
 

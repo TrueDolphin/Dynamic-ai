@@ -109,7 +109,7 @@ class Audio_trigger: Spatial_TriggerBase
     {
       if (m_insiders.Count() == 0) return;
       PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
-      if (!playerInsider || playerInsider.IsAI() || !playerInsider.GetIdentity()) return;
+      if (!playerInsider || !playerInsider.GetIdentity() || playerInsider.IsAI()) return;
       SpatialDebugPrint(playerInsider.GetIdentity().GetName());
 
       string Formation = "RANDOM";

@@ -17,8 +17,8 @@ modded class PlayerBase
     ref Spatial_Groups m_Spatial_Groups;
     ref Spatial_Players m_Spatial_Players;
     
-    Spatial_Point m_spatial_point;
-    Spatial_Notification spatial_notification;
+    ref Spatial_Point m_spatial_point;
+    ref Spatial_Notification spatial_notification;
 
     void PlayerBase()
     {
@@ -53,7 +53,7 @@ modded class PlayerBase
 
     Spatial_Group GetSpatialGroup()
     {
-        Spatial_Group group = new Spatial_Group(m_spatial_point.Spatial_MinCount, m_spatial_point.Spatial_MaxCount, 100, m_spatial_point.Spatial_ZoneLoadout, m_spatial_point.Spatial_Faction, m_spatial_point.Spatial_Name, m_spatial_point.Spatial_Lootable, m_spatial_point.Spatial_Chance, m_spatial_point.Spatial_MinAccuracy, m_spatial_point.Spatial_MaxAccuracy, m_spatial_point.Spatial_UnlimitedReload);
+        Spatial_Group group = new Spatial_Group(m_spatial_point.Spatial_MinCount, m_spatial_point.Spatial_MaxCount, 100, m_spatial_point.Spatial_ZoneLoadout.GetRandomElement(), m_spatial_point.Spatial_Faction, m_spatial_point.Spatial_Name, m_spatial_point.Spatial_Lootable, m_spatial_point.Spatial_Chance, m_spatial_point.Spatial_MinAccuracy, m_spatial_point.Spatial_MaxAccuracy, m_spatial_point.Spatial_UnlimitedReload);
         return group;
     }
 
@@ -121,10 +121,15 @@ modded class PlayerBase
         if (num > 1) return true;
         }
 
-       GPSReceiver Spatial_HasRecevier = GPSReceiver.Cast(FindAttachmentBySlotName("WalkieTalkie"));
-       if (Spatial_HasRecevier && Spatial_HasRecevier.IsTurnedOn()) return true;
+        GPSReceiver Spatial_HasRecevier = GPSReceiver.Cast(FindAttachmentBySlotName("WalkieTalkie"));
+        if (Spatial_HasRecevier && Spatial_HasRecevier.IsTurnedOn()) return true;
 
-        int item_count = GetInventory().GetCargo().GetItemCount();
+        if (!GetInventory() || !GetInventory().GetCargo()) return false;
+
+        int item_count = 0;
+        item_count += GetInventory().GetCargo().GetItemCount();
+        if (item_count == 0) return false;
+        
 		for (int i = 0; i < item_count; i++)
 		{
 			GPSReceiver item = GPSReceiver.Cast(GetInventory().GetCargo().GetItem(i));
