@@ -1,6 +1,11 @@
+/*
+main class for init/group spawns.
+check DateVersion every release.
+*/
+
 class SpatialAI {
-    const string DateVersion = "Spatial AI Date: 4/10/2023 R29-6";
-    const int SZ_IN_SAFEZONE = 0x0001;
+    const string DateVersion = "Spatial AI Date: 9/10/2023 R29-7";
+    const int SZ_IN_SAFEZONE = 0x0001; // TraderPlus compat
     int m_cur = 0;
     ref Spatial_Groups m_Spatial_Groups; // main config
     ref Spatial_Players m_Spatial_Players; // birthday config
@@ -418,7 +423,8 @@ class SpatialAI {
                 spatial_trigger.SetPosition(move0);
                 SetNotificationPoint(spatial_trigger, points);
                 SpatialLoggerPrint("Trigger at point: " + points.Spatial_Position + " - Radius: " + points.Spatial_Radius);
-                SpatialLoggerPrint("Safe: " + points.Spatial_Safe + " - Faction: " + points.Spatial_Faction + " - Loadout: " + points.Spatial_ZoneLoadout + " - counts: " + points.Spatial_MinCount + ":" + points.Spatial_MaxCount);
+                SpatialLoggerPrint("- Safe: " + points.Spatial_Safe + " - Faction: " + points.Spatial_Faction + " - counts: " + points.Spatial_MinCount + ":" + points.Spatial_MaxCount);
+                foreach (string loadout : points.Spatial_ZoneLoadout) SpatialLoggerPrint("- loadout added: " + loadout);
             }
         } else SpatialLoggerPrint("points Disabled");
 
@@ -437,9 +443,10 @@ class SpatialAI {
                 location_trigger.SetPosition(move1);
                 notification_trigger.SetPosition(move1);
                 location_trigger.Spatial_SetData(location, notification_trigger);
-                SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius + " - Spawn location: " + location.Spatial_SpawnPosition);
-                SpatialLoggerPrint("Notification covering location at: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius * 2);
-                SpatialLoggerPrint("Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
+                SpatialLoggerPrint("Trigger at location: " + location.Spatial_TriggerPosition + " - Radius: " + location.Spatial_TriggerRadius);
+                foreach (vector locpos : location.Spatial_SpawnPosition) SpatialLoggerPrint("- Spawn location: " + locpos);
+                SpatialLoggerPrint("- Notification covering location to Radius: " + location.Spatial_TriggerRadius * 2);
+                SpatialLoggerPrint("- Faction: " + location.Spatial_Faction + " - Loadout: " + location.Spatial_ZoneLoadout + " - counts: " + location.Spatial_MinCount + ":" + location.Spatial_MaxCount);
 
                 #ifdef EXPANSIONMODNAVIGATION
                 if (GetSpatialSettings().Spatial_Debug())
@@ -464,9 +471,10 @@ class SpatialAI {
                 audio_trigger.SetPosition(move2);
                 notification_trigger2.SetPosition(move2);
                 audio_trigger.Spatial_SetData(audio, notification_trigger2);
-                SpatialLoggerPrint("audio Trigger at location: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius + " - Spawn audio location: " + audio.Spatial_SpawnPosition);
-                SpatialLoggerPrint("Notification covering audio location at: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius * 2);
-                SpatialLoggerPrint("Faction: " + audio.Spatial_Faction + " - Loadout: " + audio.Spatial_ZoneLoadout + " - counts: " + audio.Spatial_MinCount + ":" + audio.Spatial_MaxCount);
+                SpatialLoggerPrint("audio Trigger at location: " + audio.Spatial_TriggerPosition + " - Radius: " + audio.Spatial_TriggerRadius);
+                foreach (vector audpos : audio.Spatial_SpawnPosition) SpatialLoggerPrint("- Spawn audio location: " + audpos);
+                SpatialLoggerPrint("- Notification covering audio location to Radius: " + audio.Spatial_TriggerRadius * 2);
+                SpatialLoggerPrint("- Faction: " + audio.Spatial_Faction + " - Loadout: " + audio.Spatial_ZoneLoadout + " - counts: " + audio.Spatial_MinCount + ":" + audio.Spatial_MaxCount);
 
                 #ifdef EXPANSIONMODNAVIGATION
                 if (GetSpatialSettings().Spatial_Debug())
@@ -493,7 +501,7 @@ class SpatialAI {
         if (!found) {
             trigger.SetNotification(new Spatial_Notification("Default", m_Spatial_Groups.ActiveStartTime, m_Spatial_Groups.ActiveStopTime, 0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, { m_Spatial_Groups.MessageText }));
         }
-    }
+    } //set notification data to points
     void SetNotificationLocation(Location_Trigger trigger, Spatial_Location location) 
     {
         bool found = false;
@@ -510,7 +518,7 @@ class SpatialAI {
         if (!found) {
             trigger.SetNotification(new Spatial_Notification("Default", m_Spatial_Groups.ActiveStartTime, m_Spatial_Groups.ActiveStopTime, 0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, { m_Spatial_Groups.MessageText }));
         }
-    }
+    } //set notification data to Locations
     void SetNotificationAudio(Audio_trigger trigger, Spatial_Audio location) 
     {
         bool found = false;
@@ -527,7 +535,7 @@ class SpatialAI {
         if (!found) {
             trigger.SetNotification(new Spatial_Notification("Default", m_Spatial_Groups.ActiveStartTime, m_Spatial_Groups.ActiveStopTime, 0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText}));
         }
-    }
+    } //set notification data to audio locations
     void Spatial_Message_parse(PlayerBase player, int SpawnCount, Spatial_Group group, Spatial_Notification notification) 
     {
         #ifdef EXPANSIONMODGROUPS
@@ -599,5 +607,5 @@ class SpatialAI {
         GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
         if (minute == 0) return hour;
         return hour + (minute * 0.01);
-    }
+    } //lightweight time, probably a better method.
 }

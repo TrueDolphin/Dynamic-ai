@@ -5,7 +5,7 @@ used for standard group replacement triggers
 
 class Spatial_Trigger: CylinderTrigger
 {     
-    bool Zone_Status;   
+    bool Zone_Status;   //safe or not
     Spatial_Point m_spatial_point;
     ref Spatial_Notification notification;
     ref Spatial_Groups m_Spatial_Groups;
@@ -44,7 +44,7 @@ class Spatial_Trigger: CylinderTrigger
     void Spatial_Trigger()
     {
       GetSpatialSettings().PullRef(m_Spatial_Groups);   
-    }
+    } // main reference pull
 
     void SetSpatialPoint(Spatial_Point point)
     {
@@ -62,7 +62,7 @@ class Spatial_Trigger: CylinderTrigger
     void SetNotification(Spatial_Notification a)
     {
         notification = a;
-    }
+    } //notification data
 
     override void OnStayStartServerEvent(int nrOfInsiders)
     {
@@ -80,7 +80,7 @@ class Spatial_Trigger: CylinderTrigger
           player.Spatial_SetNotification(notification);
         }
       }
-    }
+    } //checks on players in zone moving out of others
 
     override void Enter(TriggerInsider insider)
     {
@@ -101,7 +101,7 @@ class Spatial_Trigger: CylinderTrigger
             }
       #endif
         }
-    }
+    } //enter + marker
         
     override void Leave(TriggerInsider insider)
     {
@@ -119,7 +119,7 @@ class Spatial_Trigger: CylinderTrigger
             }
       #endif
         }
-    }
+    } //leave + marker
     
     float GetTime()
     {
@@ -127,7 +127,7 @@ class Spatial_Trigger: CylinderTrigger
       GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
       if (minute < 1) return hour;
       return hour + (minute * 0.01);
-    }
+    } //find better method
 
     override protected bool CanAddObjectAsInsider(Object object)
     {
@@ -145,7 +145,7 @@ class Spatial_Trigger: CylinderTrigger
           if (time <= notification.StartTime || time >= notification.StopTime) return false;
       }
       return true;
-    }
+    } //override for restrictions
 
     void SpatialDebugPrint(string msg)
     {

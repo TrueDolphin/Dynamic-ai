@@ -1,7 +1,6 @@
 /*
 base used for locations and audio.
-prep for splitting the spawn function to use a vector array on Spatial_TriggerPosition
-4/10/2023
+9/10/2023
 */
 
 class Spatial_TriggerBase: CylinderTrigger
@@ -36,12 +35,6 @@ class Spatial_TriggerBase: CylinderTrigger
 		m_MarkerModule.RemoveServerMarker( uid );
 	}
 
-  vector ValidPos(int enabled, vector pos)
-    {
-        if (enabled == 2) return pos;
-        return ExpansionStatic.GetSurfacePosition(pos);
-    }
-
 #endif
 
 
@@ -49,7 +42,7 @@ class Spatial_TriggerBase: CylinderTrigger
     {
       dynPatrol = {};
       GetSpatialSettings().PullRef(m_Spatial_Groups);
-    }
+    } // main reference pull
 
     override void OnStayStartServerEvent(int nrOfInsiders)
     {
@@ -62,7 +55,7 @@ class Spatial_TriggerBase: CylinderTrigger
           if (patrol && patrol.WasGroupDestroyed()) patrol.Despawn();
         }
       }
-    }
+    } //attempt at forced cleanup
 
     override void Enter(TriggerInsider insider)
     {
@@ -74,7 +67,7 @@ class Spatial_TriggerBase: CylinderTrigger
             CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, PlayerMarker.GetPosition()), TriggerName + " Enter", m_Spatial_Groups.CleanupTimer);
           }
     #endif
-    }
+    } //marker enter
 
     override void Leave(TriggerInsider insider)
     {
@@ -86,22 +79,22 @@ class Spatial_TriggerBase: CylinderTrigger
           CreateMissionMarker(0, ValidPos(m_Spatial_Groups.Locations_Enabled, PlayerMarker.GetPosition()), TriggerName + " Leave", m_Spatial_Groups.CleanupTimer);
           }
     #endif
-    }
+    } //marker leave
 
     void Spatial_timer()
     {
       Spatial_TimerCheck = false;
-    }
+    } //calllater timer for respawn
 
     void SetNotification(Spatial_Notification a)
     {
       notification = a;
-    }
+    } //notification data
 
     bool ValidSpawn(vector pos)
     {
           return !GetCEApi().AvoidPlayer(pos, 5);
-    }
+    } //unused currently
 
     override protected bool CanAddObjectAsInsider(Object object)
     {
@@ -119,7 +112,7 @@ class Spatial_TriggerBase: CylinderTrigger
           if (time <= notification.StartTime || time >= notification.StopTime) return false;
       }
       return true;
-    }
+    } //override for restrictions
 
     void Spatial_WarningMessage(PlayerBase player, string message)
     {
@@ -148,7 +141,12 @@ class Spatial_TriggerBase: CylinderTrigger
       GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
       if (minute == 0) return hour;
       return hour + (minute * 0.01);
-    }
+    } //find better method
+    vector ValidPos(int enabled, vector pos)
+    {
+        if (enabled == 2) return pos;
+        return ExpansionStatic.GetSurfacePosition(pos);
+    } //parser
 
     void Spatial_message(PlayerBase player, int SpawnCount)
     {

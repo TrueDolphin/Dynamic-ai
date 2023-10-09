@@ -1,6 +1,6 @@
 /*
-30/9/2023
-spatial settings
+9/10/2023
+Main reference settings across whole plugin
 */
 class SpatialSettings
 {

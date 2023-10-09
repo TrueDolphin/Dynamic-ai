@@ -1,16 +1,15 @@
 //!TODO: change this whole system to avoidplayer
 class Audio_trigger: Spatial_TriggerBase
 {
-    //allowed audio limits
+    //audio limit references
     const int SOUND_WALK = 1;
     const int SOUND_JOG = 2;
     const int SOUND_RUN = 3;
     const int SOUND_GUNFIRE = 1000;
 
-    vector Spatial_SpawnPosition;
-    ref Spatial_Audio Audio;
-    Notification_Trigger notif_trigger;
-    autoptr array<ref TriggerInsider> notif;
+    ref Spatial_Audio Audio; //trigger data
+    Notification_Trigger notif_trigger; //notification trigger itselkf
+    autoptr array<ref TriggerInsider> notif; //iterm player array
 
     void Spatial_SetData(Spatial_Audio audio, Notification_Trigger b)
     {
@@ -42,7 +41,7 @@ class Audio_trigger: Spatial_TriggerBase
         SpatialDebugPrint("Audio ai count too low this check");
       }
       SpatialDebugPrint("End audioID: " + m_Groupid);
-    }
+    } //stack start
 
     override void Enter(TriggerInsider insider)
     {
@@ -102,9 +101,8 @@ class Audio_trigger: Spatial_TriggerBase
           }
         }
       }
-    }
+    } //audio checks
 
-    //next plan - split spawn back into Spatial_Group and add a vector array check to Spatial_TriggerPosition
     void Spatial_Spawn(int count, Spatial_Audio audio)
     {
       if (m_insiders.Count() == 0) return;
