@@ -44,18 +44,65 @@ class Spatial_TriggerBase: CylinderTrigger
       GetSpatialSettings().PullRef(m_Spatial_Groups);
     } // main reference pull
 
+    void SpawnCheck(){/*override me*/}
+
+    bool CanSpawn()
+    {
+      
+      if (dynPatrol.Count() != 0 || Spatial_TimerCheck == true || m_insiders.Count() == 0)
+          return false;
+
+      if (!dynPatrol) dynPatrol = {};
+
+      if (!notification)
+        notification = new Spatial_Notification( "Default", m_Spatial_Groups.ActiveStartTime , m_Spatial_Groups.ActiveStopTime, 0, m_Spatial_Groups.MessageType, m_Spatial_Groups.MessageTitle, {m_Spatial_Groups.MessageText});
+      
+      if (m_Spatial_Groups.ActiveHoursEnabled != 0 && m_Spatial_Groups.ActiveHoursEnabled != 3)
+      {
+          float time = GetTime();
+          SpatialDebugPrint(TriggerName + ": " + time + " compare: " + notification.StartTime + ";" + notification.StopTime);
+          if (time <= notification.StartTime || time >= notification.StopTime) false;
+      }
+      return true;
+    } //init checks
+
     override void OnStayStartServerEvent(int nrOfInsiders)
     {
       super.OnStayStartServerEvent(nrOfInsiders);
-      if (!dynPatrol) return;
-      if (dynPatrol.Count() > 0)
+      if (!dynPatrol || Spatial_TimerCheck) return;
+      if (dynPatrol.Count() != 0)
       {
+        int pdx;
         foreach (eAISpatialPatrol patrol : dynPatrol)
         {
-          if (patrol && patrol.WasGroupDestroyed()) patrol.Despawn();
+          if (patrol && !patrol.GetGroup())
+          {
+            pdx = dynPatrol.Find(patrol);
+		        if (pdx != -1) dynPatrol.Remove(pdx);
+            patrol.Despawn();
+            SpatialDebugPrint("patrol removed from array");
+          }
+          if (patrol && patrol.GetGroup())
+          {
+            int d = patrol.GetGroup().Count();
+            eAIGroup group = patrol.GetGroup();
+            int e = 0;
+            for (int i = 0; i < d; ++i)
+            {
+              if (group.GetMember(i).IsAlive()) e += 1;
+            }
+
+            if (e == 0)
+            {
+              pdx = dynPatrol.Find(patrol);
+              if (pdx != -1) dynPatrol.Remove(pdx);
+              patrol.Despawn();
+              SpatialDebugPrint("patrol removed from array");
+            }
+          } 
         }
       }
-    } //attempt at forced cleanup
+    } //make this better. jesus.
 
     override void Enter(TriggerInsider insider)
     {
@@ -81,6 +128,9 @@ class Spatial_TriggerBase: CylinderTrigger
     #endif
     } //marker leave
 
+    
+    void Spatial_Spawn(int count){/*override me*/}
+
     void Spatial_timer()
     {
       Spatial_TimerCheck = false;
@@ -105,12 +155,6 @@ class Spatial_TriggerBase: CylinderTrigger
       PlayerBase player = PlayerBase.Cast(object);
       if (!player || !player.GetIdentity() || player.IsAI()) return false;
 
-      if (m_Spatial_Groups.ActiveHoursEnabled != 0 && m_Spatial_Groups.ActiveHoursEnabled != 3)
-      {
-          float time = GetTime();
-          SpatialDebugPrint(TriggerName + ": " + time + " compare: " + notification.StartTime + ";" + notification.StopTime);
-          if (time <= notification.StartTime || time >= notification.StopTime) return false;
-      }
       return true;
     } //override for restrictions
 

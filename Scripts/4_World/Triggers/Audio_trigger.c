@@ -20,10 +20,8 @@ class Audio_trigger: Spatial_TriggerBase
       TriggerFaction = audio.Spatial_Faction;
     } //changed to class instead of individuals
 
-    void SpawnCheck()
+    override void SpawnCheck()
     {
-      if (dynPatrol.Count() > 0 || Spatial_TimerCheck || m_insiders.Count() == 0) return;
-
       int m_Groupid = Math.RandomIntInclusive(10001, 15000);
       SpatialDebugPrint("audioID: " + m_Groupid);
       float random = Math.RandomFloat(0.0, 1.0);
@@ -33,9 +31,8 @@ class Audio_trigger: Spatial_TriggerBase
       int SpawnCount = Math.RandomIntInclusive(Audio.Spatial_MinCount, Audio.Spatial_MaxCount);
       if (SpawnCount > 0)
       {
-        Spatial_Spawn(SpawnCount, Audio);
+        Spatial_Spawn(SpawnCount);
         Spatial_TimerCheck = true;
-
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, Audio.Spatial_Timer, false);
       } else {
         SpatialDebugPrint("Audio ai count too low this check");
@@ -69,7 +66,7 @@ class Audio_trigger: Spatial_TriggerBase
       super.OnStayStartServerEvent(nrOfInsiders);
       if (nrOfInsiders == 0) return;
       
-      if (dynPatrol.Count() > 0 || Spatial_TimerCheck) return;
+      if (!CanSpawn()) return;
 
       if (nrOfInsiders > 0) //divide by zero
       {
@@ -103,8 +100,9 @@ class Audio_trigger: Spatial_TriggerBase
       }
     } //audio checks
 
-    void Spatial_Spawn(int count, Spatial_Audio audio)
+    override void Spatial_Spawn(int count)
     {
+      Spatial_Audio audio = Audio;
       if (m_insiders.Count() == 0) return;
       PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
       if (!playerInsider || !playerInsider.GetIdentity() || playerInsider.IsAI()) return;

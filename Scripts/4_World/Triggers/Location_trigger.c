@@ -1,10 +1,9 @@
 //!TODO: change this whole system to avoidplayer
 class Location_Trigger: Spatial_TriggerBase
 {
-    vector Spatial_SpawnPosition;
     ref Spatial_Location location;
     Notification_Trigger notif_trigger;
-    autoptr array<ref TriggerInsider> notif;
+    
 
     void Spatial_SetData(Spatial_Location Location, Notification_Trigger b)
     {
@@ -14,9 +13,9 @@ class Location_Trigger: Spatial_TriggerBase
       TriggerLoadout = Location.Spatial_ZoneLoadout;
       TriggerFaction = Location.Spatial_Faction;
     } //changed to class instead of individuals
-    void SpawnCheck()
+    override void SpawnCheck()
     {
-      if (dynPatrol.Count() > 0  || Spatial_TimerCheck || m_insiders.Count() == 0) return;
+      if (!CanSpawn()) return;
 
       int m_Groupid = Math.RandomIntInclusive(5001, 10000);
       SpatialDebugPrint("LocationID: " + m_Groupid);
@@ -27,7 +26,7 @@ class Location_Trigger: Spatial_TriggerBase
       int SpawnCount = Math.RandomIntInclusive(location.Spatial_MinCount, location.Spatial_MaxCount);
       if (SpawnCount > 0)
       {
-        Spatial_Spawn(SpawnCount, location);
+        Spatial_Spawn(SpawnCount);
         Spatial_TimerCheck = true;
 
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, location.Spatial_Timer, false);
@@ -45,7 +44,6 @@ class Location_Trigger: Spatial_TriggerBase
         player.Spatial_InLocation(true, location.Spatial_HuntMode);
       } 
       super.Enter(insider);
-      SpawnCheck();
     }
         
     override void Leave(TriggerInsider insider)
@@ -58,9 +56,16 @@ class Location_Trigger: Spatial_TriggerBase
       super.Leave(insider);
     }
 
-    //next plan - split spawn back into Spatial_Group and add a vector array check to Spatial_TriggerPosition
-    void Spatial_Spawn(int count, Spatial_Location Location)
+    override void OnStayStartServerEvent(int nrOfInsiders)
     {
+      super.OnStayStartServerEvent(nrOfInsiders);
+      SpawnCheck();
+    }
+
+    //next plan - split spawn back into Spatial_Group and add a vector array check to Spatial_TriggerPosition
+   override void Spatial_Spawn(int count)
+    {
+      Spatial_Location Location = location;
       if (m_insiders.Count() == 0) return;
       PlayerBase playerInsider = PlayerBase.Cast(m_insiders.Get(0).GetObject());
       if (!playerInsider || playerInsider.IsAI() || !playerInsider.GetIdentity()) return;
@@ -124,7 +129,7 @@ class Location_Trigger: Spatial_TriggerBase
         count = recount;
       }
 
-      notif = notif_trigger.GetInsiders();
+      array<ref TriggerInsider> notif = notif_trigger.GetInsiders();
       for (int i = 0; i < notif.Count(); ++i)
       {
         PlayerBase player = PlayerBase.Cast(notif[i].GetObject());
