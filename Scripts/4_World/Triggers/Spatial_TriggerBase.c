@@ -10,6 +10,7 @@ class Spatial_TriggerBase: CylinderTrigger
     ref array<ref eAISpatialPatrol> dynPatrol;
     bool Spatial_TimerCheck;
     string TriggerName, TriggerLoadout, TriggerFaction;
+    float PastTime;
 
 
 #ifdef EXPANSIONMODNAVIGATION
@@ -41,6 +42,7 @@ class Spatial_TriggerBase: CylinderTrigger
     void Spatial_TriggerBase()
     {
       dynPatrol = {};
+      PastTime = 0;
       GetSpatialSettings().PullRef(m_Spatial_Groups);
     } // main reference pull
 
@@ -60,7 +62,11 @@ class Spatial_TriggerBase: CylinderTrigger
       if (m_Spatial_Groups.ActiveHoursEnabled != 0 && m_Spatial_Groups.ActiveHoursEnabled != 3)
       {
           float time = GetTime();
-          SpatialDebugPrint(TriggerName + ": " + time + " compare: " + notification.StartTime + ";" + notification.StopTime);
+          if (!PastTime || PastTime != time)
+          {
+            SpatialDebugPrint(TriggerName + ": " + time + " compare: " + notification.StartTime + ";" + notification.StopTime);
+             PastTime = time;
+          }
           if (time <= notification.StartTime || time >= notification.StopTime) false;
       }
       return true;

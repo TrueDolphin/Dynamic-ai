@@ -65,10 +65,8 @@ class Audio_trigger: Spatial_TriggerBase
     {
       super.OnStayStartServerEvent(nrOfInsiders);
       if (nrOfInsiders == 0) return;
-      
-      if (!CanSpawn()) return;
 
-      if (nrOfInsiders > 0) //divide by zero
+      if (nrOfInsiders > 0 && CanSpawn()) //divide by zero
       {
         int totalnoise = 0;
         for (int i = 0; i < nrOfInsiders; ++i)
@@ -93,8 +91,7 @@ class Audio_trigger: Spatial_TriggerBase
           if ((totalnoise / nrOfInsiders) > Audio.Spatial_Sensitivity)
           {
             SpatialDebugPrint("Spawning due to noise: " + totalnoise);
-            SpawnCheck();
-            return;  
+            SpawnCheck(); 
           }
         }
       }
