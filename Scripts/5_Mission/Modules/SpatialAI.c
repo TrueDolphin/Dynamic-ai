@@ -4,7 +4,7 @@ check DateVersion every release.
 */
 
 class SpatialAI {
-    const string DateVersion = "Spatial AI Date: 10/10/2023 R29-8-1";
+    const string DateVersion = "Spatial AI Date: 10/10/2023 WS RC30";
     const int SZ_IN_SAFEZONE = 0x0001; // TraderPlus compat
     int m_cur = 0;
     ref Spatial_Groups m_Spatial_Groups; // main config

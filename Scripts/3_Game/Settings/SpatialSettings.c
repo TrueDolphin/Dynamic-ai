@@ -68,6 +68,9 @@ class SpatialSettings
       return;
     }
 
+    m_Spatial_Groups.Spatial_MinTimer = m_Spatial_Groups.Spatial_MinTimer * 60000;
+    m_Spatial_Groups.Spatial_MaxTimer = m_Spatial_Groups.Spatial_MaxTimer * 60000;
+
     if (m_Spatial_Groups.Spatial_MinTimer < 300000) { // global minimum time of 5 mins, 1m for debug 
       if (m_Spatial_Groups.Spatial_MinTimer < -59999)
       {
@@ -156,11 +159,15 @@ class SpatialSettings
       m_Spatial_Groups.Locations_Enabled = 0;
     }
 
+    m_Spatial_Groups.EngageTimer = m_Spatial_Groups.EngageTimer * 60000;
+
     if (m_Spatial_Groups.EngageTimer < 300000)
     {
       loggerPrint("Minimum engagement too low. setting to 5m");
       m_Spatial_Groups.EngageTimer = 300000;
     } // global minimum time of 5 mins
+
+    m_Spatial_Groups.CleanupTimer = m_Spatial_Groups.CleanupTimer * 60000;
 
     if (m_Spatial_Groups.CleanupTimer < m_Spatial_Groups.EngageTimer)
     {
@@ -278,6 +285,8 @@ class SpatialSettings
     {
       foreach(Spatial_Location location: m_Spatial_Groups.Location)
         {
+          location.Spatial_Timer = location.Spatial_Timer * 60000;
+
           if (location.Spatial_TriggerPosition[1] == 0)
           {
             location.Spatial_TriggerPosition[1] = 1;
@@ -291,6 +300,8 @@ class SpatialSettings
     {
       foreach(Spatial_Audio audio: m_Spatial_Groups.Audio)
         {
+          audio.Spatial_Timer = audio.Spatial_Timer * 60000;
+
           if (audio.Spatial_TriggerPosition[1] == 0)
           {
             audio.Spatial_TriggerPosition[1] = 1;
@@ -312,11 +323,11 @@ class SpatialSettings
     Data.Point.Insert(new Spatial_Point("West", 0, 100, {"WestLoadout.json"}, 0, 5, 1, "West", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
     Data.Point.Insert(new Spatial_Point("Civilian", 1, 150, {"HumanLoadout.json", "NBCLoadout.json"}, 0, 0, 0, "Civilian", 1, 0.5, 0.25, 0.66, false, "0.0 1.0 0.0"));
 
-    Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
-    Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+    Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 5, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+    Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 5, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
 
-    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
-    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 60000, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 5, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 5, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
   } //generate default array data
 
   void loggerPrint(string msg)
@@ -382,19 +393,19 @@ class SpatialSettings
 class Spatial_Groups
 {
   int Version = 19;
-  int Spatial_MinTimer = 1200000;
-  int Spatial_MaxTimer = 1200000;
+  float Spatial_MinTimer = 20;
+  float Spatial_MaxTimer = 40;
   int MinDistance = 140;
   int MaxDistance = 220;
   int HuntMode = 1;
   int Points_Enabled = 0;
   int Locations_Enabled = 0;
   int Audio_Enabled = 0;
-  int EngageTimer = 300000;
-  int CleanupTimer = 360000;
+  float EngageTimer = 5;
+  float CleanupTimer = 6;
   int PlayerChecks = -5;
   int MaxAI = 20;
-  int GroupDifficulty = 1;
+  int GroupDifficulty = 0;
   int MinimumPlayerDistance = 0;
   int MaxSoloPlayers = 0;
   int MinimumAge = 0;
