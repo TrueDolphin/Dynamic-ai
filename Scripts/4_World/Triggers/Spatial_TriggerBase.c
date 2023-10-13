@@ -1,6 +1,6 @@
 /*
 base used for locations and audio.
-9/10/2023
+13/10/2023
 */
 
 class Spatial_TriggerBase: CylinderTrigger
@@ -11,7 +11,6 @@ class Spatial_TriggerBase: CylinderTrigger
     bool Spatial_TimerCheck;
     string TriggerName, TriggerLoadout, TriggerFaction;
     float PastTime;
-
 
 #ifdef EXPANSIONMODNAVIGATION
    //declares
@@ -29,15 +28,14 @@ class Spatial_TriggerBase: CylinderTrigger
         }
     }
 
-	void RemoveMissionMarker(string uid)
-	{
-		if ( !m_ServerMarker )
-		return;
-		m_MarkerModule.RemoveServerMarker( uid );
-	}
+    void RemoveMissionMarker(string uid)
+    {
+      if ( !m_ServerMarker )
+      return;
+      m_MarkerModule.RemoveServerMarker( uid );
+    }
 
 #endif
-
 
     void Spatial_TriggerBase()
     {
@@ -47,6 +45,7 @@ class Spatial_TriggerBase: CylinderTrigger
     } // main reference pull
 
     void SpawnCheck(){/*override me*/}
+    void Spatial_Spawn(int count){/*override me*/}
 
     bool CanSpawn()
     {
@@ -71,7 +70,22 @@ class Spatial_TriggerBase: CylinderTrigger
       }
       return true;
     } //init checks
-
+    bool ValidSpawn(vector pos)
+    {
+          return !GetCEApi().AvoidPlayer(pos, 5);
+    } //unused currently
+    float GetTime()
+    {
+      int pass, hour, minute;
+      GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
+      if (minute == 0) return hour;
+      return hour + (minute * 0.01);
+    } //find better method
+    vector ValidPos(int enabled, vector pos)
+    {
+        if (enabled == 2) return pos;
+        return ExpansionStatic.GetSurfacePosition(pos);
+    } //parser
     override void OnStayStartServerEvent(int nrOfInsiders)
     {
       super.OnStayStartServerEvent(nrOfInsiders);
@@ -109,7 +123,6 @@ class Spatial_TriggerBase: CylinderTrigger
         }
       }
     } //make this better. jesus.
-
     override void Enter(TriggerInsider insider)
     {
       super.Enter(insider);
@@ -121,7 +134,6 @@ class Spatial_TriggerBase: CylinderTrigger
           }
     #endif
     } //marker enter
-
     override void Leave(TriggerInsider insider)
     {
       super.Leave(insider);
@@ -133,25 +145,6 @@ class Spatial_TriggerBase: CylinderTrigger
           }
     #endif
     } //marker leave
-
-    
-    void Spatial_Spawn(int count){/*override me*/}
-
-    void Spatial_timer()
-    {
-      Spatial_TimerCheck = false;
-    } //calllater timer for respawn
-
-    void SetNotification(Spatial_Notification a)
-    {
-      notification = a;
-    } //notification data
-
-    bool ValidSpawn(vector pos)
-    {
-          return !GetCEApi().AvoidPlayer(pos, 5);
-    } //unused currently
-
     override protected bool CanAddObjectAsInsider(Object object)
     {
       if (!notification)
@@ -163,7 +156,6 @@ class Spatial_TriggerBase: CylinderTrigger
 
       return true;
     } //override for restrictions
-
     void Spatial_WarningMessage(PlayerBase player, string message)
     {
       if ((player) && (message != ""))
@@ -173,31 +165,15 @@ class Spatial_TriggerBase: CylinderTrigger
           GetGame().RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
       }
     } //Ingame chat message
-
     void SpatialDebugPrint(string msg)
     {
           if (GetSpatialSettings().Spatial_Debug())
               GetExpansionSettings().GetLog().PrintLog("[Spatial Debug] " + msg);
     } //expansion debug print
-
     void SpatialLoggerPrint(string msg)
     {
           GetExpansionSettings().GetLog().PrintLog("[Spatial AI] " + msg);
     } //expansion logging
-
-    float GetTime()
-    {
-      int pass, hour, minute;
-      GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
-      if (minute == 0) return hour;
-      return hour + (minute * 0.01);
-    } //find better method
-    vector ValidPos(int enabled, vector pos)
-    {
-        if (enabled == 2) return pos;
-        return ExpansionStatic.GetSurfacePosition(pos);
-    } //parser
-
     void Spatial_message(PlayerBase player, int SpawnCount)
     {
         if (!player) return;
@@ -238,5 +214,12 @@ class Spatial_TriggerBase: CylinderTrigger
           SpatialLoggerPrint(message);
         }
     } //chat message or vanilla notification
-
+    void Spatial_timer()
+    {
+      Spatial_TimerCheck = false;
+    } //calllater timer for respawn
+    void SetNotification(Spatial_Notification a)
+    {
+      notification = a;
+    } //notification data
 }

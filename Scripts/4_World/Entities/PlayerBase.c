@@ -1,5 +1,5 @@
 //CF Dependancies here.
-//30/9/2023
+//13/10/2023
 
 modded class PlayerBase
 {
@@ -55,38 +55,38 @@ modded class PlayerBase
     {
         Spatial_Group group = new Spatial_Group(m_spatial_point.Spatial_MinCount, m_spatial_point.Spatial_MaxCount, 100, m_spatial_point.Spatial_ZoneLoadout.GetRandomElement(), m_spatial_point.Spatial_Faction, m_spatial_point.Spatial_Name, m_spatial_point.Spatial_Lootable, m_spatial_point.Spatial_Chance, m_spatial_point.Spatial_MinAccuracy, m_spatial_point.Spatial_MaxAccuracy, m_spatial_point.Spatial_UnlimitedReload);
         return group;
-    }
+    } //group from point parse
 
     void Spatial_Firing(int a)
     {
         Spatial_Firing = a;
-    }
+    } //Spatial_Audio check
 
     void Spatial_SetInZone(bool in)
     {
         Spatial_InZone = in;
-    }
+    } //trigger InZone
 
     void Spatial_SetSafe(bool a)
     {
         m_Zone_Safe = a;
-    }
+    } //Trigger IsSafe
 
     void Spatial_InLocation(bool a, int b)
     {
         Spatial_InLocation = a;
         Spatial_LocationHunt = b;
-    }
+    } //trigger location/audio
 
     void Spatial_SetNotification(Spatial_Notification a)
     {
         spatial_notification = a;
-    }
+    } //trigger transfer data to
 
     Spatial_Notification Spatial_notification()
     {
         return spatial_notification;
-    }
+    } //trigger transfer data from
     
     int Spatial_HuntMode()
     {
@@ -96,7 +96,7 @@ modded class PlayerBase
     int Spatial_LocationHunt()
     {
         return Spatial_LocationHunt;
-    }   //location huntmode
+    } //location huntmode
 
     bool Spatial_CheckSafe()
     {
@@ -115,29 +115,8 @@ modded class PlayerBase
 
     bool Spatial_HasGPSReceiver()
     {
-        if (GetMapNavigationBehaviour())
-        {
-        int num = GetMapNavigationBehaviour().GetNavigationType();
-        if (num > 1) return true;
-        }
-
-        GPSReceiver Spatial_HasRecevier = GPSReceiver.Cast(FindAttachmentBySlotName("WalkieTalkie"));
-        if (Spatial_HasRecevier && Spatial_HasRecevier.IsTurnedOn()) return true;
-
-        if (!GetInventory() || !GetInventory().GetCargo()) return false;
-
-        int item_count = 0;
-        item_count += GetInventory().GetCargo().GetItemCount();
-        if (item_count == 0) return false;
-        
-		for (int i = 0; i < item_count; i++)
-		{
-			GPSReceiver item = GPSReceiver.Cast(GetInventory().GetCargo().GetItem(i));
-            if (!item) continue;
-            if (item) return item.IsTurnedOn();
-		}
-
-        return false;
+        if (!GetIdentity() || IsAI()) return false;
+        return (GetMapNavigationBehaviour().GetNavigationType() & EMapNavigationType.GPS | EMapNavigationType.ALL == 0);
     } //wardog's code
     
     void Spatial_SetBirthday()

@@ -4,7 +4,7 @@ check DateVersion every release.
 */
 
 class SpatialAI {
-    const string DateVersion = "Spatial AI Date: 10/10/2023 R29-8";
+    const string DateVersion = "Spatial AI Date: 10/10/2023 R29-8-1";
     const int SZ_IN_SAFEZONE = 0x0001; // TraderPlus compat
     int m_cur = 0;
     ref Spatial_Groups m_Spatial_Groups; // main config
@@ -240,7 +240,11 @@ class SpatialAI {
         float random = Math.RandomFloat(0.0, 1.0);
         SpatialDebugPrint("Chance: " + group.Spatial_Chance + " | random: " + random);
 
-        if (group.Spatial_Chance < random) return;
+        if (group.Spatial_Chance < random) 
+        {
+            SpatialDebugPrint("Group chance Lower than random chance");
+            return;
+        } 
 
         if (SpawnCount > 0) {
             if (m_Spatial_Groups.GroupDifficulty == 1) {
@@ -288,7 +292,6 @@ class SpatialAI {
         Print("[Spatial_Group] GetWeightedGroup: All Groups have a 'Weight' of zero. Selecting pure random group instead.");
         return groups.GetRandomElement();
     } //expansion lightweight weighted group calcs
-
     Spatial_Group Spatial_GetTimeGroup(array < ref Spatial_Group > groups) 
     {
 
@@ -312,7 +315,6 @@ class SpatialAI {
         SpatialDebugPrint("[Spatial_Group] No valid group times found.");
         return null;
     } //time based group selection
-
     Spatial_Group Spatial_GetAgeGroup(array < ref Spatial_Group > groups, PlayerBase player) 
     {
 
@@ -340,8 +342,7 @@ class SpatialAI {
 
         SpatialDebugPrint("[Spatial_Group] No valid group ages found.");
         return null;
-    } //time based group selection
-
+    } //player age based group selection
     bool Spatial_ValidPos(PlayerBase player, out vector pos) 
     {
         pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
