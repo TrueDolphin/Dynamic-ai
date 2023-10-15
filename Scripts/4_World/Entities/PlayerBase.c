@@ -156,7 +156,7 @@ modded class PlayerBase
         CF_Date date1 = CF_Date.Now();
         CF_Date date2 = CF_Date.Epoch(m_Spatial_Birthday + a);
         int hoursDiff, minutesDiff;
-        date1.CalculateDifference(date2, hoursDiff, minutesDiff);
+        date2.CalculateDifference(date1, hoursDiff, minutesDiff);
 
         if (GetSpatialSettings().Spatial_Debug())
         {

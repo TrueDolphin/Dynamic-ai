@@ -7,7 +7,7 @@ class SpatialSettings
   //declares
   private const static string EXP_SPATIAL_FOLDER = "$profile:ExpansionMod\\AI\\Spatial\\";
   private const static string EXP_AI_SPATIAL_SETTINGS = EXP_SPATIAL_FOLDER + "SpatialSettings.json";
-  const int VERSION = 19;
+  const int VERSION = 20;
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   int m_Spatial_Total = -1;
@@ -57,9 +57,21 @@ class SpatialSettings
       JsonFileLoader < Spatial_Groups > .JsonLoadFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Groups);
     }
     if (m_Spatial_Groups.Version != VERSION) {
-      loggerPrint("Settings File Out of date. Please delete and restart server.");
+
+      if (m_Spatial_Groups.Version == 19)
+      {
+        loggerPrint("updating settings to v20");
+        m_Spatial_Groups.Version = 20;
+        m_Spatial_Groups.TargetBone = "Neck";
+        JsonFileLoader < Spatial_Groups > .JsonSaveFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Groups);
+      }
+      else
+      {
+      loggerPrint("too old to update. please delete and regenerate.");
       Spatial_Version = false;
       return;
+      }
+
     }
     if (m_Spatial_Groups.MaxAI < 1)
     {
@@ -392,7 +404,7 @@ class SpatialSettings
 //json data
 class Spatial_Groups
 {
-  int Version = 19;
+  int Version = 20;
   float Spatial_MinTimer = 20;
   float Spatial_MaxTimer = 40;
   int MinDistance = 140;
@@ -412,6 +424,7 @@ class Spatial_Groups
   int ActiveHoursEnabled = 0;
   float ActiveStartTime = 0;
   float ActiveStopTime = 24;
+  string TargetBone = "Neck";
   int MessageType = 1;
   string MessageTitle = "Spatial AI";
   string MessageText = "AI Spotted in the Area. Be Careful.";
