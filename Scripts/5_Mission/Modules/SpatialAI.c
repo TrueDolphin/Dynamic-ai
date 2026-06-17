@@ -4,7 +4,7 @@ check DateVersion every release.
 */
 
 class SpatialAI {
-    const string DateVersion = "Spatial AI Date: 15/10/2023 WS RC30.2";
+    const string DateVersion = "Spatial AI Date: 11/12/2025 WC RC30.6";
     const int SZ_IN_SAFEZONE = 0x0001; // TraderPlus compat
     int m_cur = 0;
     ref Spatial_Groups m_Spatial_Groups; // main config
@@ -50,7 +50,7 @@ class SpatialAI {
         playerChecks = Math.AbsInt(playerChecks);
         int playercount = m_Players.Count();
         int minAge = m_Spatial_Groups.MinimumAge;
-        bool checkMinAge = minAge > 0;
+        bool checkMinAge = Math.AbsInt(minAge) != 0;
         bool LoopLimit = playerChecks != 0;
         int playersindistance;
         for (int i = 1; i <= playercount; ++i) {
@@ -63,7 +63,7 @@ class SpatialAI {
 
             m_Players.RemoveItem(player);
 
-            if (GetGame().GetMission().IsPlayerDisconnecting(player)) {
+            if (g_Game.GetMission().IsPlayerDisconnecting(player)) {
                 SpatialDebugPrint("Spatial::Check - player is disconnecting");
                 continue;
             }
@@ -345,14 +345,14 @@ class SpatialAI {
     } //player age based group selection
     bool Spatial_ValidPos(PlayerBase player, out vector pos) 
     {
-        pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
-        for (int i = 0; i < 50; ++i) {
-            if (GetGame().SurfaceIsSea(pos[0], pos[2]) || GetGame().SurfaceIsPond(pos[0], pos[2])) {
-                pos = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(player.GetPosition(), m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance)));
-            } else i = 50;
+        vector playerPos = player.GetPosition();
+        for (int i = 0; i < 50; ++i)
+        {
+            pos = ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(playerPos, m_Spatial_Groups.MinDistance, m_Spatial_Groups.MaxDistance));
+            if (g_Game.GetWaterDepth(pos) <= 0)
+                return true;
         }
-        if (GetGame().SurfaceIsSea(pos[0], pos[2]) || GetGame().SurfaceIsPond(pos[0], pos[2])) return false;
-        return true;
+        return false;
     } //fixed
     void Spatial_Spawn(PlayerBase player, int bod, Spatial_Group Group) 
     {
@@ -366,9 +366,6 @@ class SpatialAI {
             SpatialLoggerPrint("Valid waypointpos not found. using startpos.");
             waypointpos = startpos;
         }
-        TVectorArray waypoints = {
-            waypointpos
-        };
         int huntmode = m_Spatial_Groups.HuntMode;
         string Formation = "RANDOM";
         eAIWaypointBehavior behaviour = typename.StringToEnum(eAIWaypointBehavior, "ALTERNATE");
@@ -381,7 +378,7 @@ class SpatialAI {
         mindistradius = 0;
         maxdistradius = 1200;
         despawnradius = 1200;
-        auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Group.Spatial_Loadout, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Group.Spatial_Faction), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, huntmode, 3.0, Group.Spatial_Lootable, Group.Spatial_UnlimitedReload);
+        auto dynPatrol = eAISpatialPatrol.CreateEx(startpos, behaviour, Group.Spatial_Loadout, bod, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Group.Spatial_Faction), eAIFormation.Create(Formation), player, mindistradius, maxdistradius, despawnradius, huntmode, 3.0, Group.Spatial_Lootable, Group.Spatial_UnlimitedReload);
         if (dynPatrol) {
             dynPatrol.SetGroupName(Group.Spatial_Name);
             dynPatrol.SetAccuracy(Group.Spatial_MinAccuracy, Group.Spatial_MaxAccuracy);
@@ -416,7 +413,7 @@ class SpatialAI {
             for (i = 0; i <= m_Spatial_Groups.Point.Count(); ++i) {
                 Spatial_Point points = Spatial_Point.Cast(m_Spatial_Groups.Point[i]);
                 if (!points) continue;
-                Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(GetGame().CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
+                Spatial_Trigger spatial_trigger = Spatial_Trigger.Cast(g_Game.CreateObjectEx("Spatial_Trigger", points.Spatial_Position, ECE_NONE));
                 spatial_trigger.SetCollisionCylinder(points.Spatial_Radius, points.Spatial_Radius / 2);
                 spatial_trigger.SetSpatialPoint(points);
                 vector move0 = points.Spatial_Position;
@@ -434,8 +431,8 @@ class SpatialAI {
             for (i = 0; i <= m_Spatial_Groups.Location.Count(); ++i) {
                 Spatial_Location location = Spatial_Location.Cast(m_Spatial_Groups.Location[i]);
                 if (!location) continue;
-                Location_Trigger location_trigger = Location_Trigger.Cast(GetGame().CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
-                Notification_Trigger notification_trigger = Notification_Trigger.Cast(GetGame().CreateObjectEx("Notification_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
+                Location_Trigger location_trigger = Location_Trigger.Cast(g_Game.CreateObjectEx("Location_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
+                Notification_Trigger notification_trigger = Notification_Trigger.Cast(g_Game.CreateObjectEx("Notification_Trigger", location.Spatial_TriggerPosition, ECE_NONE));
                 location_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius, location.Spatial_TriggerRadius / 2);
                 notification_trigger.SetCollisionCylinder(location.Spatial_TriggerRadius * 2, location.Spatial_TriggerRadius);
                 SetNotificationLocation(location_trigger, location);
@@ -462,8 +459,8 @@ class SpatialAI {
             for (i = 0; i <= m_Spatial_Groups.Audio.Count(); ++i) {
                 Spatial_Audio audio = Spatial_Audio.Cast(m_Spatial_Groups.Audio[i]);
                 if (!audio) continue;
-                Audio_trigger audio_trigger = Audio_trigger.Cast(GetGame().CreateObjectEx("Audio_trigger", audio.Spatial_TriggerPosition, ECE_NONE));
-                Notification_Trigger notification_trigger2 = Notification_Trigger.Cast(GetGame().CreateObjectEx("Notification_Trigger", audio.Spatial_TriggerPosition, ECE_NONE));
+                Audio_trigger audio_trigger = Audio_trigger.Cast(g_Game.CreateObjectEx("Audio_trigger", audio.Spatial_TriggerPosition, ECE_NONE));
+                Notification_Trigger notification_trigger2 = Notification_Trigger.Cast(g_Game.CreateObjectEx("Notification_Trigger", audio.Spatial_TriggerPosition, ECE_NONE));
                 audio_trigger.SetCollisionCylinder(audio.Spatial_TriggerRadius, audio.Spatial_TriggerRadius / 2);
                 notification_trigger2.SetCollisionCylinder(audio.Spatial_TriggerRadius * 2, audio.Spatial_TriggerRadius);
                 SetNotificationAudio(audio_trigger, audio);
@@ -590,7 +587,7 @@ class SpatialAI {
         if ((player) && (message != "")) {
             Param1 < string > Msgparam;
             Msgparam = new Param1 < string > (message);
-            GetGame().RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
+            g_Game.RPCSingleParam(player, ERPCs.RPC_USER_ACTION_MESSAGE, Msgparam, true, player.GetIdentity());
         }
     } //Ingame chat message
     void SpatialLoggerPrint(string msg) 
@@ -605,7 +602,7 @@ class SpatialAI {
     float Spatial_GetTime() 
     {
         int pass, hour, minute;
-        GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
+        g_Game.GetWorld().GetDate(pass, pass, pass, hour, minute);
         if (minute == 0) return hour;
         return hour + (minute * 0.01);
     } //lightweight time, probably a better method.

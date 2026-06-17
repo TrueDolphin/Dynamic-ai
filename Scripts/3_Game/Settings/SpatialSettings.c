@@ -1,5 +1,5 @@
 /*
-9/10/2023
+3/6/2025 WC RC30.4
 Main reference settings across whole plugin
 */
 class SpatialSettings
@@ -7,7 +7,7 @@ class SpatialSettings
   //declares
   private const static string EXP_SPATIAL_FOLDER = "$profile:ExpansionMod\\AI\\Spatial\\";
   private const static string EXP_AI_SPATIAL_SETTINGS = EXP_SPATIAL_FOLDER + "SpatialSettings.json";
-  const int VERSION = 20;
+  const int VERSION = 21;
   const int SZ_IN_SAFEZONE = 0x0001;
   int m_cur = 0;
   int m_Spatial_Total = -1;
@@ -58,7 +58,14 @@ class SpatialSettings
     }
     if (m_Spatial_Groups.Version != VERSION) {
 
-      if (m_Spatial_Groups.Version == 19)
+
+      if (m_Spatial_Groups.Version == 20)
+      {
+        m_Spatial_Groups.Version = 21;
+        loggerPrint(" delete the Spatial_MaxAccuracy lines from the Audio arrays if there.");
+        JsonFileLoader < Spatial_Groups > .JsonSaveFile(EXP_AI_SPATIAL_SETTINGS, m_Spatial_Groups);
+      }
+      else if (m_Spatial_Groups.Version == 19)
       {
         loggerPrint("updating settings to v20");
         m_Spatial_Groups.Version = 20;
@@ -136,12 +143,6 @@ class SpatialSettings
         {
           loggerPrint("Zone safe value incorrect. setting to safe");
           point.Spatial_Safe = 1;
-        }
-        eAIFaction faction = eAIFaction.Create(point.Spatial_Faction);
-        if (!faction)
-        {
-          loggerPrint("Faction not correct: " + point.Spatial_Faction);
-          point.Spatial_Faction = "Raiders";
         }
         
         if (point.Spatial_HuntMode < 0 || point.Spatial_HuntMode > 8)
@@ -284,12 +285,7 @@ class SpatialSettings
           loggerPrint("Loadout Not Found: " + group.Spatial_Loadout);
           continue;
         }
-        eAIFaction faction2 = eAIFaction.Create(group.Spatial_Faction);
-        if (!faction2)
-        {
-          loggerPrint("Faction not correct: " + group.Spatial_Faction);
-          group.Spatial_Faction = "Raiders";
-        }
+
         m_Spatial_Total += 1;
       }
     
@@ -338,8 +334,8 @@ class SpatialSettings
     Data.Location.Insert(new Spatial_Location("Location1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 5, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
     Data.Location.Insert(new Spatial_Location("Location2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 5, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
 
-    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 5, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
-    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 0.66, 5, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+    Data.Audio.Insert(new Spatial_Audio("Audio1", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 5, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
+    Data.Audio.Insert(new Spatial_Audio("Audio2", 50, "NBCLoadout.json", 0, 4, 6, "East", 1, 0.5, 0.25, 5, 3, 0, false, "0.0 1.0 0.0", {"0 1 0"}));
   } //generate default array data
 
   void loggerPrint(string msg)
@@ -525,7 +521,7 @@ class Spatial_Location
 
   void Spatial_Location(string a, float b, string c, int d, int e, int f, string g, int h, float i, float j, float k, float l, int m, bool n, vector o, TVectorArray p ) // one left
   {
-    //one left
+    //maxed
     Spatial_Name = a;
     Spatial_TriggerRadius = b;
     Spatial_ZoneLoadout = c;
@@ -554,13 +550,14 @@ class Spatial_Audio
   int  Spatial_HuntMode;
   string  Spatial_Faction;
   int  Spatial_Lootable;
-  float  Spatial_Chance, Spatial_MinAccuracy, Spatial_MaxAccuracy, Spatial_Timer, Spatial_Sensitivity;
+  float  Spatial_Chance, Spatial_MinAccuracy;
+  float Spatial_Timer, Spatial_Sensitivity;
   int Spatial_SpawnMode;
   bool Spatial_UnlimitedReload;
   vector  Spatial_TriggerPosition; 
   ref TVectorArray Spatial_SpawnPosition;
 
-  void Spatial_Audio(string a, float b, string c, int d, int e, int f, string g, int h, float i, float j, float k, float l,int m, float n, bool o, vector p, TVectorArray q ) //maxed
+  void Spatial_Audio(string a, float b, string c, int d, int e, int f, string g, int h, float i, float j, float k,int l, float m, bool n, vector o, TVectorArray p ) //maxed
   {
     //maxed
     Spatial_Name = a;
@@ -573,13 +570,12 @@ class Spatial_Audio
     Spatial_Lootable = h;
     Spatial_Chance = i;
     Spatial_MinAccuracy = j;
-    Spatial_MaxAccuracy = k;
-    Spatial_Timer = l;
-    Spatial_Sensitivity = m;
-    Spatial_SpawnMode = n;
-    Spatial_UnlimitedReload = o;
-    Spatial_TriggerPosition = p;
-    Spatial_SpawnPosition = q;
+    Spatial_Timer = k;
+    Spatial_Sensitivity = l;
+    Spatial_SpawnMode = m;
+    Spatial_UnlimitedReload = n;
+    Spatial_TriggerPosition = o;
+    Spatial_SpawnPosition = p;
   }
 };
 

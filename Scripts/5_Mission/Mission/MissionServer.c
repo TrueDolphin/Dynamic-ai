@@ -6,6 +6,7 @@ spatial ai spawns
 added restricted time spawns.
 
 */
+
 modded class MissionServer
 {
   const ref SpatialAI Spatialai = new SpatialAI();
@@ -31,13 +32,15 @@ modded class MissionServer
     int m_Spatial = Math.RandomIntInclusive(m_Spatial_Groups.Spatial_MinTimer, m_Spatial_Groups.Spatial_MaxTimer);
     if (GetCEApi())
     {
+      array < Man > players = new array < Man > ;
+      g_Game.GetPlayers(players); 
       if (m_Spatial_Groups.ActiveHoursEnabled == 1)
       {
         float Spatial_daytime = Spatial_GetTime();  
         if (Spatial_daytime >= m_Spatial_Groups.ActiveStartTime && Spatial_daytime <= m_Spatial_Groups.ActiveStopTime)
         {
           Spatialai.SpatialDebugPrint("Spatial::Stack - Start");
-          Spatialai.Spatial_Check(m_Players);
+          Spatialai.Spatial_Check(players);
           Spatialai.SpatialDebugPrint("Spatial::Stack - End");
           Spatialai.SpatialLoggerPrint("Next valid check in: " + m_Spatial + "ms");
         }
@@ -49,18 +52,18 @@ modded class MissionServer
       else
       {
         Spatialai.SpatialDebugPrint("Spatial::Stack - Start");
-        Spatialai.Spatial_Check(m_Players);
+        Spatialai.Spatial_Check(players);
         Spatialai.SpatialDebugPrint("Spatial::Stack - End");
         Spatialai.SpatialLoggerPrint("Next valid check in: " + m_Spatial + "ms");
       }
     }
-    GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SpatialTimer, m_Spatial, false);
+    g_Game.GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SpatialTimer, m_Spatial, false);
   } //timer call for varied check loops #refactored by LieutenantMaster
 
     float Spatial_GetTime()
     {
       int pass, hour, minute;
-      GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
+      g_Game.GetWorld().GetDate(pass, pass, pass, hour, minute);
       if (minute == 0) return hour;
       return hour + (minute * 0.01);
     }

@@ -23,7 +23,7 @@ class Spatial_Trigger: CylinderTrigger
         {
             m_ServerMarker = m_MarkerModule.CreateServerMarker(name, "Territory", pos, ARGB(255, 235, 59, 90), true);
             if (remove == 1)
-            GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(RemoveMissionMarker, timer, false, m_ServerMarker.GetUID());
+            g_Game.GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(RemoveMissionMarker, timer, false, m_ServerMarker.GetUID());
         }
     }
 
@@ -124,7 +124,7 @@ class Spatial_Trigger: CylinderTrigger
     float GetTime()
     {
       int pass, hour, minute;
-      GetGame().GetWorld().GetDate(pass, pass, pass, hour, minute);
+      g_Game.GetWorld().GetDate(pass, pass, pass, hour, minute);
       if (minute < 1) return hour;
       return hour + (minute * 0.01);
     } //find better method

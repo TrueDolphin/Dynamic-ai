@@ -35,7 +35,7 @@ class CfgMods
 			class missionScriptModule
 			{
 				value = "";
-				files[] = {"SafeZone/scripts/Common","dolphin/DayZ-Expansion-AI-Dynamic/Scripts/5_Mission"};
+				files[] = {"dolphin/DayZ-Expansion-AI-Dynamic/Scripts/5_Mission"};
 			};
 		};
 	};

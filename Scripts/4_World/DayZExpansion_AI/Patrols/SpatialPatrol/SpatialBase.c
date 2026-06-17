@@ -51,7 +51,7 @@ class SpatialBase : SpatialPatrol
 			case 4: 
 				//stay around spawnpos - extended onupdate
 				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(ai.GetPosition(), 20, 40));
-				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingPos, 10000, true, m_Group, m_Position, 40);
+				g_Game.GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingPos, 10000, true, m_Group, m_Position, 40);
 			break;
 			case 5: 
 				//mix of 4 and 6 sorta
@@ -61,7 +61,7 @@ class SpatialBase : SpatialPatrol
 			case 6: 
 				//follows player
 				m_Group.AddWaypoint(ExpansionMath.GetRandomPointInRing(player.GetPosition(), 50, 55));
-				GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 10000, false, m_Group, player, vector.Zero, 10000, 80);
+				g_Game.GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, 10000, false, m_Group, player, vector.Zero, 10000, 80);
 			break;
     	}
 	}//Spatial_Movement(ai, group);
@@ -97,32 +97,29 @@ class SpatialBase : SpatialPatrol
 		if (!player || !AiGroup) return;
 		if (m_Spatial_Groups.HuntMode == 1)
     	{
-			if (player.GetTargetInformation().IsTargettedBy(lead)) return;
+			auto info = eAITargetInformation.GetTargetInformation(player);
+			if (info.IsTrackedBy(lead)) return;
 		}
-		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer, distance);
+		g_Game.GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer, distance);
 	}//TrailingGroup(m_Group, player, pos, timer, distance);
 	void HuntCheck(eAIGroup AiGroup, PlayerBase player, vector pos = vector.Zero, int timer = 10000, int distance = 20)
     {
 			//actively hunts player
 			eAIBase lead = eAIBase.Cast(AiGroup.GetLeader());
 			if (!player || !AiGroup || !lead) return;
-		if (!player.GetTargetInformation().IsTargettedBy(lead))
-		{
-			player.GetTargetInformation().AddAI(lead, m_Spatial_Groups.EngageTimer);
-			GetGame().GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer, distance);
-		}
-		else 
-		{
-			//! Update target found at time if already targeting
-			player.GetTargetInformation().Update(m_Group);
-		}
+
+		auto info = eAITargetInformation.GetTargetInformation(player);
+		if (info.IsTrackedBy(lead)) return;
+		player.GetTargetInformation().AddAI(lead, m_Spatial_Groups.EngageTimer);
+		g_Game.GetCallQueue(CALL_CATEGORY_GAMEPLAY).CallLater(TrailingGroup, timer, false, AiGroup, player, pos, timer, distance);
+
 	}//HuntCheck(m_Group, player, pos, timer, distance);
 	void TrailingPos(eAIGroup AiGroup, vector position, int distance = 20)
     {
 		//Print("Trailing trigger" + this);
 		if (!AiGroup) return;
 		AiGroup.ClearWaypoints();
-		vector waypoint = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(position, distance, (distance * 1.5)));
+		vector waypoint = (ExpansionStatic.GetSurfacePosition(ExpansionMath.GetRandomPointInRing(position, distance, (distance * 1.5))));
 		AiGroup.AddWaypoint(waypoint); 
 	}//TrailingPos(pos, distance, m_Group);
 

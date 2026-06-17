@@ -33,7 +33,7 @@ class eAISpatialPatrol : SpatialBase
 	bool m_Cooldown;
 	private bool m_WasGroupDestroyed;
 
-	static eAISpatialPatrol CreateEx(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
+	static eAISpatialPatrol CreateEx(vector pos, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, float despawnR = 880, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
     {
 		#ifdef EAI_TRACE
 		auto trace = CF_Trace_0("eAISpatialPatrol", "Create");
@@ -42,7 +42,6 @@ class eAISpatialPatrol : SpatialBase
 		eAISpatialPatrol patrol;	
 		Class.CastTo(patrol, ((typename)eAISpatialPatrol).Spawn());
 		patrol.m_Position = pos;
-		patrol.m_Waypoints = waypoints;
 		patrol.m_WaypointBehaviour = behaviour;
 		patrol.m_NumberOfAI = count;
 		patrol.m_Loadout = loadout;
@@ -70,9 +69,9 @@ class eAISpatialPatrol : SpatialBase
 		return patrol;
 	}//edited
 
-	static eAISpatialPatrol Create(vector pos, array<vector> waypoints, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
+	static eAISpatialPatrol Create(vector pos, eAIWaypointBehavior behaviour, string loadout = "", int count = 1, int respawnTime = 600, int despawnTime = 600, eAIFaction faction = null, eAIFormation formation = null, PlayerBase player = null, float minR = 300, float maxR = 800, int HuntMode = 1, float threatspeedLimit = 3.0, int lootcheck = 1, bool unlimitedReload = false)
     {
-		return CreateEx(pos, waypoints, behaviour, loadout, count, respawnTime, despawnTime, faction, null, player, minR, maxR, maxR * 1.1, HuntMode, threatspeedLimit, lootcheck, unlimitedReload);
+		return CreateEx(pos, behaviour, loadout, count, respawnTime, despawnTime, faction, null, player, minR, maxR, maxR * 1.1, HuntMode, threatspeedLimit, lootcheck, unlimitedReload);
 	}//edited
 
 	void SetAccuracy(float accuracyMin, float accuracyMax)
@@ -125,7 +124,7 @@ class eAISpatialPatrol : SpatialBase
 		pos = ExpansionAIPatrol.GetPlacementPosition(pos);
 
 		eAIBase ai;
-		if (!Class.CastTo(ai, GetGame().CreateObject(GetRandomAI(), pos))) return null;
+		if (!Class.CastTo(ai, g_Game.CreateObject(GetRandomAI(), pos))) return null;
 
 		ai.SetPosition(pos);
 
@@ -217,7 +216,7 @@ class eAISpatialPatrol : SpatialBase
 		m_Group.SetFormation(m_Formation);
 		m_Group.SetWaypointBehaviour(m_WaypointBehaviour);
 		m_Group.SetName(m_GroupName);
-
+		ai.Expansion_SetCanBeLooted(CheckMemberLootable(ai, m_lootcheck));
 		Spatial_Movement(m_Huntmode);
 		//getting m_Group outside of this function returns null, irrelevant of before or after.
 
@@ -226,6 +225,7 @@ class eAISpatialPatrol : SpatialBase
 			ai = SpawnAI(m_Formation.ToWorld(m_Formation.GetPosition(i)));
 			ai.SetGroup(m_Group);
 			ai.eAI_SetAccuracy(-1, -1);
+			ai.Expansion_SetCanBeLooted(CheckLootable(m_lootcheck));
 		}
 
 		++m_NumberOfSpatialPatrols;
@@ -316,7 +316,7 @@ class eAISpatialPatrol : SpatialBase
 			if (!GetCEApi().AvoidPlayer(patrolPos, m_MaximumRadius) && GetCEApi().AvoidPlayer(patrolPos, m_MinimumRadius))
 			{
 			Spawn();	
-			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false, true);
+			g_Game.GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(this.Despawn, m_Spatial_Groups.CleanupTimer, false, true);
 			} 
 		}
 	}//edited
@@ -329,7 +329,7 @@ class eAISpatialPatrol : SpatialBase
 	void AudioMovement(vector pos)
 	{
 		array<Man> m_Players;
-		GetGame().GetPlayers(m_Players);
+		g_Game.GetPlayers(m_Players);
 		if (m_Players)
 		{
 			int playercount = m_Players.Count();
@@ -345,7 +345,7 @@ class eAISpatialPatrol : SpatialBase
 					{
 						CheckLocation(playerfiring.GetPosition());
 						m_Cooldown = true;
-						GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(EndCooldown, 10000, false);
+						g_Game.GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(EndCooldown, 10000, false);
 					}
 				}
 			}

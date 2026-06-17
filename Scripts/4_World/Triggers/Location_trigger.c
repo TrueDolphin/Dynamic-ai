@@ -29,7 +29,7 @@ class Location_Trigger: Spatial_TriggerBase
         Spatial_Spawn(SpawnCount);
         Spatial_TimerCheck = true;
 
-        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, location.Spatial_Timer, false);
+        g_Game.GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, location.Spatial_Timer, false);
       } else {
         SpatialDebugPrint("Location ai count too low this check");
       }
@@ -76,7 +76,6 @@ class Location_Trigger: Spatial_TriggerBase
       if (Location.Spatial_HuntMode == 3) 
         behaviour = typename.StringToEnum(eAIWaypointBehavior, "HALT");
       vector startpos;
-      TVectorArray waypoints;
       eAISpatialPatrol DynPatrol;
       int mindistradius, maxdistradius, despawnradius;
       mindistradius = 0;
@@ -87,8 +86,7 @@ class Location_Trigger: Spatial_TriggerBase
       {
         vector interm = Location.Spatial_SpawnPosition.GetRandomElement();
         startpos = ValidPos(m_Spatial_Groups.Locations_Enabled, interm);
-        waypoints = { ValidPos(m_Spatial_Groups.Locations_Enabled, interm) };
-        DynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, Location.Spatial_HuntMode, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
+        DynPatrol = eAISpatialPatrol.CreateEx(startpos, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, Location.Spatial_HuntMode, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
         if (DynPatrol)
         {
           DynPatrol.SetAccuracy(Location.Spatial_MinAccuracy, Location.Spatial_MaxAccuracy);
@@ -110,8 +108,7 @@ class Location_Trigger: Spatial_TriggerBase
         foreach (vector pos : Location.Spatial_SpawnPosition)
         {
           startpos = ValidPos(m_Spatial_Groups.Locations_Enabled, pos);
-          waypoints = { ValidPos(m_Spatial_Groups.Locations_Enabled, pos) };
-          DynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, Location.Spatial_HuntMode, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
+          DynPatrol = eAISpatialPatrol.CreateEx(startpos, behaviour, Location.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(Location.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, Location.Spatial_HuntMode, 3.0, Location.Spatial_Lootable, Location.Spatial_UnlimitedReload);
           if (DynPatrol)
           {
             DynPatrol.SetAccuracy(Location.Spatial_MinAccuracy, Location.Spatial_MaxAccuracy);

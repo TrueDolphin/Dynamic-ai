@@ -33,7 +33,7 @@ class Audio_trigger: Spatial_TriggerBase
       {
         Spatial_Spawn(SpawnCount);
         Spatial_TimerCheck = true;
-        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, Audio.Spatial_Timer, false);
+        g_Game.GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Spatial_timer, Audio.Spatial_Timer, false);
       } else {
         SpatialDebugPrint("Audio ai count too low this check");
       }
@@ -110,7 +110,6 @@ class Audio_trigger: Spatial_TriggerBase
       if (audio.Spatial_HuntMode == 3) 
         behaviour = typename.StringToEnum(eAIWaypointBehavior, "HALT");
       vector startpos;
-      TVectorArray waypoints;
       eAISpatialPatrol DynPatrol;
       int mindistradius, maxdistradius, despawnradius;
       mindistradius = 0;
@@ -121,11 +120,10 @@ class Audio_trigger: Spatial_TriggerBase
       {
         vector interm = Audio.Spatial_SpawnPosition.GetRandomElement();
         startpos = ValidPos(m_Spatial_Groups.Audio_Enabled, interm);
-        waypoints = { ValidPos(m_Spatial_Groups.Audio_Enabled, interm) };
-        DynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, audio.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(audio.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, audio.Spatial_HuntMode, 3.0, audio.Spatial_Lootable, audio.Spatial_UnlimitedReload);
+        DynPatrol = eAISpatialPatrol.CreateEx(startpos, behaviour, audio.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(audio.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, audio.Spatial_HuntMode, 3.0, audio.Spatial_Lootable, audio.Spatial_UnlimitedReload);
         if (DynPatrol)
         {
-          DynPatrol.SetAccuracy(audio.Spatial_MinAccuracy, audio.Spatial_MaxAccuracy);
+          DynPatrol.SetAccuracy(audio.Spatial_MinAccuracy, audio.Spatial_MinAccuracy + 0.25);
           DynPatrol.SetGroupName(audio.Spatial_Name);
           DynPatrol.SetSniperProneDistanceThreshold(0.0);
           dynPatrol.Insert(DynPatrol);
@@ -143,11 +141,10 @@ class Audio_trigger: Spatial_TriggerBase
         foreach (vector pos : Audio.Spatial_SpawnPosition)
         {
           startpos = ValidPos(m_Spatial_Groups.Audio_Enabled, pos);
-          waypoints = { ValidPos(m_Spatial_Groups.Audio_Enabled, pos) };
-          DynPatrol = eAISpatialPatrol.CreateEx(startpos, waypoints, behaviour, audio.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(audio.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, audio.Spatial_HuntMode, 3.0, audio.Spatial_Lootable, audio.Spatial_UnlimitedReload);
+          DynPatrol = eAISpatialPatrol.CreateEx(startpos, behaviour, audio.Spatial_ZoneLoadout, count, m_Spatial_Groups.CleanupTimer + 500, m_Spatial_Groups.CleanupTimer - 500, eAIFaction.Create(audio.Spatial_Faction), eAIFormation.Create(Formation), playerInsider, mindistradius, maxdistradius, despawnradius, audio.Spatial_HuntMode, 3.0, audio.Spatial_Lootable, audio.Spatial_UnlimitedReload);
           if (DynPatrol)
           {
-            DynPatrol.SetAccuracy(audio.Spatial_MinAccuracy, audio.Spatial_MaxAccuracy);
+            DynPatrol.SetAccuracy(audio.Spatial_MinAccuracy, audio.Spatial_MinAccuracy + 0.25);
             DynPatrol.SetGroupName(audio.Spatial_Name);
             DynPatrol.SetSniperProneDistanceThreshold(0.0);
             recount += count;
